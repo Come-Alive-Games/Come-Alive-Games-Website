@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reconquesta</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    h1 { font-weight: normal; }
+    body { font-family: Georgia, serif; background: #1a0a00; color: #f0e6d0; min-height: 100vh; overflow-x: hidden; }
+    :focus-visible { outline: 2px solid #d4a843; outline-offset: 2px; }
+    .screen { display: none; min-height: 100vh; }
+    .screen.active { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    #title-screen { background: radial-gradient(ellipse at center, #2d0a00 0%, #1a0a00 70%); text-align: center; padding: 40px 20px; }
+    .game-title { font-size: 52px; color: #d4a843; letter-spacing: 6px; text-shadow: 0 0 20px #d4a84380; margin-bottom: 8px; }
+    .game-subtitle { font-size: 14px; color: #a08060; letter-spacing: 4px; margin-bottom: 48px; }
+    .menu-btn { display: block; width: 240px; padding: 14px 24px; margin: 10px auto; background: transparent; border: 1px solid #d4a843; color: #d4a843; font-family: Georgia, serif; font-size: 16px; letter-spacing: 2px; cursor: pointer; transition: background 0.2s; }
+    .menu-btn:hover { background: #d4a84320; }
+    #game-screen { background: #1a0a00; padding: 0; }
+    #game-screen.active { display: block; }
+    .game-layout { display: grid; grid-template-columns: 185px 1fr 205px; height: 100vh; }
+    .left-panel, .right-panel { background: #120800; display: flex; flex-direction: column; padding: 10px; gap: 8px; overflow-y: auto; }
+    .left-panel { border-right: 1px solid #3d2000; }
+    .right-panel { border-left: 1px solid #3d2000; }
+    .panel-title { font-size: 15px; color: #d4a843; letter-spacing: 3px; text-transform: uppercase; border-bottom: 1px solid #3d2000; padding-bottom: 5px; margin-bottom: 3px; }
+    .resource-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; }
+    .res-token { display: flex; align-items: center; gap: 4px; font-size: 16px; padding: 3px 5px; border-radius: 3px; background: #1e1000; }
+    .res-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .res-W { background: #3a8cc4; } .res-E { background: #6b4c2a; } .res-F { background: #c44a1a; } .res-L { background: #d4c060; } .res-D { background: #6a3a9a; }
+    .hand-area { flex: 1; overflow-y: auto; }
+    .hand-card { background: #1e1000; border: 1px solid #3d2000; border-radius: 3px; padding: 5px; margin-bottom: 5px; cursor: pointer; transition: border-color 0.15s; }
+    .hand-card:hover { border-color: #d4a843; } .hand-card.selected { border-color: #d4a843; background: #2a1800; } .hand-card.unplayable { opacity: 0.45; cursor: default; }
+    .hc-name { font-size: 13px; color: #f0e6d0; font-weight: bold; margin-bottom: 1px; }
+    .hc-type { font-size: 11px; color: #a08060; margin-bottom: 2px; }
+    .hc-cost { font-size: 11px; color: #d4a843; } .hc-stats { font-size: 11px; color: #c0a080; }
+    .center-area { display: flex; flex-direction: column; }
+    .player-info-bar { display: flex; align-items: center; justify-content: space-between; padding: 6px 12px; background: #120800; border-bottom: 1px solid #3d2000; }
+    .glory-val { font-size: 20px; color: #d4a843; font-weight: bold; } .glory-label { font-size: 12px; color: #a08060; }
+    .glory-display { display: flex; align-items: center; gap: 6px; }
+    .phase-bar { background: #0d0500; border-bottom: 1px solid #3d2000; display: flex; align-items: center; justify-content: center; }
+    .phase-tab { padding: 4px 8px; font-size: 11px; color: #a08060; letter-spacing: 1px; border-right: 1px solid #3d2000; }
+    .phase-tab.active { color: #d4a843; background: #1e1000; }
+    .battlefield-wrap { flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; background: #1a0a00; padding: 4px; }
+    .battlefield { display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(8, 1fr); gap: 2px; width: 100%; max-width: 430px; }
+    .bf-cell { aspect-ratio: 1; border-radius: 3px; border: 1px solid #3d2000; display: flex; flex-direction: column; align-items: stretch; cursor: pointer; position: relative; transition: all 0.12s; min-height: 42px; overflow: hidden; }
+    .bf-cell .zone-label { font-size: 9px; color: #ffffff20; position: absolute; top: 2px; left: 2px; z-index: 1; }
+    .zone-rz_p1 { background: #001a0d; } .zone-rz_p2 { background: #1a0000; } .zone-burz_p1 { background: #002a18; } .zone-burz_p2 { background: #2a0010; } .zone-ad_p1 { background: #0a1220; } .zone-ad_p2 { background: #200a10; } .zone-bf { background: #141008; }
+    .bf-cell.highlight-move { border-color: #00cc66 !important; background: #003318 !important; }
+    .bf-cell.highlight-attack { border-color: #cc2200 !important; background: #220000 !important; cursor: crosshair; }
+    .bf-cell.highlight-recruit { border-color: #d4a843 !important; background: #2a1800 !important; }
+    .bf-cell.highlight-obstacle { border-color: #aa8800 !important; background: #221800 !important; }
+    .bf-cell.highlight-obstacle-preview { border-color: #554400 !important; background: #181000 !important; opacity: 0.7; cursor: not-allowed !important; }
+    .bf-cell.highlight-anchor { border-color: #ffcc00 !important; background: #332200 !important; box-shadow: 0 0 6px #ffcc0060; }
+    .cell-stack { display: flex; flex-direction: column; gap: 1px; padding: 1px; width: 100%; height: 100%; }
+    .cell-layer { border-radius: 2px; border: 1px solid; font-size: 9px; padding: 1px 2px; line-height: 1.2; flex-shrink: 0; }
+    .layer-conqueror.p1 { border-color: #00cc66; background: #002211; color: #00cc66; }
+    .layer-conqueror.p2 { border-color: #ff4422; background: #220000; color: #ff4422; }
+    .layer-artillery.p1 { border-color: #4488ff; background: #001133; color: #4488ff; }
+    .layer-artillery.p2 { border-color: #ff8844; background: #221100; color: #ff8844; }
+    .layer-obstacle { border-color: #887755; background: #1a1408; color: #aa9966; }
+    .layer-trap { border-color: #aa4488; background: #1a0014; color: #cc66aa; }
+    .layer-trap.facedown { border-color: #554455; background: #110011; color: #554455; }
+    .layer-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .layer-stats { display: flex; justify-content: space-between; font-size: 8px; }
+    .owner-glyph { font-size: 7px; font-weight: bold; opacity: 0.85; margin-right: 1px; }
+    .layer-hp { height: 2px; border-radius: 1px; background: #cc2200; margin-top: 1px; }
+    .layer-hp-fill { height: 100%; border-radius: 1px; background: #00cc66; }
+    .layer-exhausted { opacity: 0.5; }
+    .action-btn { width: 100%; padding: 7px 8px; background: transparent; border: 1px solid #3d2000; color: #d4a843; font-family: Georgia, serif; font-size: 14px; letter-spacing: 1px; cursor: pointer; transition: all 0.15s; margin-bottom: 3px; border-radius: 2px; text-align: left; }
+    .action-btn:hover:not(:disabled) { background: #2a1800; border-color: #d4a843; }
+    .action-btn:disabled { opacity: 0.3; cursor: default; }
+    .action-btn.danger { border-color: #cc2200; color: #cc4422; }
+    .action-btn.danger:hover:not(:disabled) { background: #220000; }
+    .action-btn.safe { border-color: #00aa44; color: #00cc66; }
+    .action-btn.safe:hover:not(:disabled) { background: #003311; }
+    .action-btn.undo-btn { border-color: #6644aa; color: #aa88dd; }
+    .action-btn.undo-btn:hover:not(:disabled) { background: #1a0033; border-color: #aa88dd; }
+    .action-btn.cancel-btn { border-color: #555; color: #888; }
+    .action-btn.surrender-btn { border-color: #880000; color: #aa2222; }
+    .kbd { display: inline-block; font-size: 12px; font-family: monospace; background: #2a1800; border: 1px solid #664400; border-radius: 2px; padding: 0 3px; margin-left: 4px; color: #d4a84390; vertical-align: middle; }
+    .log-area { flex: 1; overflow-y: auto; background: #0d0500; border: 1px solid #3d2000; border-radius: 3px; padding: 5px; min-height: 80px; }
+    .log-entry { font-size: 11px; color: #a08060; padding: 2px 0; border-bottom: 1px solid #3d200015; line-height: 1.3; }
+    .log-entry.important { color: #d4a843; } .log-entry.combat { color: #cc4422; } .log-entry.p1 { color: #00cc66; } .log-entry.p2 { color: #ff4422; } .log-entry.undo { color: #aa88dd; }
+    .card-detail { background: #1e1000; border: 1px solid #3d2000; border-radius: 3px; padding: 7px; font-size: 12px; min-height: 90px; }
+    .cd-name { color: #d4a843; font-size: 14px; margin-bottom: 2px; } .cd-type { color: #a08060; font-size: 11px; margin-bottom: 3px; }
+    .cd-text { color: #c0b090; line-height: 1.4; } .cd-stats { margin-top: 5px; display: flex; gap: 6px; flex-wrap: wrap; }
+    .cd-stat { color: #d4a843; font-size: 12px; } .cd-weakness { font-size: 11px; color: #cc4422; margin-top: 3px; }
+    .modal-overlay { display: none; position: fixed; inset: 0; background: #000000cc; z-index: 100; align-items: center; justify-content: center; }
+    .modal-overlay.active { display: flex; }
+    .modal-box { background: #1a0a00; border: 1px solid #d4a843; padding: 22px; max-width: 460px; width: 95%; border-radius: 4px; max-height: 92vh; overflow-y: auto; }
+    .modal-title { font-size: 20px; color: #d4a843; margin-bottom: 10px; letter-spacing: 2px; }
+    .modal-body { font-size: 14px; color: #c0b090; line-height: 1.6; margin-bottom: 16px; }
+    .modal-btns { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+    .modal-btn { padding: 7px 16px; border: 1px solid #d4a843; background: transparent; color: #d4a843; font-family: Georgia, serif; font-size: 14px; cursor: pointer; border-radius: 2px; }
+    .modal-btn:hover { background: #2a1800; } .modal-btn.secondary { border-color: #3d2000; color: #a08060; }
+    #setup-screen { background: radial-gradient(ellipse at center, #2d0a00 0%, #1a0a00 70%); padding: 20px; }
+    .setup-box { background: #1a0a00; border: 1px solid #d4a843; padding: 26px; max-width: 500px; width: 95%; border-radius: 4px; }
+    .setup-title { font-size: 20px; color: #d4a843; letter-spacing: 3px; margin-bottom: 18px; text-align: center; }
+    .setup-field { margin-bottom: 14px; } .setup-label { font-size: 11px; color: #a08060; letter-spacing: 1px; display: block; margin-bottom: 5px; }
+    .setup-input { width: 100%; padding: 7px 10px; background: #0d0500; border: 1px solid #3d2000; color: #f0e6d0; font-family: Georgia, serif; font-size: 14px; border-radius: 2px; }
+    .setup-input:focus { outline: none; border-color: #d4a843; }
+    .setup-row { display: flex; gap: 12px; } .setup-row .setup-field { flex: 1; }
+    fieldset { border: none; padding: 0; }
+    .setup-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
+    .r { display: none; }     .rl { padding: 5px 12px; border: 1px solid #3d2000; color: #a08060; font-size: 12px; cursor: pointer; border-radius: 2px; transition: all 0.15s; display: inline-block; margin-right: 6px; margin-bottom: 4px; }
+    .r:checked + .rl { border-color: #d4a843; color: #d4a843; background: #2a1800; }
+    .final-charge-badge { background: #cc220020; border: 1px solid #cc2200; color: #cc4422; font-size: 8px; padding: 1px 5px; border-radius: 2px; }
+    .ab { display: inline-block; font-size: 11px; padding: 1px 5px; border-radius: 2px; margin-left: 3px; }
+    .ab-W { background: #0a2a40; color: #3a8cc4; } .ab-E { background: #2a1a08; color: #9a7040; } .ab-F { background: #3a1000; color: #c44a1a; } .ab-L { background: #2a2800; color: #c8b840; } .ab-D { background: #1a0a2a; color: #8a4ab4; } .ab-NA, .ab-Universal { background: #1e1e1e; color: #888; }
+    .dmg-badge { position: absolute; bottom: 1px; right: 1px; z-index: 4; background: #cc2200; color: #fff; font-size: 8px; font-weight: bold; padding: 0 3px; border-radius: 3px; pointer-events: none; box-shadow: 0 0 3px #000; }
+    .dmg-badge.lethal { background: #ffcc00; color: #1a0a00; }
+    .dmg-badge .wk { color: #ffd0d0; font-size: 7px; }
+    .af-panel { background: #0d0500; border: 1px solid #3d2000; border-radius: 3px; padding: 6px; }
+    .af-panel-title { font-size: 13px; color: #d4a843; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 5px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
+    .af-toggle-all { font-size: 12px; color: #a08060; letter-spacing: 0; text-transform: none; border: 1px solid #3d2000; padding: 1px 5px; border-radius: 2px; background: transparent; cursor: pointer; }
+    .af-toggle-all:hover { color: #d4a843; border-color: #d4a843; }
+    .af-rows { display: flex; flex-direction: column; gap: 4px; }
+    .af-row { display: flex; align-items: center; gap: 6px; font-size: 10px; color: #c0b090; cursor: pointer; padding: 2px 0; }
+    .af-row:hover { color: #f0e6d0; }
+    .af-switch { position: relative; width: 28px; height: 14px; flex-shrink: 0; }
+    .af-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .af-slider { position: absolute; inset: 0; background: #2a1000; border: 1px solid #3d2000; border-radius: 7px; transition: background 0.2s; }
+    .af-slider::before { content: ''; position: absolute; width: 10px; height: 10px; left: 1px; top: 1px; background: #a08060; border-radius: 50%; transition: transform 0.2s; }
+    .af-switch input:checked + .af-slider { background: #1a3a10; border-color: #00aa44; }
+    .af-switch input:checked + .af-slider::before { transform: translateX(14px); background: #00cc66; }
+    .af-label { flex: 1; line-height: 1.3; }
+    .turn-info { text-align: center; }
+    .turn-player-name { font-size: 13px; color: #d4a843; }
+    .turn-charge { font-size: 10px; color: #a08060; }
+    .deck-info { font-size: 10px; color: #a08060; }
+    .kbd-hint { font-size: 9px; color: #a08060; text-align: center; padding: 2px 0; letter-spacing: 1px; }
+    #deckbuilder-screen { background: #1a0a00; padding: 0; }
+    #deckbuilder-screen.active { display: block; }
+    .db-layout { display: grid; grid-template-columns: 1fr 220px 260px; height: 100vh; }
+    .db-library { background: #0d0500; border-right: 1px solid #3d2000; display: flex; flex-direction: column; padding: 12px; overflow: hidden; }
+    .db-deck-panel { background: #120800; border-right: 1px solid #3d2000; display: flex; flex-direction: column; padding: 12px; overflow: hidden; }
+    .db-detail-panel { background: #0a0500; display: flex; flex-direction: column; padding: 12px; overflow-y: auto; }
+    .db-title { font-size: 19px; color: #d4a843; letter-spacing: 3px; margin-bottom: 10px; }
+    .db-filters { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 8px; }
+    .db-filter-btn { padding: 3px 9px; border: 1px solid #3d2000; background: transparent; color: #a08060; font-size: 13px; cursor: pointer; border-radius: 2px; font-family: Georgia, serif; }
+    .db-filter-btn.active { border-color: #d4a843; color: #d4a843; background: #1e1000; }
+    .db-search { width: 100%; padding: 6px 10px; background: #0d0500; border: 1px solid #3d2000; color: #f0e6d0; font-family: Georgia, serif; font-size: 15px; border-radius: 2px; margin-bottom: 8px; }
+    .db-search:focus { outline: none; border-color: #d4a843; }
+    .db-card-grid { flex: 1; overflow-y: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+    .db-card { background: #1e1000; border: 1px solid #3d2000; border-radius: 3px; padding: 5px; cursor: pointer; transition: border-color 0.15s; position: relative; }
+    .db-card:hover { border-color: #d4a843; } .db-card.maxed { opacity: 0.4; cursor: default; }
+    .db-card-name { font-size: 11px; color: #f0e6d0; font-weight: bold; margin-bottom: 2px; }
+    .db-card-meta { font-size: 9px; color: #a08060; } .db-card-cost { font-size: 9px; color: #d4a843; }
+    .db-card-count { position: absolute; top: 4px; right: 4px; background: #d4a843; color: #1a0a00; font-size: 10px; font-weight: bold; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    .db-card-info { position: absolute; bottom: 4px; right: 4px; background: #3d2000; border: none; color: #d4a843; font-size: 9px; cursor: pointer; width: 16px; height: 16px; border-radius: 50%; line-height: 16px; text-align: center; padding: 0; }
+    .db-card-info:hover { background: #d4a843; color: #1a0a00; }
+    .db-deck-list { flex: 1; overflow-y: auto; margin-bottom: 8px; }
+    .db-deck-entry { display: flex; align-items: center; gap: 5px; padding: 3px 5px; background: #1e1000; border: 1px solid #3d2000; border-radius: 3px; margin-bottom: 3px; font-size: 10px; }
+    .db-deck-entry-name { flex: 1; color: #f0e6d0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .db-deck-entry-count { color: #d4a843; font-size: 11px; min-width: 18px; text-align: center; }
+    .db-deck-entry-remove { background: #3d2000; border: none; color: #cc4422; cursor: pointer; width: 16px; height: 16px; border-radius: 2px; font-size: 11px; line-height: 1; }
+    .db-deck-stats { font-size: 11px; color: #a08060; margin-bottom: 6px; }
+    .db-deck-valid { color: #00cc66; } .db-deck-invalid { color: #cc4422; }
+    .db-btn { width: 100%; padding: 7px; background: transparent; border: 1px solid #d4a843; color: #d4a843; font-family: Georgia, serif; font-size: 11px; cursor: pointer; border-radius: 2px; margin-bottom: 4px; }
+    .db-btn:hover { background: #2a1800; } .db-btn.sec { border-color: #3d2000; color: #a08060; }
+    .db-presets { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 6px; }
+    .db-preset-btn { padding: 3px 7px; border: 1px solid #3d2000; background: transparent; color: #a08060; font-size: 10px; cursor: pointer; border-radius: 2px; font-family: Georgia, serif; }
+    .db-preset-btn:hover { border-color: #d4a843; color: #d4a843; }
+    .db-detail-empty { color: #a08060; font-size: 11px; text-align: center; margin-top: 40px; }
+    .db-detail-name { font-size: 15px; color: #d4a843; font-weight: bold; margin-bottom: 4px; }
+    .db-detail-meta { font-size: 10px; color: #a08060; margin-bottom: 8px; }
+    .db-detail-section { margin-bottom: 10px; }
+    .db-detail-label { font-size: 9px; color: #d4a843; letter-spacing: 2px; text-transform: uppercase; border-bottom: 1px solid #3d2000; padding-bottom: 3px; margin-bottom: 5px; }
+    .db-detail-row { display: flex; justify-content: space-between; font-size: 11px; color: #f0e6d0; padding: 2px 0; }
+    .db-detail-row span:first-child { color: #a08060; }
+    .db-detail-text { font-size: 11px; color: #c0b090; line-height: 1.5; }
+    .db-detail-weak { color: #cc4422 !important; }
+    .db-detail-clear { font-size: 10px; color: #00aa44; margin-top: 3px; }
+    .db-detail-add { width: 100%; padding: 7px; background: transparent; border: 1px solid #d4a843; color: #d4a843; font-family: Georgia, serif; font-size: 11px; cursor: pointer; border-radius: 2px; margin-top: 8px; }
+    .db-detail-add:hover { background: #2a1800; } .db-detail-add:disabled { opacity: 0.4; cursor: default; }
+    ::-webkit-scrollbar { width: 3px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: #3d2000; border-radius: 2px; }
+  </style>
+</head>
+<body>
+
+  <main id="title-screen" class="screen active">
+    <h1 class="game-title">RECONQUESTA</h1>
+    <p class="game-subtitle">THE CONQUEST BEGINS</p>
+    <nav aria-label="Main menu">
+      <button class="menu-btn" id="btn-new-game">⚔ New Game</button>
+      <button class="menu-btn" id="btn-tutorial">📘 Interactive Tutorial</button>
+      <button class="menu-btn" id="btn-deck-builder">🃏 Deck Builder</button>
+      <button class="menu-btn" id="btn-rules">📜 How to Play</button>
+      <button class="menu-btn" id="btn-card-library">📖 Card Library</button>
+    </nav>
+    <div style="position:fixed;bottom:12px;right:16px;font-size:14px;color:#a08060;letter-spacing:1px;font-family:Georgia,serif;">v 1.3.5</div>
+  </main>
+
+  <div id="tutorial-overlay" style="display:none;position:fixed;inset:0;z-index:200;pointer-events:none;">
+    <div id="tut-mask" style="position:absolute;inset:0;background:transparent;pointer-events:none;"></div>
+    <div id="tut-box" style="
+      display:none;position:absolute;pointer-events:all;
+      background:#1a0a00;border:1px solid #d4a843;border-radius:4px;
+      padding:18px 20px;max-width:460px;width:90%;z-index:201;
+      font-family:Georgia,serif;color:#f0e6d0;box-shadow:0 4px 24px #000a;
+    ">
+      <div id="tut-step-label" style="font-size:10px;color:#a08060;letter-spacing:2px;margin-bottom:6px;text-transform:uppercase;"></div>
+      <div id="tut-title" style="font-size:16px;color:#d4a843;margin-bottom:8px;font-weight:normal;"></div>
+      <div id="tut-body" style="font-size:13px;color:#c0b090;line-height:1.6;margin-bottom:14px;"></div>
+      <div id="tut-action-hint" style="font-size:11px;color:#d4a843;font-style:italic;margin-bottom:10px;"></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;align-items:center;white-space:nowrap;">
+        <button id="tut-exit" style="
+          padding:5px 12px;border:1px solid #880000;background:transparent;
+          color:#aa2222;font-family:Georgia,serif;font-size:12px;cursor:pointer;border-radius:2px;
+        ">Exit Tutorial</button>
+        <button id="tut-prev" style="
+          padding:7px 14px;border:1px solid #6644aa;background:transparent;
+          color:#aa88dd;font-family:Georgia,serif;font-size:13px;cursor:pointer;border-radius:2px;
+        ">← Back <span class="kbd" style="color:#aa88dd90;border-color:#6644aa;background:#1a0033;">B</span></button>
+        <button id="tut-next" style="
+          padding:7px 16px;border:1px solid #d4a843;background:transparent;
+          color:#d4a843;font-family:Georgia,serif;font-size:13px;cursor:pointer;border-radius:2px;
+        ">Next →</button>
+      </div>
+    </div>
+  </div>
+
+  <section id="setup-screen" class="screen" aria-label="Game setup">
+    <div class="setup-box">
+      <h2 class="setup-title">PREPARE FOR CONQUEST</h2>
+      <div class="setup-row">
+        <div class="setup-field">
+          <label class="setup-label" for="p1name">MAJESTY 1 NAME</label>
+          <input class="setup-input" id="p1name" type="text" value="Majesty 1">
+        </div>
+        <div class="setup-field">
+          <label class="setup-label" for="p2name">MAJESTY 2 NAME</label>
+          <input class="setup-input" id="p2name" type="text" value="Majesty 2">
+        </div>
+      </div>
+      <fieldset class="setup-field">
+        <legend class="setup-label">GAME MODE</legend>
+        <input class="r" type="radio" name="mode" id="mode-pvp" value="pvp" checked><label class="rl" for="mode-pvp">⚔ Pass &amp; Play</label>
+        <input class="r" type="radio" name="mode" id="mode-ai" value="ai"><label class="rl" for="mode-ai">🤖 vs AI</label>
+      </fieldset>
+      <fieldset class="setup-field">
+        <legend class="setup-label">STARTING RESOURCES</legend>
+        <input class="r" type="radio" name="resbefore" id="res-before" value="before" checked><label class="rl" for="res-before">Before Hand</label>
+        <input class="r" type="radio" name="resbefore" id="res-after" value="after"><label class="rl" for="res-after">After Hand</label>
+      </fieldset>
+      <fieldset class="setup-field">
+        <legend class="setup-label">DECK — MAJESTY 1</legend>
+        <input class="r" type="radio" name="deck1" id="d1-bal" value="balanced" checked><label class="rl" for="d1-bal">Balanced</label>
+        <input class="r" type="radio" name="deck1" id="d1-fire" value="fire"><label class="rl" for="d1-fire">🔥 Fire</label>
+        <input class="r" type="radio" name="deck1" id="d1-water" value="water"><label class="rl" for="d1-water">💧 Water</label>
+        <input class="r" type="radio" name="deck1" id="d1-dark" value="dark"><label class="rl" for="d1-dark">🌑 Dark</label>
+        <input class="r" type="radio" name="deck1" id="d1-earth" value="earth"><label class="rl" for="d1-earth">🌍 Earth</label>
+        <input class="r" type="radio" name="deck1" id="d1-light" value="light"><label class="rl" for="d1-light">✨ Light</label>
+        <input class="r" type="radio" name="deck1" id="d1-custom" value="custom"><label class="rl" for="d1-custom" id="d1-custom-label">✏ Custom</label>
+      </fieldset>
+      <fieldset class="setup-field">
+        <legend class="setup-label">DECK — MAJESTY 2</legend>
+        <input class="r" type="radio" name="deck2" id="d2-bal" value="balanced" checked><label class="rl" for="d2-bal">Balanced</label>
+        <input class="r" type="radio" name="deck2" id="d2-fire" value="fire"><label class="rl" for="d2-fire">🔥 Fire</label>
+        <input class="r" type="radio" name="deck2" id="d2-water" value="water"><label class="rl" for="d2-water">💧 Water</label>
+        <input class="r" type="radio" name="deck2" id="d2-dark" value="dark"><label class="rl" for="d2-dark">🌑 Dark</label>
+        <input class="r" type="radio" name="deck2" id="d2-earth" value="earth"><label class="rl" for="d2-earth">🌍 Earth</label>
+        <input class="r" type="radio" name="deck2" id="d2-light" value="light"><label class="rl" for="d2-light">✨ Light</label>
+        <input class="r" type="radio" name="deck2" id="d2-custom" value="custom"><label class="rl" for="d2-custom" id="d2-custom-label">✏ Custom</label>
+      </fieldset>
+      <div class="setup-actions">
+        <button class="modal-btn secondary" id="btn-setup-back">Back</button>
+        <button class="modal-btn" id="btn-setup-start">Begin Conquest →</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="deckbuilder-screen" class="screen" aria-label="Deck builder">
+    <div class="db-layout">
+      <aside class="db-library" aria-label="Card library">
+        <h2 class="db-title">CARD LIBRARY</h2>
+        <input class="db-search" id="db-search" type="search" placeholder="Search cards…">
+        <div class="db-filters" id="db-filters" role="toolbar" aria-label="Filter by type or attribute"></div>
+        <div class="db-card-grid" id="db-card-grid" role="list"></div>
+      </aside>
+      <section class="db-deck-panel" aria-label="Your deck">
+        <h2 class="db-title">YOUR DECK</h2>
+        <div class="db-presets" id="db-presets" role="toolbar" aria-label="Preset decks"></div>
+        <p class="db-deck-stats" id="db-deck-stats" aria-live="polite"></p>
+        <div class="db-deck-list" id="db-deck-list" role="list"></div>
+        <button class="db-btn" id="btn-db-save">💾 Save Custom Deck</button>
+        <button class="db-btn" id="btn-db-clear">🗑 Clear</button>
+        <button class="db-btn sec" id="btn-db-back">← Back to Title</button>
+      </section>
+      <aside class="db-detail-panel" aria-label="Card details">
+        <h2 class="panel-title">CARD DETAILS</h2>
+        <p class="db-detail-empty" id="db-detail-empty">Click any card to inspect it</p>
+        <div id="db-detail-content" style="display:none;"></div>
+      </aside>
+    </div>
+  </section>
+
+  <section id="game-screen" class="screen" aria-label="Game board">
+    <div class="game-layout">
+      <aside class="left-panel" aria-label="Player hand and resources">
+        <h2 class="panel-title" id="hand-panel-title">YOUR HAND</h2>
+        <div class="hand-area" id="hand-area" role="list" aria-label="Cards in hand"></div>
+        <div>
+          <h3 class="panel-title">RESOURCES</h3>
+          <div class="resource-grid" id="resource-display" aria-label="Resource counts"></div>
+        </div>
+        <div>
+          <h3 class="panel-title">DECK / UNDERCROFT</h3>
+          <p class="deck-info" id="deck-info">—</p>
+        </div>
+      </aside>
+
+      <main class="center-area">
+        <header class="player-info-bar" aria-label="Opponent info">
+          <div class="glory-display">
+            <span class="glory-val" id="opp-glory">20</span>
+            <span class="glory-label">GLORY</span>
+          </div>
+          <span id="opp-name" style="font-size:19px;color:#d4a843;"></span>
+          <span id="opp-fc"></span>
+          <span id="opp-deck-info" style="font-size:17px;color:#d4a843;"></span>
+        </header>
+        <nav class="phase-bar" role="tablist" aria-label="Turn phases">
+          <div class="phase-tab" id="ph-draw"       role="tab" aria-selected="false">DRAW</div>
+          <div class="phase-tab" id="ph-pillage"    role="tab" aria-selected="false">PILLAGE</div>
+          <div class="phase-tab" id="ph-strategize" role="tab" aria-selected="false">STRATEGIZE</div>
+          <div class="phase-tab" id="ph-combat"     role="tab" aria-selected="false">COMBAT</div>
+          <div class="phase-tab" id="ph-recover"    role="tab" aria-selected="false">RECOVER</div>
+          <div class="phase-tab" id="ph-end"        role="tab" aria-selected="false">END</div>
+        </nav>
+        <div class="battlefield-wrap">
+          <div class="battlefield" id="battlefield" role="grid" aria-label="Battlefield"></div>
+        </div>
+        <footer class="player-info-bar" aria-label="Active player info">
+          <div class="glory-display">
+            <span class="glory-val" id="act-glory">20</span>
+            <span class="glory-label">GLORY</span>
+          </div>
+          <span id="act-name" style="font-size:19px;color:#d4a843;"></span>
+          <span id="act-final-charge"></span>
+        </footer>
+      </main>
+
+      <aside class="right-panel" aria-label="Actions and game log">
+        <div class="turn-info">
+          <p class="turn-player-name" id="turn-player-label">—</p>
+          <p class="turn-charge"      id="turn-charge-label">Charge 1</p>
+        </div>
+        <nav aria-label="Turn actions">
+          <button class="action-btn safe"         id="btn-draw">Draw Card <span class="kbd">D</span></button>
+          <button class="action-btn"              id="btn-pillage"    disabled>Pillage Resources <span class="kbd">P</span></button>
+          <button class="action-btn"              id="btn-strategize" disabled>Strategize Phase <span class="kbd">S</span></button>
+          <button class="action-btn danger"       id="btn-combat"     disabled>Combat Phase <span class="kbd">C</span></button>
+          <button class="action-btn"              id="btn-recover"    disabled>Recover Phase <span class="kbd">V</span></button>
+          <button class="action-btn danger"       id="btn-end"        disabled>End Turn <span class="kbd">E</span></button>
+          <button class="action-btn"              id="btn-recruit"    disabled>Recruit / Play Card <span class="kbd">R</span></button>
+          <button class="action-btn"              id="btn-move"       disabled>Move Selected <span class="kbd">M</span></button>
+          <button class="action-btn cancel-btn"   id="btn-cancel"     disabled>Cancel <span class="kbd">Esc</span></button>
+          <button class="action-btn undo-btn"     id="btn-undo"       disabled>↩ Undo <span class="kbd">U</span></button>
+          <button class="action-btn surrender-btn" id="btn-surrender">⚑ Surrender</button>
+        </nav>
+        <p class="kbd-hint">D P S R M C V E Esc U=Undo</p>
+        <button class="action-btn" id="btn-autoflow" style="border-color:#554400;color:#aa8800;">⚙ Auto-Flow Settings</button>
+        <div>
+          <h3 class="panel-title">SELECTED</h3>
+          <div class="card-detail" id="card-detail"><p style="color:#a08060;font-size:10px;">Click a card to inspect</p></div>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;min-height:0;">
+          <h3 class="panel-title">BATTLE LOG</h3>
+          <div class="log-area" id="log-area" role="log" aria-live="polite" aria-atomic="false" aria-label="Battle log"></div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <div id="cell-tooltip" style="display:none;position:fixed;z-index:250;pointer-events:none;background:#1a0a00;border:1px solid #d4a843;border-radius:4px;padding:8px 10px;max-width:240px;font-family:Georgia,serif;font-size:11px;color:#f0e6d0;box-shadow:0 4px 16px #000a;line-height:1.4;"></div>
+
+  <!-- Pass-and-play curtain -->
+  <div id="curtain-overlay" style="display:none;position:fixed;inset:0;background:#0d0500;z-index:300;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px;">
+    <div style="font-size:36px;color:#d4a843;letter-spacing:6px;margin-bottom:12px;">RECONQUESTA</div>
+    <div id="curtain-player-name" style="font-size:22px;color:#f0e6d0;margin-bottom:8px;"></div>
+    <div style="font-size:13px;color:#a08060;margin-bottom:40px;letter-spacing:2px;">YOUR TURN</div>
+    <button id="curtain-btn" style="padding:14px 36px;border:1px solid #d4a843;background:transparent;color:#d4a843;font-family:Georgia,serif;font-size:16px;letter-spacing:2px;cursor:pointer;border-radius:2px;">Begin Turn</button>
+  </div>
+
+  <!-- Auto-Flow modal -->
+  <div class="modal-overlay" id="af-modal" role="dialog" aria-modal="true" aria-labelledby="af-modal-title" style="z-index:150;">
+    <div class="modal-box" style="max-width:340px;">
+      <h2 class="modal-title" id="af-modal-title">⚙ Auto-Flow Settings</h2>
+      <div class="modal-body" style="margin-bottom:10px;">
+        <div class="af-rows" id="af-rows"></div>
+      </div>
+      <div class="modal-btns" style="justify-content:space-between;">
+        <button class="modal-btn secondary" id="af-toggle-all" type="button">Toggle All</button>
+        <button class="modal-btn" id="af-close">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card Library backdrop screen (kept rendered behind the detail modal) -->
+  <div id="library-backdrop" style="display:none;position:fixed;inset:0;z-index:90;background:#1a0a00;overflow-y:auto;padding:30px 20px;">
+    <div style="max-width:900px;margin:0 auto;">
+      <h2 style="font-size:22px;color:#d4a843;letter-spacing:3px;margin-bottom:16px;">📖 CARD LIBRARY</h2>
+      <div id="library-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"></div>
+      <button id="btn-library-back" onclick="closeCardList();showScreen('title-screen');" style="margin-top:20px;padding:8px 18px;border:1px solid #3d2000;background:transparent;color:#a08060;font-family:Georgia,serif;font-size:13px;cursor:pointer;border-radius:2px;">← Back to Title</button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-box">
+      <h2 class="modal-title" id="modal-title"></h2>
+      <div class="modal-body"  id="modal-body"></div>
+      <div class="modal-btns" id="modal-btns"></div>
+    </div>
+  </div>
+
+<script>
+var autoSettings={autoDrawOnTurnStart:true,autoAdvancePillageToStrategize:true,autoPlayFromHand:true,autoCombatSelect:true,autoMoveSelect:true,autoAdvanceCombatToRecover:true,passCurtain:true};
+var AF_LABELS={autoDrawOnTurnStart:'Auto-draw at turn start',autoAdvancePillageToStrategize:'Auto-advance Pillage→Strategize',autoPlayFromHand:'Auto-play from hand (click card)',autoCombatSelect:'Auto-combat on unit click',autoMoveSelect:'Auto-move on unit click',autoAdvanceCombatToRecover:'Auto-advance Combat→Recover when no attacks available',passCurtain:'Pass-and-play curtain between turns (PvP only)'};
+function renderAutoFlowPanel(){var rows=document.getElementById('af-rows');if(!rows)return;rows.innerHTML='';Object.keys(autoSettings).forEach(function(key){var row=document.createElement('label');row.className='af-row';var sw=document.createElement('span');sw.className='af-switch';var inp=document.createElement('input');inp.type='checkbox';inp.checked=autoSettings[key];inp.setAttribute('aria-label',AF_LABELS[key]);inp.onchange=function(){autoSettings[key]=inp.checked;};var sl=document.createElement('span');sl.className='af-slider';sw.appendChild(inp);sw.appendChild(sl);var lbl=document.createElement('span');lbl.className='af-label';lbl.textContent=AF_LABELS[key];row.appendChild(sw);row.appendChild(lbl);rows.appendChild(row);});}
+var OWNER_GLYPH=['▲ P1','▼ P2'];
+var OWNER_LABEL=['P1','P2'];
+var CARDS={wood_hunter:{id:"wood_hunter",name:"Wood Hunter",type:"Conqueror",subtype:"C/D",attr:"E",cost:{E:2,D:1},move:1,range:"1,3",atk:2,hp:5,maxhp:5,weakness:[{a:"F",v:2},{a:"L",v:1}],max:3,text:"Long-range hunter. Aerial range 1-3, Move 1."},archer:{id:"archer",name:"Archer",type:"Conqueror",subtype:"C/D",attr:"Universal",cost:{D:1,E:2},move:1,range:"1,3",atk:2,hp:5,maxhp:5,weakness:[{a:"F",v:2},{a:"L",v:1}],max:3,text:"Long-range infantry. Aerial range 1-3."},soldier:{id:"soldier",name:"Soldier",type:"Conqueror",subtype:"C/D",attr:"Universal",cost:{E:2},move:2,range:"1",atk:3,hp:6,maxhp:6,weakness:[{a:"F",v:3},{a:"L",v:1}],max:3,text:"Reliable infantry. Move 2."},black_krawling:{id:"black_krawling",name:"Black Krawling",type:"Conqueror",subtype:"C/D",attr:"D",cost:{D:2},move:4,range:"1",atk:3,hp:1,maxhp:1,weakness:[],max:3,text:"Move 4. Fast Dark scout."},blue_krawling:{id:"blue_krawling",name:"Blue Krawling",type:"Conqueror",subtype:"C/D",attr:"W",cost:{W:2},move:4,range:"1",atk:3,hp:1,maxhp:1,weakness:[],max:3,text:"Move 4. Fast Water scout."},grass_krawler:{id:"grass_krawler",name:"Grass Krawler",type:"Conqueror",subtype:"C/D",attr:"E",cost:{E:2},move:4,range:"1",atk:3,hp:1,maxhp:1,weakness:[],max:3,text:"Move 4. Fast Earth scout."},red_krawler:{id:"red_krawler",name:"Red Krawler",type:"Conqueror",subtype:"C/D",attr:"F",cost:{F:2},move:4,range:"1",atk:3,hp:1,maxhp:1,weakness:[],max:3,text:"Move 4. Fast Fire scout."},light_krawler:{id:"light_krawler",name:"Light Krawler",type:"Conqueror",subtype:"C/D",attr:"L",cost:{L:2},move:4,range:"1",atk:3,hp:1,maxhp:1,weakness:[],max:3,text:"Move 4. Fast Light scout."},blue_sorcerer:{id:"blue_sorcerer",name:"Blue Sorcerer",type:"Conqueror",subtype:"C/D",attr:"W",cost:{W:3},move:2,range:"1",atk:3,hp:8,maxhp:8,weakness:[{a:"E",v:3},{a:"L",v:2}],max:3,sorcererAttr:"W",text:"When you recruit a Water Conqueror, draw 1 card."},evil_sorcerer:{id:"evil_sorcerer",name:"Evil Sorcerer",type:"Conqueror",subtype:"C/D",attr:"D",cost:{D:3},move:2,range:"1",atk:3,hp:8,maxhp:8,weakness:[{a:"L",v:3},{a:"F",v:1}],max:3,sorcererAttr:"D",text:"When you recruit a Dark Conqueror, draw 1 card."},land_sorcerer:{id:"land_sorcerer",name:"Land Sorcerer",type:"Conqueror",subtype:"C/D",attr:"E",cost:{E:3},move:2,range:"1",atk:3,hp:8,maxhp:8,weakness:[{a:"F",v:3},{a:"D",v:2}],max:3,sorcererAttr:"E",text:"When you recruit an Earth Conqueror, draw 1 card."},pyro_sorcerer:{id:"pyro_sorcerer",name:"Pyro Sorcerer",type:"Conqueror",subtype:"C/D",attr:"F",cost:{F:3},move:2,range:"1",atk:3,hp:8,maxhp:8,weakness:[{a:"W",v:3},{a:"D",v:2}],max:3,sorcererAttr:"F",text:"When you recruit a Fire Conqueror, draw 1 card."},righteous_sorcerer:{id:"righteous_sorcerer",name:"Righteous Sorcerer",type:"Conqueror",subtype:"C/D",attr:"L",cost:{L:3},move:2,range:"1",atk:3,hp:8,maxhp:8,weakness:[{a:"D",v:3},{a:"E",v:2}],max:3,sorcererAttr:"L",text:"When you recruit a Light Conqueror, draw 1 card."},dark_dragon:{id:"dark_dragon",name:"Dark Dragon",type:"Conqueror",subtype:"C/D",attr:"D",cost:{D:3},move:2,range:"1",atk:3,hp:9,maxhp:9,weakness:[{a:"L",v:3},{a:"F",v:1}],max:3,text:"Dark dragon. Move 2."},earth_dragon:{id:"earth_dragon",name:"Earth Dragon",type:"Conqueror",subtype:"C/D",attr:"E",cost:{E:3},move:2,range:"1",atk:3,hp:9,maxhp:9,weakness:[{a:"F",v:3},{a:"L",v:2}],max:3,text:"Earth dragon. Move 2."},light_dragon:{id:"light_dragon",name:"Light Dragon",type:"Conqueror",subtype:"C/D",attr:"L",cost:{L:3},move:2,range:"1",atk:3,hp:9,maxhp:9,weakness:[{a:"D",v:3}],max:3,text:"Light dragon. Move 2."},red_dragon:{id:"red_dragon",name:"Red Dragon",type:"Conqueror",subtype:"C/D",attr:"F",cost:{F:3},move:2,range:"1",atk:3,hp:9,maxhp:9,weakness:[{a:"W",v:3},{a:"D",v:2}],max:3,text:"Fire dragon. Move 2."},water_dragon:{id:"water_dragon",name:"Water Dragon",type:"Conqueror",subtype:"C/D",attr:"W",cost:{W:3},move:2,range:"1",atk:3,hp:9,maxhp:9,weakness:[{a:"E",v:3},{a:"L",v:2}],max:3,text:"Water dragon. Move 2."},complete_darkness_dragon:{id:"complete_darkness_dragon",name:"Darkness Dragon",type:"Conqueror",subtype:"Legendary",attr:"D",cost:{D:5},move:1,range:"1-2",atk:5,hp:15,maxhp:15,weakness:[{a:"L",v:5}],max:3,text:"Legendary Dark Dragon. Splash range 1-2."},raging_red_dragon:{id:"raging_red_dragon",name:"Raging Red Dragon",type:"Conqueror",subtype:"Legendary",attr:"F",cost:{F:5},move:1,range:"1-2",atk:5,hp:15,maxhp:15,weakness:[{a:"W",v:4},{a:"D",v:2}],max:3,text:"Legendary Fire Dragon. Splash range 1-2."},supreme_bright_dragon:{id:"supreme_bright_dragon",name:"Supreme Bright Dragon",type:"Conqueror",subtype:"Legendary",attr:"L",cost:{L:5},move:1,range:"1-2",atk:5,hp:15,maxhp:15,weakness:[{a:"D",v:5}],max:3,text:"Legendary Light Dragon. Splash range 1-2."},ultimate_water_dragon:{id:"ultimate_water_dragon",name:"Ultimate Water Dragon",type:"Conqueror",subtype:"Legendary",attr:"W",cost:{W:5},move:1,range:"1-2",atk:5,hp:15,maxhp:15,weakness:[{a:"E",v:4},{a:"L",v:2}],max:3,text:"Legendary Water Dragon. Splash range 1-2."},whole_earth_dragon:{id:"whole_earth_dragon",name:"Whole Earth Dragon",type:"Conqueror",subtype:"Legendary",attr:"E",cost:{E:5},move:1,range:"1-2",atk:5,hp:15,maxhp:15,weakness:[{a:"W",v:4},{a:"L",v:2}],max:3,text:"Legendary Earth Dragon. Splash range 1-2."},cannon:{id:"cannon",name:"Cannon",type:"Artillery",subtype:"Land",attr:"NA",cost:{D:1,L:1,E:1},move:1,range:"2",atk:2,hp:6,maxhp:6,weakness:[{a:"F",v:2},{a:"D",v:1}],max:3,text:"Mobile artillery. Move 1."},archer_tower:{id:"archer_tower",name:"Archer Tower",type:"Artillery",subtype:"Land",attr:"NA",cost:{E:1,F:1,W:1},move:0,range:"1,2",atk:3,hp:8,maxhp:8,weakness:[{a:"F",v:3},{a:"W",v:1},{a:"D",v:1}],max:3,text:"Stationary tower. Aerial range 1-2, ATK 3."},catapult:{id:"catapult",name:"Catapult",type:"Artillery",subtype:"Land",attr:"NA",cost:{D:2,F:1,E:2},move:0,range:"2,3",atk:5,hp:10,maxhp:10,weakness:[{a:"F",v:4},{a:"W",v:3},{a:"D",v:2},{a:"L",v:1}],max:3,text:"Stationary. Aerial range 2-3."},giant_cannon:{id:"giant_cannon",name:"Giant Cannon",type:"Artillery",subtype:"Land",attr:"NA",cost:{D:2,E:1,F:1,W:1},move:0,range:"2",atk:5,hp:12,maxhp:12,weakness:[{a:"F",v:3},{a:"W",v:2},{a:"D",v:1}],max:3,text:"Massive stationary cannon. ATK 5, Range 2."},abandoned_barn:{id:"abandoned_barn",name:"Abandoned Barn",type:"Obstacle",subtype:"",attr:"NA",cost:{any:1},move:0,atk:0,hp:2,maxhp:2,weakness:[{a:"F",v:4},{a:"L",v:2}],max:3,text:"1x1. On placement: gain 1 resource of your choice."},large_stone_wall:{id:"large_stone_wall",name:"Large Stone Wall",type:"Obstacle",subtype:"",attr:"NA",cost:{any:4},move:0,atk:0,hp:9,maxhp:9,weakness:[{a:"W",v:3},{a:"E",v:2}],max:3,multiCell:true,cellShape:[[0,0],[0,1],[0,2]],anchorDesc:"leftmost cell",text:"Spans 3 columns (1x3). Click the LEFT cell to place."},small_stone_wall:{id:"small_stone_wall",name:"Small Stone Wall",type:"Obstacle",subtype:"",attr:"NA",cost:{any:2},move:0,atk:0,hp:6,maxhp:6,weakness:[],max:3,multiCell:true,cellShape:[[0,0],[0,1]],anchorDesc:"left cell",text:"Spans 2 columns (1x2). Click the LEFT cell to place."},wooden_barricade:{id:"wooden_barricade",name:"Wooden Barricade",type:"Obstacle",subtype:"",attr:"NA",cost:{E:2},move:0,atk:0,hp:5,maxhp:5,weakness:[{a:"F",v:3},{a:"L",v:1}],max:3,multiCell:true,cellShape:[[0,0],[0,1]],anchorDesc:"left cell",text:"Spans 2 columns (1x2). Click the LEFT cell to place."},raging_forest_fire:{id:"raging_forest_fire",name:"Raging Forest Fire",type:"Obstacle",subtype:"Land",attr:"F",cost:{F:2},move:0,atk:0,hp:1,maxhp:1,clearAttr:"W",weakness:[],max:2,text:"1x1. Cleared by Water Conqueror."},small_stream:{id:"small_stream",name:"Small Stream",type:"Obstacle",subtype:"Land",attr:"W",cost:{W:2},move:0,atk:0,hp:1,maxhp:1,clearAttr:"E",weakness:[],max:2,text:"1x1. Cleared by Earth Conqueror."},sunny_desert:{id:"sunny_desert",name:"Sunny Desert",type:"Obstacle",subtype:"Land",attr:"L",cost:{L:2},move:0,atk:0,hp:1,maxhp:1,clearAttr:"D",weakness:[],max:2,text:"1x1. Cleared by Dark Conqueror."},thick_forest:{id:"thick_forest",name:"Thick Forest",type:"Obstacle",subtype:"Land",attr:"E",cost:{E:2},move:0,atk:0,hp:1,maxhp:1,clearAttr:"F",weakness:[],max:2,text:"1x1. Cleared by Fire Conqueror."},thunder_storm:{id:"thunder_storm",name:"Thunder Storm",type:"Obstacle",subtype:"Land",attr:"D",cost:{D:2},move:0,atk:0,hp:1,maxhp:1,clearAttr:"L",weakness:[],max:2,text:"1x1. Cleared by Light Conqueror."},small_bomb:{id:"small_bomb",name:"Small Bomb",type:"Trap",subtype:"Land",attr:"NA",cost:{D:1,F:1},move:0,atk:3,hp:0,maxhp:0,weakness:[],max:3,facedown:true,text:"1x1 Trap. Face down. When attacked: deal 3 damage, then destroy."},armor:{id:"armor",name:"Armor",type:"Action",subtype:"Instant",attr:"NA",cost:{any:2},max:3,text:"No Weaknesses applied this Combat Phase."},bright_sky:{id:"bright_sky",name:"Bright Sky",type:"Action",subtype:"Basic Instant",attr:"L",cost:{L:1},targetAttr:"D",aoeAtk:2,range:"3x3",max:3,text:"All Dark units in a 3x3 area lose 2 HP."},counter_action:{id:"counter_action",name:"Counter Action",type:"Action",subtype:"Scheme",attr:"NA",cost:{any:2},max:3,text:"Stop an Action card from being played this turn."},depression:{id:"depression",name:"Depression",type:"Action",subtype:"Instant",attr:"NA",cost:{any:2},max:3,text:"Opponent gains only 2 different resources next Pillage."},energy_drain:{id:"energy_drain",name:"Energy Drain",type:"Action",subtype:"Instant",attr:"NA",cost:{any:2},max:3,text:"All attacks this Combat Phase deal -2 ATK."},meteor_shower:{id:"meteor_shower",name:"Meteor Shower",type:"Action",subtype:"Basic Instant",attr:"F",cost:{F:1},targetAttr:"E",aoeAtk:2,range:"3x3",max:3,text:"All Earth units in a 3x3 area lose 2 HP."},rain_spell:{id:"rain_spell",name:"Rain Spell",type:"Action",subtype:"Basic Instant",attr:"W",cost:{W:1},targetAttr:"F",aoeAtk:2,range:"3x3",max:3,text:"All Fire units in a 3x3 area lose 2 HP."},rock_slide:{id:"rock_slide",name:"Rock Slide",type:"Action",subtype:"Basic Instant",attr:"E",cost:{E:1},targetAttr:"W",aoeAtk:2,range:"3x3",max:3,text:"All Water units in a 3x3 area lose 2 HP."},solar_eclipse:{id:"solar_eclipse",name:"Solar Eclipse",type:"Action",subtype:"Basic Instant",attr:"D",cost:{D:1},targetAttr:"L",aoeAtk:2,range:"3x3",max:3,text:"All Light units in a 3x3 area lose 2 HP."},thieving:{id:"thieving",name:"Thieving",type:"Action",subtype:"Instant",attr:"NA",cost:{any:1},max:3,text:"Steal 1 resource from opponent."},tornado:{id:"tornado",name:"Tornado",type:"Action",subtype:"Basic Instant",attr:"NA",cost:{any:3},max:3,text:"Destroy any one Obstacle on the battlefield."}};
+var DECKS={balanced:["soldier","soldier","soldier","archer","archer","wood_hunter","red_dragon","water_dragon","earth_dragon","light_dragon","dark_dragon","cannon","small_stone_wall","armor","counter_action","thieving","rain_spell","rock_slide","meteor_shower","solar_eclipse"],fire:["red_dragon","red_dragon","raging_red_dragon","pyro_sorcerer","pyro_sorcerer","red_krawler","red_krawler","red_krawler","meteor_shower","meteor_shower","meteor_shower","raging_forest_fire","raging_forest_fire","small_bomb","small_bomb","armor","counter_action","cannon","thieving","tornado"],water:["water_dragon","water_dragon","ultimate_water_dragon","blue_sorcerer","blue_sorcerer","blue_krawling","blue_krawling","blue_krawling","rain_spell","rain_spell","rain_spell","small_stream","small_stream","archer_tower","armor","counter_action","thieving","energy_drain","tornado","soldier"],dark:["dark_dragon","dark_dragon","complete_darkness_dragon","evil_sorcerer","evil_sorcerer","black_krawling","black_krawling","black_krawling","solar_eclipse","solar_eclipse","solar_eclipse","thunder_storm","thunder_storm","small_bomb","small_bomb","depression","energy_drain","counter_action","thieving","tornado"],earth:["earth_dragon","earth_dragon","whole_earth_dragon","land_sorcerer","land_sorcerer","grass_krawler","grass_krawler","grass_krawler","rock_slide","rock_slide","rock_slide","thick_forest","thick_forest","wooden_barricade","wooden_barricade","armor","counter_action","thieving","catapult","soldier"],light:["light_dragon","light_dragon","supreme_bright_dragon","righteous_sorcerer","righteous_sorcerer","light_krawler","light_krawler","light_krawler","bright_sky","bright_sky","bright_sky","sunny_desert","sunny_desert","giant_cannon","archer_tower","armor","counter_action","thieving","energy_drain","tornado"]};
+var RES=['W','E','F','L','D'];
+var RES_NAME={W:'Water',E:'Earth',F:'Fire',L:'Light',D:'Dark'};
+var RES_EMOJI={W:'💧',E:'🌿',F:'🔥',L:'☀️',D:'🌑'};
+var RES_COLOR={W:'#3a8cc4',E:'#8a6030',F:'#c44a1a',L:'#c8b840',D:'#8a4ab4'};
+var AOE_SPELLS=['bright_sky','meteor_shower','rain_spell','rock_slide','solar_eclipse'];
+function aoeHasTargets(card,pi){var opp=1-pi;for(var r=0;r<8;r++)for(var c=0;c<5;c++){var cell=G.cells[r][c];if(['conqueror','artillery'].some(function(lk){return cell[lk]&&cell[lk].owner===opp&&cell[lk].attr===card.targetAttr;}))return true;}return false;}
+function canPlayCard(pi,card){if(!canAfford(pi,card.cost||{}))return false;if(AOE_SPELLS.indexOf(card.id)>=0&&!aoeHasTargets(card,pi))return false;return true;}
+function enemyInOwnRZ(pi){var rz=pi===0?[[7,1],[7,2],[7,3]]:[[0,1],[0,2],[0,3]];return rz.some(function(rc){var cell=G.cells[rc[0]][rc[1]];return['conqueror','artillery','obstacle','trap'].some(function(lk){return cell[lk]&&cell[lk].owner!==pi;});});}
+function weakDmg(att,def){if(!def.weakness)return 0;var w=def.weakness.find(function(x){return x.a===att.attr;});return w?w.v:0;}
+function fmtCost(cost){return Object.entries(cost).map(function(e){return e[1]>0?e[1]+(e[0]==='any'?'✦':e[0]):'';}).filter(Boolean).join(' ')||'Free';}
+function fmtCostFull(cost){var parts=[];for(var t in cost){if(!cost[t]||cost[t]<=0)continue;if(t==='any')parts.push(cost[t]+' \u2756 (any type)');else parts.push(cost[t]+' '+RES_EMOJI[t]+' '+RES_NAME[t]);}return parts.length?parts.join('<br>'):'Free';}
+function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+var iCtr=0;
+function newInst(cid){var c=Object.assign({},CARDS[cid]);c.instanceId=iCtr++;c.currentHp=c.hp||0;c.movedThisTurn=false;c.attackedThisTurn=false;c.justRecruited=true;c.exhausted=false;c.atkMod=0;c.stunned=false;c.rooted=false;if(c.facedown)c.revealed=false;return c;}
+function snapshotState(){return JSON.parse(JSON.stringify({cells:G.cells,players:G.players.map(function(p){return{hand:p.hand,resources:p.resources,discard:p.discard,deck:p.deck,glory:p.glory,inFinalCharge:p.inFinalCharge,depressedNextTurn:p.depressedNextTurn};}),phase:G.phase,armorActive:G.armorActive,energyDrainActive:G.energyDrainActive,log:G.log.slice()}));}
+function pushUndo(label){if(!G.undoStack)G.undoStack=[];G.undoStack.push({label:label||'action',snap:snapshotState()});}
+function clearUndo(){if(G.undoStack)G.undoStack=[];var btn=document.getElementById('btn-undo');if(btn)btn.disabled=true;}
+function handleUndo(){if(!G.undoStack||!G.undoStack.length){addLog('Nothing to undo.','undo');refreshUI();return;}var entry=G.undoStack.pop();var s=entry.snap;G.cells=s.cells;G.players.forEach(function(p,i){p.hand=s.players[i].hand;p.resources=s.players[i].resources;p.discard=s.players[i].discard;p.deck=s.players[i].deck;p.glory=s.players[i].glory;p.inFinalCharge=s.players[i].inFinalCharge;p.depressedNextTurn=s.players[i].depressedNextTurn;});G.phase=s.phase;G.armorActive=s.armorActive;G.energyDrainActive=s.energyDrainActive;G.log=s.log;G.selectedCard=null;G.actionMode=null;G.highlightCells=[];addLog('↩ Undid: '+entry.label,'undo');refreshUI();}
+function emptyCell(){return{conqueror:null,artillery:null,obstacle:null,trap:null};}
+var DMG_ORDER=['obstacle','artillery','conqueror'];
+function cellHasAny(cell){return cell&&(cell.conqueror||cell.artillery||cell.obstacle||cell.trap);}
+function layerKey(type){if(type==='Conqueror')return'conqueror';if(type==='Artillery')return'artillery';if(type==='Obstacle')return'obstacle';if(type==='Trap')return'trap';return null;}
+function getObsCells(aR,aC,card){if(!card.multiCell||!card.cellShape)return[[aR,aC]];return card.cellShape.map(function(d){return[aR+d[0],aC+d[1]];});}
+function obsInBounds(aR,aC,card){return getObsCells(aR,aC,card).every(function(rc){return rc[0]>=0&&rc[0]<8&&rc[1]>=0&&rc[1]<5;});}
+function obsSpaceFree(aR,aC,card){return getObsCells(aR,aC,card).every(function(rc){return!G.cells[rc[0]][rc[1]].obstacle;});}
+function placeMultiObs(aR,aC,card,owner){var cells=getObsCells(aR,aC,card);var inst=Object.assign({},card,{owner:owner,justRecruited:true,movedThisTurn:false,attackedThisTurn:false,currentHp:card.hp||0,anchorR:aR,anchorC:aC,satelliteCells:cells,wallWidth:card.cellShape?card.cellShape.length:1});cells.forEach(function(rc){G.cells[rc[0]][rc[1]].obstacle=inst;});}
+function removeObs(inst){if(inst.satelliteCells){inst.satelliteCells.forEach(function(rc){if(G.cells[rc[0]]&&G.cells[rc[0]][rc[1]]&&G.cells[rc[0]][rc[1]].obstacle===inst)G.cells[rc[0]][rc[1]].obstacle=null;});}}
+function applyDmgToCell(r,c,dmg,attCard,isSplash){var cell=G.cells[r][c],rem=dmg;DMG_ORDER.forEach(function(lk){if(rem<=0)return;var tgt=cell[lk];if(!tgt)return;if(!isSplash&&attCard&&tgt.owner===attCard.owner)return;// FIX: never damage a friendly trap
+if(lk==='trap'&&attCard&&tgt.owner===attCard.owner)return;var wb=attCard?weakDmg(attCard,tgt):0;var tot=rem+wb;var prevHp=tgt.currentHp||0;tgt.currentHp=Math.max(0,prevHp-tot);addLog('  '+tgt.name+' takes '+tot+' dmg ('+tgt.currentHp+' HP left)','combat');if(tgt.currentHp<=0){addLog('  '+tgt.name+' destroyed!','combat');if(G.players[tgt.owner])G.players[tgt.owner].discard.push(tgt.id);if(lk==='obstacle'){removeObs(tgt);}else{cell[lk]=null;}rem=Math.max(0,rem-prevHp);}else{rem=0;}});}
+function cellHasEnemy(r,c,ownerIdx){var cell=G.cells[r][c];return['conqueror','artillery'].some(function(lk){return cell[lk]&&cell[lk].owner!==ownerIdx;});}
+function cellPassable(r,c,unit){var cell=G.cells[r][c];if(cellHasEnemy(r,c,unit.owner))return false;if(cell.obstacle&&cell.obstacle.owner!==unit.owner)return false;return true;}
+function cellLandable(r,c,unit){var cell=G.cells[r][c];if(cellHasEnemy(r,c,unit.owner))return false;if(cell.obstacle&&cell.obstacle.owner!==unit.owner)return false;var lk=layerKey(unit.type);if(lk&&cell[lk])return false;return true;}
+var G={};
+function initGame(p1n,p2n,mode,d1ids,d2ids,resBefore){G={mode:mode,resBefore:resBefore,charge:1,activePlayer:0,phase:'draw',players:[{name:p1n,glory:20,hand:[],deck:shuffle(d1ids.slice()),discard:[],resources:{W:0,E:0,F:0,L:0,D:0},inFinalCharge:false,pillagedThisTurn:false,drawnThisTurn:false,skipNextPillage:false,depressedNextTurn:false,skipFirstDraw:false,firstPillageLimit:null},{name:p2n,glory:20,hand:[],deck:shuffle(d2ids.slice()),discard:[],resources:{W:0,E:0,F:0,L:0,D:0},inFinalCharge:false,pillagedThisTurn:false,drawnThisTurn:false,skipNextPillage:false,depressedNextTurn:false,skipFirstDraw:false,firstPillageLimit:null}],cellar:{W:15,E:15,F:15,L:15,D:15},cells:Array.from({length:8},function(){return Array.from({length:5},emptyCell);}),selectedCard:null,actionMode:null,highlightCells:[],log:[],effectsThisTurn:[],armorActive:false,energyDrainActive:false,aoeTargetSelect:null,_fx:[],undoStack:[]};if(resBefore==='after'){for(var i=0;i<5;i++){drawCard(0);drawCard(1);}}}
+function zoneOf(r,c){if(r===0)return c===0||c===4?'burz_p2':'rz_p2';if(r===7)return c===0||c===4?'burz_p1':'rz_p1';if(r===1||r===2)return'ad_p2';if(r===5||r===6)return'ad_p1';return'bf';}
+function isRZ(r,c,p){var z=zoneOf(r,c);return p===0?z==='rz_p1':z==='rz_p2';}
+function isBURZ(r,c,p){var z=zoneOf(r,c);return p===0?z==='burz_p1':z==='burz_p2';}
+function isAD(r,c,p){var z=zoneOf(r,c);return p===0?z==='ad_p1':z==='ad_p2';}
+function allRZsOccupied(p){var rz=p===0?[[7,1],[7,2],[7,3]]:[[0,1],[0,2],[0,3]];return rz.every(function(rc){var u=G.cells[rc[0]][rc[1]].conqueror;return u&&u.owner!==p;});}
+function canAfford(pi,cost){var res=G.players[pi].resources;var anyNeed=cost.any||0;for(var t in cost){if(t==='any')continue;if((res[t]||0)<cost[t])return false;}var spec=Object.entries(cost).filter(function(e){return e[0]!=='any';}).reduce(function(s,e){return s+e[1];},0);return RES.reduce(function(s,t){return s+(res[t]||0);},0)-spec>=anyNeed;}
+function spendRes(pi,cost,anyChoices){var res=G.players[pi].resources;for(var t in cost){if(t==='any')continue;res[t]-=cost[t];G.cellar[t]+=cost[t];}var anyNeed=cost.any||0;if(anyNeed>0){if(anyChoices&&anyChoices.length){anyChoices.forEach(function(t){res[t]=Math.max(0,(res[t]||0)-1);G.cellar[t]+=1;});}else{RES.forEach(function(t){if(anyNeed<=0)return;var sp=Math.min(res[t]||0,anyNeed);res[t]-=sp;G.cellar[t]+=sp;anyNeed-=sp;});}}}
+function gainRes(pi,t,amt){var p=G.players[pi];var act=Math.min(amt,10-(p.resources[t]||0),G.cellar[t]||0);if(act<=0)return 0;p.resources[t]=(p.resources[t]||0)+act;G.cellar[t]-=act;return act;}
+function showUniversalCostModal(anyAmt,pi,onConfirm){var res=G.players[pi].resources;var html='<div style="font-size:12px;margin-bottom:10px;">Choose <b>'+anyAmt+' resource'+(anyAmt>1?'s':'')+' of any type</b> to spend (✦ cost).</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;">';RES.forEach(function(t){var have=res[t]||0;html+='<div style="display:flex;align-items:center;gap:5px;padding:5px;background:#0d0500;border-radius:3px;border:1px solid #3d2000;"><div style="width:10px;height:10px;border-radius:50%;background:'+RES_COLOR[t]+';"></div><span style="font-size:11px;color:#c0b090;flex:1;">'+RES_NAME[t]+' ('+have+')</span><button onclick="univAdj(\''+t+'\',-1)" style="background:#3d2000;border:none;color:#d4a843;width:20px;height:20px;cursor:pointer;border-radius:2px;">-</button><span id="univ-'+t+'" style="min-width:18px;text-align:center;font-size:12px;">0</span><button onclick="univAdj(\''+t+'\',1)" style="background:#3d2000;border:none;color:#d4a843;width:20px;height:20px;cursor:pointer;border-radius:2px;">+</button></div>';});html+='</div><div id="univ-status" style="font-size:11px;color:#d4a843;min-height:16px;"></div>';window._univSel={W:0,E:0,F:0,L:0,D:0};window._univAmt=anyAmt;window._univPi=pi;window._univConfirm=onConfirm;showModal('Choose Resources to Spend',html,[{label:'Confirm',fn:confirmUniversalCost},{label:'Cancel',fn:closeModal,secondary:true}]);}
+window.univAdj=function(t,d){var sel=window._univSel,pi=window._univPi,amt=window._univAmt;var res=G.players[pi].resources;var total=RES.reduce(function(s,k){return s+(sel[k]||0);},0);if(d>0&&total>=amt)return;if(d>0&&(sel[t]||0)>=(res[t]||0))return;sel[t]=Math.max(0,(sel[t]||0)+d);var el=document.getElementById('univ-'+t);if(el)el.textContent=sel[t];var tot=RES.reduce(function(s,k){return s+(sel[k]||0);},0);var st=document.getElementById('univ-status');if(st)st.textContent=tot+'/'+amt+' chosen'+(tot===amt?' \u2713':'');};
+function confirmUniversalCost(){var sel=window._univSel,amt=window._univAmt;var total=RES.reduce(function(s,k){return s+(sel[k]||0);},0);if(total!==amt){var st=document.getElementById('univ-status');if(st)st.textContent='Must choose exactly '+amt+'.';return;}var choices=[];RES.forEach(function(t){for(var i=0;i<(sel[t]||0);i++)choices.push(t);});closeModal();window._univConfirm(choices);}
+function drawCard(pi){var p=G.players[pi];if(p.deck.length===0){if(!p.inFinalCharge){p.inFinalCharge=true;addLog(p.name+' enters THE FINAL CHARGE!','important');}return false;}p.hand.push(newInst(p.deck.pop()));return true;}
+function checkSorcererTrigger(owner,recruitedCard){if(recruitedCard.type!=='Conqueror')return;for(var r=0;r<8;r++)for(var c=0;c<5;c++){var u=G.cells[r][c].conqueror;if(u&&u.owner===owner&&u.sorcererAttr&&u.sorcererAttr===recruitedCard.attr&&u.instanceId!==recruitedCard.instanceId){drawCard(owner);addLog(u.name+' triggers — '+G.players[owner].name+' draws 1!',owner===0?'p1':'p2');}}}
+function parseRange(card){var s=String(card.range!=null?card.range:'');if(/^\d+x\d+$/i.test(s)){var p=s.toLowerCase().split('x');return{type:'area',rows:parseInt(p[0]),cols:parseInt(p[1])};}if(s.indexOf(',')>=0){var p=s.split(',');return{type:'aerial',min:parseInt(p[0]),max:parseInt(p[1])};}if(s.indexOf('-')>=0){var p=s.split('-');return{type:'splash',min:parseInt(p[0]),max:parseInt(p[1])};}if(/^\d+$/.test(s)&&s!==''){return{type:'normal',min:1,max:parseInt(s)};}if(card.rangeType==='aerial')return{type:'aerial',min:card.rangeMin||1,max:card.rangeMax||2};if(card.rangeType==='splash')return{type:'splash',min:1,max:(typeof card.range==='number'?card.range:2)};if(card.rangeType==='normal'||typeof card.range==='number')return{type:'normal',min:1,max:card.range||1};return{type:'normal',min:1,max:1};}
+var DIRS=[[0,1],[0,-1],[1,0],[-1,0]];
+function candidatesNormal(r,c,card,ownerIdx){var rp=parseRange(card),res=[];DIRS.forEach(function(d){for(var s=1;s<=rp.max;s++){var nr=r+d[0]*s,nc=c+d[1]*s;if(nr<0||nr>=8||nc<0||nc>=5)break;var cell=G.cells[nr][nc];if(cellHasAny(cell)){var hasEnemy=['conqueror','artillery','obstacle','trap'].some(function(lk){return cell[lk]&&cell[lk].owner!==ownerIdx;});if(hasEnemy)res.push({row:nr,col:nc});break;}}});return res;}
+function candidatesAerial(r,c,card,ownerIdx){var rp=parseRange(card),res=[];DIRS.forEach(function(d){for(var s=rp.min;s<=rp.max;s++){var nr=r+d[0]*s,nc=c+d[1]*s;if(nr<0||nr>=8||nc<0||nc>=5)continue;var cell=G.cells[nr][nc];var hasEnemy=['conqueror','artillery','obstacle','trap'].some(function(lk){return cell[lk]&&cell[lk].owner!==ownerIdx;});if(hasEnemy)res.push({row:nr,col:nc});}});return res;}
+function candidatesSplash(r,c,card,ownerIdx){var rp=parseRange(card),res=[];DIRS.forEach(function(d){var hasAnyEnemy=false;var band=[];for(var s=rp.min;s<=rp.max;s++){var nr=r+d[0]*s,nc=c+d[1]*s;if(nr<0||nr>=8||nc<0||nc>=5)continue;band.push({row:nr,col:nc});var cell=G.cells[nr][nc];['conqueror','artillery','obstacle','trap'].forEach(function(lk){if(cell[lk]&&cell[lk].owner!==ownerIdx)hasAnyEnemy=true;});}if(hasAnyEnemy){band.forEach(function(bc){var cell=G.cells[bc.row][bc.col];var hasEnemy=['conqueror','artillery','obstacle','trap'].some(function(lk){return cell[lk]&&cell[lk].owner!==ownerIdx;});if(hasEnemy)res.push({row:bc.row,col:bc.col});});}});return res;}
+function getCandidateCells(r,c,card,ownerIdx){var rp=parseRange(card);if(rp.type==='normal')return candidatesNormal(r,c,card,ownerIdx);if(rp.type==='aerial')return candidatesAerial(r,c,card,ownerIdx);if(rp.type==='splash')return candidatesSplash(r,c,card,ownerIdx);return[];}
+function resolveNormalAttack(att,srcR,srcC,tr,tc,atkVal){var tCell=G.cells[tr][tc];
+  // FIX: only trigger a trap if it belongs to the opponent
+  if(tCell.trap&&!tCell.trap.revealed&&tCell.trap.owner!==att.owner){
+    tCell.trap.revealed=true;
+    addLog(att.name+' hits a Small Bomb! Takes 3 damage!','combat');
+    att.currentHp=Math.max(0,att.currentHp-3);
+    var srcCell=G.cells[srcR][srcC];
+    if(G.players[tCell.trap.owner])G.players[tCell.trap.owner].discard.push(tCell.trap.id);
+    tCell.trap=null;
+    if(att.currentHp<=0){
+      G.players[att.owner].discard.push(att.id);
+      var attLk=layerKey(att.type);
+      if(srcCell[attLk]===att)srcCell[attLk]=null;
+      addLog(att.name+' destroyed by bomb!','combat');
+      return; // attacker died — attack does not proceed
+    }
+    // Attacker survived the trap — its attack still lands on the target
+    addLog(att.name+' presses the attack despite the bomb!','combat');
+    addLog(att.name+' attacks ('+tr+','+tc+') for '+atkVal+'!','combat');
+    applyDmgToCell(tr,tc,atkVal,att,false);
+  }else{
+    addLog(att.name+' attacks ('+tr+','+tc+') for '+atkVal+'!','combat');
+    applyDmgToCell(tr,tc,atkVal,att,false);
+  }
+}
+var resolveAerialAttack=resolveNormalAttack;
+function resolveSplashAttack(att,srcR,srcC,tr,tc,atkVal){var dr=tr-srcR,dc=tc-srcC;var len=Math.max(Math.abs(dr),Math.abs(dc));if(len===0){addLog('Invalid splash target.');return;}var d=[dr/len|0,dc/len|0];var rp=parseRange(att);addLog(att.name+' launches a splash attack!','combat');for(var s=rp.min;s<=rp.max;s++){var nr=srcR+d[0]*s,nc=srcC+d[1]*s;if(nr<0||nr>=8||nc<0||nc>=5)continue;var cell=G.cells[nr][nc];['obstacle','artillery','conqueror','trap'].forEach(function(lk){var tgt=cell[lk];if(!tgt||tgt.owner===att.owner)return;// FIX: skip friendly traps in splash too
+var wb=G.armorActive?0:weakDmg(att,tgt);var tot=atkVal+wb;var prevHp=tgt.currentHp||0;tgt.currentHp=Math.max(0,prevHp-tot);addLog('  '+tgt.name+' takes '+tot+' dmg ('+tgt.currentHp+' HP)','combat');if(tgt.currentHp<=0){addLog('  '+tgt.name+' destroyed!','combat');G.players[tgt.owner].discard.push(tgt.id);if(lk==='obstacle')removeObs(tgt);else cell[lk]=null;}});}}
+function resolveAreaAttack(aoeCard,pi,anchorR,anchorC){var rp=parseRange(aoeCard);var halfR=Math.floor((rp.rows-1)/2);var halfC=Math.floor((rp.cols-1)/2);addLog(aoeCard.name+' strikes a '+rp.rows+'x'+rp.cols+' area!','combat');for(var dr=-halfR;dr<=halfR;dr++){for(var dc=-halfC;dc<=halfC;dc++){var nr=anchorR+dr,nc=anchorC+dc;if(nr<0||nr>=8||nc<0||nc>=5)continue;var cell=G.cells[nr][nc];['conqueror','artillery'].forEach(function(lk){var u=cell[lk];if(u&&u.attr===aoeCard.targetAttr&&u.owner!==pi){u.currentHp=Math.max(0,u.currentHp-(aoeCard.aoeAtk||2));addLog('  '+u.name+' takes '+(aoeCard.aoeAtk||2)+' ('+u.currentHp+' HP left)','combat');if(u.currentHp<=0){addLog('  '+u.name+' destroyed!','combat');G.players[u.owner].discard.push(u.id);cell[lk]=null;}}});}}}
+function resolveAttack(att,srcR,srcC,tr,tc,atkVal){var rp=parseRange(att);if(rp.type==='splash')resolveSplashAttack(att,srcR,srcC,tr,tc,atkVal);else resolveNormalAttack(att,srcR,srcC,tr,tc,atkVal);}
+function getCellsInRange(r,c,card){return getCandidateCells(r,c,card,card.owner!==undefined?card.owner:G.activePlayer);}
+function previewDamageAt(att,r,c){if(!att)return null;var cell=G.cells[r][c];var base=Math.max(0,(att.atk||0)+(att.atkMod||0)+(G.energyDrainActive?-2:0));var rp=parseRange(att);if(rp.type==='splash'){var tgt=null;['obstacle','artillery','conqueror'].forEach(function(lk){if(!tgt&&cell[lk]&&cell[lk].owner!==att.owner)tgt=cell[lk];});if(!tgt)return null;var wb=G.armorActive?0:weakDmg(att,tgt);var tot=base+wb;return{dmg:tot,mult:wb,lethal:tot>=(tgt.currentHp||0),name:tgt.name,splash:true};}var tgt=null;for(var i=0;i<DMG_ORDER.length;i++){var u=cell[DMG_ORDER[i]];if(u&&u.owner!==att.owner){tgt=u;break;}}if(!tgt)return null;var wb=G.armorActive?0:weakDmg(att,tgt);var tot=base+wb;return{dmg:tot,mult:wb,lethal:tot>=(tgt.currentHp||0),name:tgt.name};}
+function doAttack(tr,tc){var src=G.selectedCard;if(!src||src.source!=='cell')return;var att=src.card;if(!att){addLog('No attacker selected.');return;}if(att.attackedThisTurn){addLog(att.name+' has already attacked this turn.');G.actionMode=null;G.highlightCells=[];refreshUI();return;}att.attackedThisTurn=true;att.exhausted=true;var atkVal=Math.max(0,(att.atk||0)+(att.atkMod||0)+(G.energyDrainActive?-2:0));var savedAttr=att.attr;if(G.armorActive)att.attr='__NONE__';var rp=parseRange(att);if(rp.type==='splash'){resolveSplashAttack(att,src.row,src.col,tr,tc,atkVal);}else{resolveNormalAttack(att,src.row,src.col,tr,tc,atkVal);}  if(G.armorActive)att.attr=savedAttr;G.actionMode=null;G.highlightCells=[];G.selectedCard=null;clearUndo();checkWin();
+  // Auto-advance to Recover if no more attacks remain
+  if(G.phase==='combat'&&autoSettings.autoAdvanceCombatToRecover&&!hasAnyAttacker(G.activePlayer)){
+    addLog('No more attacks available — advancing to Recover.','important');
+    setTimeout(enterRecover,300);return;
+  }
+  refreshUI();}
+function doDirectGloryStrike(r,c,att,atkVal,opp){att.attackedThisTurn=true;att.exhausted=true;G.players[opp].glory=Math.max(0,G.players[opp].glory-atkVal);addLog('GLORY STRIKE! '+att.name+' attacks '+G.players[opp].name+' for '+atkVal+'! ('+G.players[opp].glory+' Glory left)','important');G.actionMode=null;G.highlightCells=[];G.selectedCard=null;clearUndo();checkWin();
+  if(G.phase==='combat'&&autoSettings.autoAdvanceCombatToRecover&&!hasAnyAttacker(G.activePlayer)){
+    addLog('No more attacks available — advancing to Recover.','important');
+    setTimeout(enterRecover,300);return;
+  }
+  refreshUI();}
+function doDrawPhase(){var ap=G.activePlayer,p=G.players[ap];if(p.inFinalCharge)addLog(p.name+' skips Draw (Final Charge).','important');else if(p.skipFirstDraw){p.skipFirstDraw=false;addLog(p.name+' skips first Draw.','important');}else{drawCard(ap);addLog(p.name+' draws.',ap===0?'p1':'p2');}p.drawnThisTurn=true;G.phase='pillage';refreshUI();}
+function beginTurn(){refreshUI();if(autoSettings.autoDrawOnTurnStart)doDrawPhase();}
+function doPillagePhase(){var ap=G.activePlayer,p=G.players[ap];if(p.depressedNextTurn){p.depressedNextTurn=false;showPillageModal('depressed',2);return;}if(p.firstPillageLimit!==null){var lim=p.firstPillageLimit;p.firstPillageLimit=null;showPillageModal('limited',lim);return;}showPillageModal('normal',3);}
+function showPillageModal(mode,maxTotal){var titles={normal:'Pillage Resources',depressed:'Pillage (Depression Restricted)',limited:'Pillage (First Turn — '+maxTotal+' only)'};var descs={normal:'Choose <b>3 different types</b> OR <b>2 of the same type</b>.',depressed:'<span style="color:#cc4422;">Depression:</span> gain <b>2 resources of two different types</b> only.',limited:'First turn: gain up to <b>'+maxTotal+' resources</b> (max 2 of same type).'};var html='<div style="margin-bottom:8px;font-size:12px;">'+descs[mode]+'</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:10px;">';RES.forEach(function(t){html+='<div style="display:flex;align-items:center;gap:5px;padding:4px;background:#0d0500;border-radius:3px;border:1px solid #3d2000;"><div style="width:10px;height:10px;border-radius:50%;background:'+RES_COLOR[t]+';"></div><span style="font-size:11px;color:#c0b090;flex:1;">'+RES_NAME[t]+' ('+G.cellar[t]+')</span><button onclick="pillAdj(\''+t+'\',-1)" style="background:#3d2000;border:none;color:#d4a843;width:20px;height:20px;cursor:pointer;border-radius:2px;">-</button><span id="pill-'+t+'" style="min-width:16px;text-align:center;font-size:12px;">0</span><button onclick="pillAdj(\''+t+'\',1)" style="background:#3d2000;border:none;color:#d4a843;width:20px;height:20px;cursor:pointer;border-radius:2px;">+</button></div>';});html+='</div><div id="pill-status" style="font-size:11px;color:#d4a843;min-height:16px;"></div>';window._pillSel={W:0,E:0,F:0,L:0,D:0};window._pillMode=mode;window._pillMax=maxTotal;showModal(titles[mode],html,[{label:'Confirm',fn:confirmPillage},{label:'Cancel',fn:closeModal,secondary:true}]);}
+window.pillAdj=function(t,d){var sel=window._pillSel,mode=window._pillMode,maxTotal=window._pillMax||3;var total=RES.reduce(function(s,k){return s+(sel[k]||0);},0);if(d>0&&total>=maxTotal)return;if(d>0&&(sel[t]||0)>=2)return;if(d>0&&(sel[t]||0)>=(G.cellar[t]||0))return; // cannot select more than cellar holds
+sel[t]=Math.max(0,(sel[t]||0)+d);var el=document.getElementById('pill-'+t);if(el)el.textContent=sel[t];var vals=RES.map(function(k){return sel[k]||0;}).filter(function(v){return v>0;});var tot=vals.reduce(function(s,v){return s+v;},0);var st=document.getElementById('pill-status');if(!st)return;if(mode==='depressed')st.textContent=(tot===2&&vals.length===2)?'Valid!':'Choose 2 of 2 different types.';else if(mode==='limited')st.textContent=tot===maxTotal?'Valid!':tot+'/'+maxTotal+' chosen.';else st.textContent=(tot===2&&vals.length===1)?'Valid: 2 of same.':(tot===3&&vals.length===3)?'Valid: 3 different.':'3 different OR 2 of same.';};
+function confirmPillage(){var sel=window._pillSel,mode=window._pillMode,maxTotal=window._pillMax||3;var vals=RES.map(function(k){return sel[k]||0;}).filter(function(v){return v>0;});var tot=vals.reduce(function(s,v){return s+v;},0);var valid=false;if(mode==='depressed')valid=(tot===2&&vals.length===2);else if(mode==='limited')valid=(tot===maxTotal);else valid=(tot===2&&vals.length===1)||(tot===3&&vals.length===3);if(!valid){var st=document.getElementById('pill-status');if(st)st.textContent='Invalid!';return;}var ap=G.activePlayer;
+  // Check cellar has enough of each selected resource
+  var cellarShort=RES.filter(function(t){return sel[t]>0&&sel[t]>(G.cellar[t]||0);});
+  if(cellarShort.length){
+    var st3=document.getElementById('pill-status');
+    if(st3)st3.textContent='Not enough '+cellarShort.map(function(t){return RES_NAME[t];}).join(', ')+' in the Cellar.';
+    return;
+  }
+  // Check that none of the selected resources would push the player's total above 10
+  var overflow=RES.filter(function(t){return sel[t]>0&&((G.players[ap].resources[t]||0)+sel[t])>10;});
+  if(overflow.length){
+    var st2=document.getElementById('pill-status');
+    if(st2)st2.textContent='Cannot pillage: would exceed 10 '+overflow.map(function(t){return RES_NAME[t];}).join(', ')+'.';
+    return;
+  }
+  RES.forEach(function(t){if(sel[t]>0)gainRes(ap,t,sel[t]);});addLog(G.players[ap].name+' pillages.',ap===0?'p1':'p2');closeModal();G.players[ap].pillagedThisTurn=true;G.phase='strategize';if(autoSettings.autoAdvancePillageToStrategize)enterStrategize();else refreshUI();}
+function enterStrategize(){G.phase='strategize';G.armorActive=false;G.energyDrainActive=false;addLog(G.players[G.activePlayer].name+' strategizes.');refreshUI();}
+function handleRecruit(){if(!G.selectedCard)return;var card=G.selectedCard.card,ap=G.activePlayer;if(!canAfford(ap,card.cost||{})){addLog('Not enough resources.');return;}if(card.type==='Action'){playActionCard(G.selectedCard.index);return;}var isConq=card.type==='Conqueror',isArt=card.type==='Artillery',isObs=card.type==='Obstacle',isTrap=card.type==='Trap';if(!isConq&&!isArt&&!isObs&&!isTrap){addLog('Cannot place this type.');return;}G.actionMode='recruit';G.highlightCells=[];var burzAllowed=enemyInOwnRZ(ap);var lk=layerKey(card.type);for(var r=0;r<8;r++)for(var c=0;c<5;c++){var zone=zoneOf(r,c);if(zone==='bf')continue;var cell=G.cells[r][c];var slotFree=!cell[lk];var noEnemy=!cellHasEnemy(r,c,ap);if(isConq){if((isRZ(r,c,ap)||(isBURZ(r,c,ap)&&burzAllowed))&&slotFree&&noEnemy)G.highlightCells.push({row:r,col:c,type:'recruit'});}if(isArt&&isAD(r,c,ap)&&slotFree&&noEnemy)G.highlightCells.push({row:r,col:c,type:'recruit'});if(isTrap&&(isRZ(r,c,ap)||isAD(r,c,ap))&&!cell.trap)G.highlightCells.push({row:r,col:c,type:'recruit'});if(isObs){if(card.multiCell){if(isAD(r,c,ap)&&obsInBounds(r,c,card)&&obsSpaceFree(r,c,card)){var wc=getObsCells(r,c,card);var allInAD=wc.every(function(rc){return isAD(rc[0],rc[1],ap);});if(allInAD){G.highlightCells.push({row:r,col:c,type:'obstacle',isAnchor:true,wallCells:wc});}}}else{if(isAD(r,c,ap)&&slotFree)G.highlightCells.push({row:r,col:c,type:'obstacle'});}}}var guide=card.multiCell&&card.anchorDesc?'Click the '+card.anchorDesc+' of the obstacle — any valid AD position.':'Choose placement zone.';if(card.multiCell){var anchorKeys={};G.highlightCells.forEach(function(h){if(h.isAnchor)anchorKeys[h.row+','+h.col]=true;});var previews=[];G.highlightCells.forEach(function(h){if(!h.isAnchor||!h.wallCells)return;h.wallCells.slice(1).forEach(function(rc){var key=rc[0]+','+rc[1];if(!anchorKeys[key])previews.push({row:rc[0],col:rc[1],type:'obstacle-preview',isAnchor:false});});});var seenPrev={};previews.forEach(function(p){var k=p.row+','+p.col;if(!seenPrev[k]){seenPrev[k]=true;G.highlightCells.push(p);}});}addLog(guide,'important');refreshUI();}
+function placeCard(r,c,anyChoices){var ap=G.activePlayer,card=G.selectedCard.card,idx=G.selectedCard.index;if(card.cost&&card.cost.any&&!anyChoices){window._pendingPlace={r:r,c:c};showUniversalCostModal(card.cost.any,ap,function(choices){placeCard(window._pendingPlace.r,window._pendingPlace.c,choices);});return;}pushUndo('place '+card.name);spendRes(ap,card.cost||{},anyChoices||[]);if(card.multiCell){placeMultiObs(r,c,card,ap);}else{var inst=Object.assign({},card,{owner:ap,justRecruited:true,movedThisTurn:false,attackedThisTurn:false,currentHp:card.hp||0,atkMod:0,stunned:false,rooted:false});if(card.facedown)inst.revealed=false;var lk=layerKey(card.type);G.cells[r][c][lk]=inst;if(card.type==='Obstacle'){inst.anchorR=r;inst.anchorC=c;inst.satelliteCells=[[r,c]];}}if(card.id==='abandoned_barn')showResChoiceModal(ap);G.players[ap].hand.splice(idx,1);addLog(G.players[ap].name+' places '+card.name+'!',ap===0?'p1':'p2');checkSorcererTrigger(ap,card);G.selectedCard=null;G.actionMode=null;G.highlightCells=[];refreshUI();}
+function showResChoiceModal(pi){var html='<p style="margin-bottom:10px;">Abandoned Barn: gain 1 resource of your choice.</p><div style="display:flex;gap:8px;flex-wrap:wrap;">';RES.forEach(function(t){html+='<button onclick="gainResClose('+pi+',\''+t+'\')" style="padding:6px 12px;background:#1e1000;border:1px solid #3d2000;color:#f0e6d0;cursor:pointer;border-radius:3px;font-family:Georgia,serif;">'+RES_EMOJI[t]+' '+RES_NAME[t]+'</button>';});html+='</div>';showModal('Choose Resource',html,[]);}
+window.gainResClose=function(pi,t){gainRes(pi,t,1);addLog(G.players[pi].name+' gains 1 '+RES_NAME[t]+'.');closeModal();refreshUI();};
+function tryObstacleClear(r,c,unit){var obs=G.cells[r][c].obstacle;if(obs&&obs.clearAttr&&obs.clearAttr===unit.attr){addLog(unit.name+' clears '+obs.name+'!','important');removeObs(obs);}}
+function unitCanMove(unit){if(!unit)return false;if(unit.owner!==G.activePlayer)return false;if(unit.movedThisTurn||unit.rooted)return false;if(unit.justRecruited)return false;if(unit.attackedThisTurn)return false;if(unit.type==='Obstacle')return false;if(!unit.move||unit.move<=0)return false;return true;}
+function startMove(){if(!G.selectedCard||G.selectedCard.source!=='cell'){addLog('Select a unit on the field.');return;}var row=G.selectedCard.row,col=G.selectedCard.col;var cell=G.cells[row][col];var movers=[];['conqueror','artillery'].forEach(function(lk){if(cell[lk]&&unitCanMove(cell[lk]))movers.push({lk:lk,unit:cell[lk]});});if(movers.length===0){var owned=['conqueror','artillery'].map(function(lk){return cell[lk];}).filter(function(u){return u&&u.owner===G.activePlayer;});if(owned.length===0){addLog('No movable unit here.');return;}if(owned.every(function(u){return u.attackedThisTurn;})){addLog('All units here already attacked — cannot move in Recovery.');return;}if(owned.every(function(u){return u.movedThisTurn;})){addLog('All units here already moved.');return;}if(owned.every(function(u){return u.justRecruited;})){addLog('Newly placed units cannot move this turn.');return;}addLog('No eligible units to move here.');return;}if(movers.length===1){_beginMoveForUnit(row,col,movers[0].unit);return;}_showMoverChoiceModal(row,col,movers);}
+function _showMoverChoiceModal(row,col,movers){var html='<p style="margin-bottom:10px;font-size:12px;">Multiple units here. Choose which one to move:</p><div style="display:flex;flex-direction:column;gap:6px;">';movers.forEach(function(m,i){var u=m.unit;html+='<button onclick="pickMover('+row+','+col+','+i+')" style="padding:8px 12px;background:#1e1000;border:1px solid #3d2000;color:#f0e6d0;cursor:pointer;border-radius:3px;font-family:Georgia,serif;text-align:left;"><b>'+u.name+'</b> <span style="color:#a08060;font-size:10px;">'+u.type+'</span> — MV:'+u.move+' HP:'+u.currentHp+'</button>';});html+='</div>';window._moverChoices={row:row,col:col,movers:movers};showModal('Choose Unit to Move',html,[{label:'Cancel',fn:closeModal,secondary:true}]);}
+window.pickMover=function(row,col,idx){var choice=window._moverChoices;closeModal();_beginMoveForUnit(row,col,choice.movers[idx].unit);};
+function _beginMoveForUnit(row,col,unit){G.selectedCard={source:'cell',row:row,col:col,card:unit};showCardDetail(unit);G.actionMode='move';var mv=unit.move||1,visited={},queue=[{row:row,col:col,dist:0}];G.highlightCells=[];visited[row+','+col]=true;while(queue.length){var cur=queue.shift();if(cur.dist>0&&cellLandable(cur.row,cur.col,unit))G.highlightCells.push({row:cur.row,col:cur.col,type:'move'});if(cur.dist<mv){[[0,1],[0,-1],[1,0],[-1,0]].forEach(function(d){var nr=cur.row+d[0],nc=cur.col+d[1],key=nr+','+nc;if(nr<0||nr>=8||nc<0||nc>=5||visited[key])return;if(isBURZ(nr,nc,1-G.activePlayer))return;if(!cellPassable(nr,nc,unit))return;visited[key]=true;queue.push({row:nr,col:nc,dist:cur.dist+1});});}}addLog('Choose destination for '+unit.name+'.');refreshUI();}
+function moveUnit(tr,tc){var row=G.selectedCard.row,col=G.selectedCard.col;var srcCell=G.cells[row][col];var unit=G.selectedCard.card;if(!unit){addLog('No unit to move.');cancelAction();return;}var lk=layerKey(unit.type);pushUndo('move '+unit.name);unit.movedThisTurn=true;G.cells[tr][tc][lk]=unit;srcCell[lk]=null;addLog(unit.name+' moves.');tryObstacleClear(tr,tc,unit);var landCell=G.cells[tr][tc];
+  // FIX: only trigger a trap if it belongs to the opponent
+  if(landCell.trap&&!landCell.trap.revealed&&landCell.trap.owner!==unit.owner){landCell.trap.revealed=true;unit.currentHp=Math.max(0,unit.currentHp-(landCell.trap.atk||3));addLog(unit.name+' triggers Small Bomb! Takes '+(landCell.trap.atk||3)+' damage!','combat');if(G.players[landCell.trap.owner])G.players[landCell.trap.owner].discard.push(landCell.trap.id);landCell.trap=null;if(unit.currentHp<=0){addLog(unit.name+' destroyed!','combat');G.players[unit.owner].discard.push(unit.id);landCell[lk]=null;clearUndo();checkWin();}}var opp=1-G.activePlayer;if(isRZ(tr,tc,opp))addLog(unit.name+' enters enemy RZ! Attack from here to strike Glory.','important');G.selectedCard=null;G.actionMode=null;G.highlightCells=[];refreshUI();}
+function hasAnyAttacker(ap){
+  for(var r=0;r<8;r++)for(var c=0;c<5;c++){
+    var cell=G.cells[r][c];
+    var units=[];
+    ['conqueror','artillery'].forEach(function(lk){if(cell[lk]&&cell[lk].owner===ap)units.push({lk:lk,unit:cell[lk]});});
+    for(var i=0;i<units.length;i++){
+      var u=units[i].unit;
+      if(u.attackedThisTurn||u.stunned)continue;
+      if(units[i].lk==='conqueror'&&u.justRecruited&&!enemyInOwnRZ(ap))continue;
+      // In enemy RZ → can always glory-strike
+      if(isRZ(r,c,1-ap))return true;
+      // Has targets in range
+      var cands=getCandidateCells(r,c,u,ap);
+      if(cands.length)return true;
+    }
+  }
+  return false;
+}
+function enterCombat(){G.phase='combat';G.armorActive=false;G.energyDrainActive=false;
+  // Auto-advance to Recover if no attacks are available
+  if(autoSettings.autoAdvanceCombatToRecover&&!hasAnyAttacker(G.activePlayer)){
+    addLog('No attacks available — advancing to Recover.','important');
+    enterRecover();return;
+  }if(G.selectedCard&&G.selectedCard.source==='cell'){var cell=G.cells[G.selectedCard.row][G.selectedCard.col];var attackers=[];['conqueror','artillery'].forEach(function(lk){var u=cell[lk];if(u&&u.owner===G.activePlayer&&!u.attackedThisTurn&&!(u.justRecruited&&lk==='conqueror'&&!enemyInOwnRZ(G.activePlayer))&&!u.stunned)attackers.push({lk:lk,unit:u});});if(attackers.length===1){G.selectedCard.card=attackers[0].unit;showAttackTargets(G.selectedCard.row,G.selectedCard.col,attackers[0].unit);return;}if(attackers.length>1){showAttackerChoiceModal(G.selectedCard.row,G.selectedCard.col,attackers);return;}}G.actionMode='selectAttacker';addLog('Select a cell to attack with.');refreshUI();}
+function showAttackerChoiceModal(row,col,attackers){var html='<p style="margin-bottom:10px;font-size:12px;">Multiple units here. Choose which one attacks:</p><div style="display:flex;flex-direction:column;gap:6px;">';attackers.forEach(function(a,i){var u=a.unit;html+='<button onclick="pickAttacker('+row+','+col+','+i+')" style="padding:8px 12px;background:#1e1000;border:1px solid #3d2000;color:#f0e6d0;cursor:pointer;border-radius:3px;font-family:Georgia,serif;text-align:left;"><b>'+u.name+'</b> <span style="color:#a08060;font-size:10px;">'+u.type+'</span> — ATK:'+(u.atk||0)+' HP:'+u.currentHp+' RNG:'+(u.range||u.rangeMax||'—')+'</button>';});html+='</div>';window._attackerChoices={row:row,col:col,attackers:attackers};showModal('Choose Attacker',html,[{label:'Cancel',fn:closeModal,secondary:true}]);}
+window.pickAttacker=function(row,col,idx){var choice=window._attackerChoices;closeModal();var unit=choice.attackers[idx].unit;G.selectedCard={source:'cell',row:row,col:col,card:unit};showAttackTargets(row,col,unit);};
+function showAttackTargets(r,c,att){G.actionMode='attack';var opp=1-G.activePlayer;var attInOppRZ=isRZ(r,c,opp);var atkVal=Math.max(0,(att.atk||0)+(att.atkMod||0)+(G.energyDrainActive?-2:0));var rp=parseRange(att);if(rp.type==='area'){addLog('Use an action card to trigger area attacks.','important');G.actionMode=null;return;}var candidates=getCandidateCells(r,c,att,G.activePlayer);G.highlightCells=candidates.map(function(t){return{row:t.row,col:t.col,type:'attack'};});if(attInOppRZ){if(candidates.length>0){showModal('Choose Attack','<b>'+att.name+'</b> is in the enemy RZ.<br><br>Strike the Majesty directly for <b>'+atkVal+' Glory</b>, or attack a unit in range?',[{label:'Strike Majesty (-'+atkVal+' Glory)',fn:function(){closeModal();doDirectGloryStrike(r,c,att,atkVal,opp);}},{label:'Attack a Unit',fn:function(){closeModal();if(!G.highlightCells.length){addLog('No targets in range.');G.actionMode=null;}refreshUI();},secondary:true},{label:'Cancel',fn:function(){closeModal();G.actionMode=null;G.highlightCells=[];refreshUI();},secondary:true}]);return;}else{showModal('Direct Glory Strike!','<b>'+att.name+'</b> is in the enemy RZ with no targets in range.<br><br>Strike the Majesty for <b>'+atkVal+' Glory damage</b>?',[{label:'Strike! (-'+atkVal+' Glory)',fn:function(){closeModal();doDirectGloryStrike(r,c,att,atkVal,opp);}},{label:'Cancel',fn:function(){closeModal();G.actionMode=null;G.highlightCells=[];refreshUI();},secondary:true}]);return;}}if(!G.highlightCells.length){addLog('No targets in range.');G.actionMode=null;}refreshUI();}
+function enterRecover(){G.phase='recover';addLog(G.players[G.activePlayer].name+' enters Recovery.');refreshUI();}
+function startAOE(card,pi){G.actionMode='aoe';G.aoeTargetSelect={card:card,pi:pi};G.highlightCells=[];for(var r=0;r<8;r++)for(var c=0;c<5;c++){var cell=G.cells[r][c];var has=['conqueror','artillery'].some(function(lk){return cell[lk]&&cell[lk].attr===card.targetAttr&&cell[lk].owner!==pi;});if(has)G.highlightCells.push({row:r,col:c,type:'attack'});}var rp=parseRange(card);var sizeStr=(rp.rows&&rp.cols)?rp.rows+'x'+rp.cols:'3x3';addLog(card.name+': click the anchor tile for the '+sizeStr+' area.','important');refreshUI();}
+function startTornadoSelect(){
+  G.actionMode='tornado';
+  G.highlightCells=[];
+  // Highlight the anchor cell of every obstacle on the board (any owner)
+  var seen={};
+  for(var r=0;r<8;r++)for(var c=0;c<5;c++){
+    var obs=G.cells[r][c].obstacle;
+    if(!obs)continue;
+    // Use the anchor cell so multi-cell walls show one highlight
+    var ar=obs.anchorR!==undefined?obs.anchorR:r;
+    var ac=obs.anchorC!==undefined?obs.anchorC:c;
+    var key=ar+','+ac;
+    if(!seen[key]){seen[key]=true;G.highlightCells.push({row:ar,col:ac,type:'obstacle'});}
+  }
+  addLog('Tornado: click an obstacle to destroy it.','important');
+  refreshUI();
+}
+function resolveAOE(anchorR,anchorC){var card=G.aoeTargetSelect.card,pi=G.aoeTargetSelect.pi;resolveAreaAttack(card,pi,anchorR,anchorC);G.actionMode=null;G.aoeTargetSelect=null;G.highlightCells=[];clearUndo();checkWin();refreshUI();}
+function playActionCard(idx){var ap=G.activePlayer,p=G.players[ap],card=p.hand[idx];if(!canAfford(ap,card.cost||{})){addLog('Not enough resources.');return;}if(card.cost&&card.cost.any&&card.cost.any>0){window._pendingAction={idx:idx};showUniversalCostModal(card.cost.any,ap,function(choices){resolveActionCard(window._pendingAction.idx,choices);});return;}resolveActionCard(idx,[]);}
+function resolveActionCard(idx,anyChoices){var ap=G.activePlayer,p=G.players[ap],card=p.hand[idx],opp=1-ap;pushUndo('play '+card.name);spendRes(ap,card.cost||{},anyChoices);if(card.id==='armor'){G.armorActive=true;addLog('Armor: no Weaknesses this Combat Phase!','important');}else if(card.id==='energy_drain'){G.energyDrainActive=true;addLog('Energy Drain: all attacks -2 ATK!','important');}else if(card.id==='depression'){G.players[opp].depressedNextTurn=true;addLog('Depression: '+G.players[opp].name+' limited next Pillage!','important');}else if(card.id==='counter_action'){addLog('Counter Action held.','important');}else if(card.id==='thieving'){var stealable=RES.filter(function(t){return(G.players[opp].resources[t]||0)>0;});if(!stealable.length){addLog('Thieving: opponent has nothing to steal.');}else{p.hand.splice(idx,1);p.discard.push(card.id);G.selectedCard=null;showThievingModal(ap,opp,stealable);return;}}else if(card.id==='tornado'){// Check if any obstacles exist on the board
+var hasObs=false;for(var r=0;r<8&&!hasObs;r++)for(var c=0;c<5&&!hasObs;c++){if(G.cells[r][c].obstacle)hasObs=true;}if(!hasObs){addLog('No obstacles on the battlefield to destroy.');}else{p.hand.splice(idx,1);p.discard.push(card.id);G.selectedCard=null;startTornadoSelect();return;}}else if(['bright_sky','meteor_shower','rain_spell','rock_slide','solar_eclipse'].indexOf(card.id)>=0){p.hand.splice(idx,1);p.discard.push(card.id);G.selectedCard=null;startAOE(card,ap);return;}else addLog(card.name+' played.','important');p.hand.splice(idx,1);p.discard.push(card.id);G.selectedCard=null;refreshUI();}
+function showThievingModal(ap,opp,stealable){var html='<div style="font-size:12px;margin-bottom:10px;">Choose which resource to steal from <b>'+G.players[opp].name+'</b>:</div><div style="display:flex;flex-wrap:wrap;gap:8px;">';stealable.forEach(function(t){var have=G.players[opp].resources[t]||0;html+='<button onclick="confirmThieving('+ap+','+opp+',\''+t+'\')" style="padding:8px 14px;background:#1e1000;border:1px solid #3d2000;color:#f0e6d0;cursor:pointer;border-radius:3px;font-family:Georgia,serif;"><div style="display:flex;align-items:center;gap:6px;"><div style="width:10px;height:10px;border-radius:50%;background:'+RES_COLOR[t]+';"></div>'+RES_NAME[t]+' ('+have+')</div></button>';});html+='</div>';showModal('Thieving — Choose Resource',html,[]);}
+window.confirmThieving=function(ap,opp,t){var transfer=Math.min(1,G.players[opp].resources[t]||0);if(transfer<=0){addLog('No '+RES_NAME[t]+' to steal.');closeModal();return;}G.players[opp].resources[t]-=transfer;G.players[ap].resources[t]=Math.min(10,(G.players[ap].resources[t]||0)+transfer);addLog('Thieving: stole 1 '+RES_NAME[t]+' from '+G.players[opp].name+'!','important');closeModal();refreshUI();};
+function endTurn(){var ap=G.activePlayer,p=G.players[ap];addLog(p.name+' ends turn.',ap===0?'p1':'p2');for(var r=0;r<8;r++)for(var c=0;c<5;c++){['conqueror','artillery'].forEach(function(lk){var u=G.cells[r][c][lk];if(u&&u.owner===ap){u.movedThisTurn=false;u.attackedThisTurn=false;u.exhausted=false;u.justRecruited=false;}});}G.armorActive=false;G.energyDrainActive=false;p.pillagedThisTurn=false;p.drawnThisTurn=false;clearUndo();checkFCLoss(ap);G.activePlayer=1-ap;if(G.activePlayer===0)G.charge++;G.phase='draw';G.selectedCard=null;G.actionMode=null;G.highlightCells=[];if(G.mode==='ai'&&G.activePlayer===1){refreshUI();setTimeout(doAITurn,900);}else if(G.mode==='pvp')showPassModal();else beginTurn();}
+function checkFCLoss(pi){var p=G.players[pi];if(!p.inFinalCharge)return;var has=false;for(var r=0;r<8;r++)for(var c=0;c<5;c++){if(['conqueror','artillery'].some(function(lk){return G.cells[r][c][lk]&&G.cells[r][c][lk].owner===pi;})){has=true;break;}}if(!has){p.glory=0;addLog(p.name+' has no units — Final Charge defeat!','important');checkWin(pi);}}
+function checkWin(fcLoserIdx){for(var i=0;i<2;i++){if(G.players[i].glory<=0){(function(wi,li){setTimeout(function(){showVictory(wi,fcLoserIdx===li);},300);})(1-i,i);return;}}}
+function showVictory(wi,isFinalCharge){var li=1-wi;if(isFinalCharge){showModal('Final Charge!','<b>'+G.players[wi].name+'</b> wins the Final Charge!<br><br>'+G.players[li].name+' lost the Conquest due to having no more attackers on the Battlefield at the end of their turn.',[{label:'New Game',fn:function(){closeModal();showScreen('setup-screen');}},{label:'Title',fn:function(){closeModal();showScreen('title-screen');}}]);}else{showModal('Victory!','<b>'+G.players[wi].name+'</b> wins the Conquest!',[{label:'New Game',fn:function(){closeModal();showScreen('setup-screen');}},{label:'Title',fn:function(){closeModal();showScreen('title-screen');}}]);}}
+function onCellClick(r,c){var ap=G.activePlayer;if(G.actionMode==='aoe'){resolveAOE(r,c);return;}
+  if(G.actionMode==='tornado'){
+    var obs=G.cells[r][c].obstacle;
+    if(!obs){cancelAction();return;}
+    addLog('Tornado destroys '+obs.name+'!','important');
+    removeObs(obs);
+    G.actionMode=null;G.highlightCells=[];G.selectedCard=null;
+    clearUndo();checkWin();refreshUI();return;
+  }if(G.actionMode==='recruit'||G.actionMode==='obstacle'){var hl=G.highlightCells.find(function(h){return h.row===r&&h.col===c;});if(!hl||hl.type==='obstacle-preview'){if(hl&&hl.type==='obstacle-preview')addLog('Click the bright anchor cell (left) to place the wall.','important');else cancelAction();return;}placeCard(r,c);return;}if(G.actionMode==='move'){var hl2=G.highlightCells.find(function(h){return h.row===r&&h.col===c;});if(!hl2){cancelAction();return;}moveUnit(r,c);return;}if(G.actionMode==='attack'){var hl3=G.highlightCells.find(function(h){return h.row===r&&h.col===c;});if(!hl3){cancelAction();return;}doAttack(r,c);return;}if(G.actionMode==='selectAttacker'){var cell2=G.cells[r][c],attackers2=[];['conqueror','artillery'].forEach(function(lk){var u=cell2[lk];if(u&&u.owner===ap&&!u.attackedThisTurn&&!u.justRecruited&&!u.stunned)attackers2.push({lk:lk,unit:u});});if(attackers2.length===1){G.selectedCard={source:'cell',row:r,col:c,card:attackers2[0].unit};showAttackTargets(r,c,attackers2[0].unit);return;}if(attackers2.length>1){G.selectedCard={source:'cell',row:r,col:c,card:attackers2[0].unit};showAttackerChoiceModal(r,c,attackers2);return;}}var cell=G.cells[r][c];var top=cell.conqueror||cell.artillery||cell.obstacle||cell.trap;if(autoSettings.autoMoveSelect&&!G.actionMode&&(G.phase==='strategize'||G.phase==='recover')){var autoMover=null;['conqueror','artillery'].forEach(function(lk){if(!autoMover&&cell[lk]&&unitCanMove(cell[lk]))autoMover=cell[lk];});if(autoMover){G.selectedCard={source:'cell',row:r,col:c,card:autoMover};showCardDetail(autoMover);startMove();return;}}if(autoSettings.autoCombatSelect&&!G.actionMode&&(G.phase==='combat'||G.phase==='strategize')){var autoAtt=null;['conqueror','artillery'].forEach(function(lk){if(!autoAtt&&cell[lk]&&cell[lk].owner===ap&&!cell[lk].attackedThisTurn&&!(cell[lk].justRecruited&&lk==='conqueror'&&!enemyInOwnRZ(ap))&&!cell[lk].stunned)autoAtt=cell[lk];});if(autoAtt){G.selectedCard={source:'cell',row:r,col:c,card:autoAtt};showCardDetail(autoAtt);if(G.phase==='strategize'){G.phase='combat';G.armorActive=false;G.energyDrainActive=false;}showAttackTargets(r,c,autoAtt);return;}}if(top){G.selectedCard={source:'cell',row:r,col:c,card:top};showCardDetail(top);}else G.selectedCard=null;G.actionMode=null;G.highlightCells=[];refreshUI();}
+function onHandClick(i){if(G.mode==='ai'&&G.activePlayer===1)return;var card=G.players[G.activePlayer].hand[i];G.selectedCard={source:'hand',index:i,card:card};G.actionMode=null;G.highlightCells=[];showCardDetail(card);refreshUI();if(autoSettings.autoPlayFromHand&&(G.phase==='strategize'||G.phase==='recover')&&canPlayCard(G.activePlayer,card))handleRecruit();}
+function cancelAction(){G.actionMode=null;G.highlightCells=[];G.selectedCard=null;G.aoeTargetSelect=null;refreshUI();}
+document.addEventListener('keydown',function(e){if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return;if(document.getElementById('modal').classList.contains('active'))return;
+  // Tutorial hotkeys: B = Back, N = Next (only while the tutorial overlay is visible)
+  if(document.getElementById('tutorial-overlay').style.display==='block'){
+    var tk=e.key.toUpperCase();
+    if(tk==='B'){e.preventDefault();var pb=document.getElementById('tut-prev');if(pb&&!pb.disabled)pb.click();return;}
+    if(tk==='N'){e.preventDefault();var nb=document.getElementById('tut-next');if(nb&&!nb.disabled)nb.click();return;}
+  }
+  if(!G.players)return;var inAI=G.mode==='ai'&&G.activePlayer===1;if(inAI)return;var k=e.key.toUpperCase();if(k==='ESCAPE'){if(!document.getElementById('btn-cancel').disabled)cancelAction();return;}if(k==='U'){handleUndo();return;}var map={'D':'btn-draw','P':'btn-pillage','S':'btn-strategize','R':'btn-recruit','M':'btn-move','C':'btn-combat','V':'btn-recover','E':'btn-end'};if(map[k]){var btn=document.getElementById(map[k]);if(btn&&!btn.disabled)btn.click();}});
+function showSetupResourceModal(pi){var p=G.players[pi],isAfter=G.resBefore==='after';var handHtml='';if(isAfter&&p.hand.length>0){handHtml='<div style="margin-bottom:10px;padding:8px;background:#0d0500;border:1px solid #3d2000;border-radius:3px;"><div style="font-size:10px;color:#d4a843;letter-spacing:2px;margin-bottom:5px;">YOUR STARTING HAND</div><div style="display:flex;flex-wrap:wrap;gap:4px;">'+p.hand.map(function(c){return'<div style="padding:2px 6px;background:#1e1000;border:1px solid #3d2000;border-radius:2px;font-size:10px;color:#f0e6d0;">'+c.name+'</div>';}).join('')+'</div></div>';}var html=handHtml+'<div style="font-size:12px;margin-bottom:8px;">Choose <b>5 starting resources</b> (max 2 of the same type).</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:10px;">';RES.forEach(function(t){html+='<div style="display:flex;align-items:center;gap:5px;padding:4px;background:#0d0500;border-radius:3px;border:1px solid #3d2000;"><div style="width:10px;height:10px;border-radius:50%;background:'+RES_COLOR[t]+';"></div><span style="font-size:11px;color:#c0b090;flex:1;">'+RES_NAME[t]+' ('+G.cellar[t]+')</span><button onclick="setupAdj(\''+t+'\',-1)" style="background:#3d2000;border:none;color:#d4a843;width:20px;height:20px;cursor:pointer;border-radius:2px;">-</button><span id="spl-'+t+'" style="min-width:16px;text-align:center;font-size:12px;">0</span><button onclick="setupAdj(\''+t+'\',1)" style="background:#3d2000;border:none;color:#d4a843;width:20px;height:20px;cursor:pointer;border-radius:2px;">+</button></div>';});html+='</div><div id="spl-status" style="font-size:11px;color:#d4a843;min-height:16px;"></div>';window._spl={W:0,E:0,F:0,L:0,D:0};window._splPi=pi;showModal(p.name+' — Choose Starting Resources',html,[{label:'Confirm',fn:confirmSetupRes}]);}
+window.setupAdj=function(t,d){var sel=window._spl;var tot=RES.reduce(function(s,k){return s+(sel[k]||0);},0);if(d>0&&tot>=5)return;if(d>0&&(sel[t]||0)>=2)return;if(d>0&&G.cellar[t]<=0)return;sel[t]=Math.max(0,(sel[t]||0)+d);var el=document.getElementById('spl-'+t);if(el)el.textContent=sel[t];var tot2=RES.reduce(function(s,k){return s+(sel[k]||0);},0);var st=document.getElementById('spl-status');if(st)st.textContent=tot2+'/5 selected'+(tot2===5?' \u2713':'');};
+function confirmSetupRes(){var sel=window._spl,pi=window._splPi;var tot=RES.reduce(function(s,k){return s+(sel[k]||0);},0);if(tot!==5){var st=document.getElementById('spl-status');if(st)st.textContent='Must select exactly 5.';return;}RES.forEach(function(t){if(sel[t]>0)gainRes(pi,t,sel[t]);});addLog(G.players[pi].name+' receives starting resources.','important');closeModal();if(pi===0){if(G.mode==='pvp'){showModal('Pass to '+G.players[1].name,G.players[0].name+' has chosen. Pass the device to <b>'+G.players[1].name+'</b>.',[{label:'Continue',fn:function(){closeModal();showSetupResourceModal(1);}}]);}else{aiPickSetup(1);}}else{finalizeSetup();}}
+function aiPickSetup(pi){var picks={W:0,E:0,F:0,L:0,D:0},p=G.players[pi],needed={W:0,E:0,F:0,L:0,D:0};p.deck.slice(-10).forEach(function(id){var card=CARDS[id];if(!card)return;Object.entries(card.cost||{}).forEach(function(e){if(e[0]!=='any'&&needed[e[0]]!==undefined)needed[e[0]]+=e[1];});});var sorted=RES.filter(function(t){return G.cellar[t]>0;}).sort(function(a,b){return needed[b]-needed[a];});if(sorted[0])picks[sorted[0]]=Math.min(2,G.cellar[sorted[0]]);if(sorted[1])picks[sorted[1]]=Math.min(1,G.cellar[sorted[1]]);if(sorted[2])picks[sorted[2]]=Math.min(1,G.cellar[sorted[2]]);var tot=RES.reduce(function(s,k){return s+(picks[k]||0);},0);sorted.forEach(function(t){if(tot>=5)return;var can=Math.min(2-(picks[t]||0),G.cellar[t],5-tot);picks[t]=(picks[t]||0)+can;tot+=can;});RES.forEach(function(t){if(picks[t]>0)gainRes(pi,t,picks[t]);});addLog(G.players[pi].name+' (AI) receives starting resources.','important');finalizeSetup();}
+function finalizeSetup(){if(G.resBefore==='before'){for(var i=0;i<5;i++){drawCard(0);drawCard(1);}addLog('Starting hands dealt. Conquest begins!','important');}else{G.players[G.activePlayer].skipFirstDraw=true;G.players[G.activePlayer].firstPillageLimit=2;addLog('First player skips Draw and pillages only 2 this turn.','important');}refreshUI();if(G.mode==='pvp')showPassModal();else if(G.mode==='ai'&&G.activePlayer===1)setTimeout(doAITurn,900);else beginTurn();}
+function doAITurn(){if(G.activePlayer!==1)return;var p=G.players[1];addLog(p.name+' (AI) planning...','p2');if(!p.inFinalCharge)drawCard(1);p.drawnThisTurn=true;var needed={W:0,E:0,F:0,L:0,D:0};p.hand.forEach(function(c){Object.entries(c.cost||{}).forEach(function(e){if(e[0]!=='any'&&needed[e[0]]!==undefined)needed[e[0]]+=e[1];});});var sorted=RES.filter(function(t){return G.cellar[t]>0;}).sort(function(a,b){return needed[b]-needed[a];});if(sorted.length>=3){gainRes(1,sorted[0],1);gainRes(1,sorted[1],1);gainRes(1,sorted[2],1);}else if(sorted.length===2){gainRes(1,sorted[0],1);gainRes(1,sorted[1],1);}else if(sorted.length===1)gainRes(1,sorted[0],2);p.pillagedThisTurn=true;setTimeout(function(){var conqs=p.hand.filter(function(c){return c.type==='Conqueror'&&canAfford(1,c.cost||{});}).sort(function(a,b){return(b.hp||0)-(a.hp||0);});if(conqs.length){var card=conqs[0];var recruitSquares=[[0,1],[0,2],[0,3]];if(enemyInOwnRZ(1))recruitSquares.push([0,0],[0,4]);var placed=false;for(var ri=0;ri<recruitSquares.length&&!placed;ri++){var rr=recruitSquares[ri][0],rc=recruitSquares[ri][1];if(!G.cells[rr][rc].conqueror){spendRes(1,card.cost||{},[]);var inst=Object.assign({},card,{owner:1,justRecruited:true,movedThisTurn:false,attackedThisTurn:false,currentHp:card.hp||0,atkMod:0,stunned:false,rooted:false});G.cells[rr][rc].conqueror=inst;p.hand.splice(p.hand.indexOf(card),1);checkSorcererTrigger(1,card);addLog(p.name+' recruits '+card.name+'!','p2');placed=true;}}}for(var r=0;r<8;r++)for(var c=0;c<5;c++){var unit=G.cells[r][c].conqueror||G.cells[r][c].artillery;if(!unit||unit.owner!==1||unit.justRecruited||unit.movedThisTurn)continue;var lk=layerKey(unit.type);var mv=unit.move||1,visited={},queue=[{row:r,col:c,dist:0}];var candidates=[];visited[r+','+c]=true;while(queue.length){var cur=queue.shift();if(cur.dist>0&&cellLandable(cur.row,cur.col,unit)){var score=0;var inOppRZ=isRZ(cur.row,cur.col,0);var inOppBURZ=isBURZ(cur.row,cur.col,0);if(inOppRZ||inOppBURZ)score+=1000;score+=(cur.row-r)*10;var adjEnemies=0,adjEnemyMaxAtk=0;[[0,1],[0,-1],[1,0],[-1,0]].forEach(function(d){var ar=cur.row+d[0],ac=cur.col+d[1];if(ar<0||ar>=8||ac<0||ac>=5)return;var adjCell=G.cells[ar][ac];['conqueror','artillery'].forEach(function(alk){var ae=adjCell[alk];if(ae&&ae.owner===0){adjEnemies++;var aeDmg=(ae.atk||0)+weakDmg(ae,unit);if(aeDmg>adjEnemyMaxAtk)adjEnemyMaxAtk=aeDmg;}});});if(adjEnemyMaxAtk>=(unit.currentHp||1)&&!inOppRZ)score-=500;var aiCands=getCandidateCells(cur.row,cur.col,unit,1);if(aiCands.length)score+=50;candidates.push({row:cur.row,col:cur.col,score:score});}if(cur.dist<mv){[[0,1],[0,-1],[1,0],[-1,0]].forEach(function(d){var nr=cur.row+d[0],nc=cur.col+d[1],key=nr+','+nc;if(nr<0||nr>=8||nc<0||nc>=5||visited[key])return;if(isBURZ(nr,nc,0))return;if(!cellPassable(nr,nc,unit))return;visited[key]=true;queue.push({row:nr,col:nc,dist:cur.dist+1});});}}if(!candidates.length)continue;candidates.sort(function(a,b){return b.score-a.score;});var best=candidates[0];if(best.score>0){var moved=Object.assign({},unit,{movedThisTurn:true});G.cells[best.row][best.col][lk]=moved;G.cells[r][c][lk]=null;tryObstacleClear(best.row,best.col,moved);if(isRZ(best.row,best.col,0))addLog(moved.name+' enters enemy RZ!','important');}}for(var r2=0;r2<8;r2++)for(var c2b=0;c2b<5;c2b++){var u=G.cells[r2][c2b].conqueror||G.cells[r2][c2b].artillery;if(!u||u.owner!==1||u.attackedThisTurn||u.stunned)continue;var inOppRZ=isRZ(r2,c2b,0);if(inOppRZ){var atkVal2=Math.max(0,(u.atk||0)+(u.atkMod||0));G.players[0].glory=Math.max(0,G.players[0].glory-atkVal2);u.attackedThisTurn=true;addLog('AI glory strike! '+G.players[0].name+' loses '+atkVal2+' Glory!','important');checkWin();continue;}var aiCandidates=getCandidateCells(r2,c2b,u,1);if(aiCandidates.length){var atkVal3=Math.max(0,(u.atk||0)+(u.atkMod||0));var t0=aiCandidates[0];var rp=parseRange(u);if(rp.type==='splash'){resolveSplashAttack(u,r2,c2b,t0.row,t0.col,atkVal3);}else{resolveNormalAttack(u,r2,c2b,t0.row,t0.col,atkVal3);}u.attackedThisTurn=true;checkWin();}}setTimeout(function(){addLog(p.name+' ends turn.','p2');for(var r3=0;r3<8;r3++)for(var c3=0;c3<5;c3++){['conqueror','artillery'].forEach(function(lk){var u2=G.cells[r3][c3][lk];if(u2&&u2.owner===1){u2.movedThisTurn=false;u2.attackedThisTurn=false;u2.exhausted=false;u2.justRecruited=false;}});}p.pillagedThisTurn=false;p.drawnThisTurn=false;checkFCLoss(1);G.activePlayer=0;G.charge++;G.phase='draw';G.selectedCard=null;G.actionMode=null;G.highlightCells=[];clearUndo();beginTurn();},700);},700);}
+function refreshUI(){renderBF();renderHand();renderRes();renderPhase();renderBars();renderBtns();renderDeck();renderLog();}
+function buildCellTooltipHtml(r,c){
+  var cell=G.cells[r][c];
+  var parts=[];
+  var visibleCount=0;
+  [{key:'obstacle',label:'Obstacle'},{key:'trap',label:'Trap'},{key:'artillery',label:'Artillery'},{key:'conqueror',label:'Conqueror'}].forEach(function(lk){
+    var u=cell[lk.key];
+    if(!u)return;
+    if(lk.key==='trap'&&u.owner!==G.activePlayer)return; // respect hidden enemy traps
+    visibleCount++;
+  });
+  if(visibleCount<2)return null;
+  [{key:'obstacle',label:'Obstacle'},{key:'trap',label:'Trap'},{key:'artillery',label:'Artillery'},{key:'conqueror',label:'Conqueror'}].forEach(function(lk){
+    var u=cell[lk.key];
+    if(!u)return;
+    if(lk.key==='trap'&&u.owner!==G.activePlayer)return; // respect hidden enemy traps
+    var ownerStr=u.owner!==undefined?OWNER_GLYPH[u.owner]+' '+G.players[u.owner].name:'';
+    var fd=lk.key==='trap'&&!u.revealed;
+    var line='<div style="margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid #3d2000;">';
+    line+='<div style="color:#d4a843;font-weight:bold;">'+(fd?'??? (Hidden Trap)':u.name)+'</div>';
+    line+='<div style="color:#a08060;font-size:10px;">'+lk.label+(ownerStr?' \u00b7 '+ownerStr:'')+'</div>';
+    if(!fd){
+      var stats=[];
+      if(u.atk!==undefined&&u.atk>0)stats.push('\u2694 '+((u.atk||0)+(u.atkMod||0)));
+      if(u.hp)stats.push('\u2764 '+(u.currentHp!==undefined?u.currentHp:u.hp)+'/'+(u.maxhp||u.hp));
+      if(u.move)stats.push('MV '+u.move);
+      if(stats.length)line+='<div style="color:#c0b090;">'+stats.join('  ')+'</div>';
+      if(u.weakness&&u.weakness.length){
+        var wStr=u.weakness.map(function(w){return RES_NAME[w.a]+' +'+w.v;}).join(', ');
+        line+='<div style="color:#cc4422;font-size:10px;">Weak: '+wStr+'</div>';
+      }
+    }
+    line+='</div>';
+    parts.push(line);
+  });
+  if(!parts.length)return null;
+  parts[parts.length-1]=parts[parts.length-1].replace('border-bottom:1px solid #3d2000;','');
+  return parts.join('');
+}
+function showCellTooltip(e,r,c){
+  var html=buildCellTooltipHtml(r,c);
+  var tip=document.getElementById('cell-tooltip');
+  if(!html){tip.style.display='none';return;}
+  tip.innerHTML=html;
+  tip.style.display='block';
+  positionCellTooltip(e,tip);
+}
+function positionCellTooltip(e,tip){
+  var vw=window.innerWidth,vh=window.innerHeight;
+  var tw=tip.offsetWidth||240,th=tip.offsetHeight||80;
+  var left=e.clientX+16,top=e.clientY+16;
+  if(left+tw>vw-8)left=e.clientX-tw-16;
+  if(top+th>vh-8)top=e.clientY-th-16;
+  if(left<8)left=8;
+  if(top<8)top=8;
+  tip.style.left=left+'px';
+  tip.style.top=top+'px';
+}
+function hideCellTooltip(){document.getElementById('cell-tooltip').style.display='none';}
+function renderBF(){var bf=document.getElementById('battlefield');bf.innerHTML='';if(!G._fx)G._fx=[];for(var r=0;r<8;r++)for(var c=0;c<5;c++){var zone=zoneOf(r,c),cell=G.cells[r][c];var hl=G.highlightCells.find(function(h){return h.row===r&&h.col===c;});var hlClass='';if(hl){if(hl.type==='obstacle'&&hl.isAnchor)hlClass=' highlight-anchor';else if(hl.type==='obstacle-preview')hlClass=' highlight-obstacle-preview';else if(hl.type==='obstacle')hlClass=' highlight-obstacle';else hlClass=' highlight-'+hl.type;}var div=document.createElement('div');div.className='bf-cell zone-'+zone+hlClass;div.setAttribute('role','gridcell');var cellDesc=[];['conqueror','artillery','obstacle','trap'].forEach(function(lk){var u=cell[lk];if(!u)return;var fd=lk==='trap'&&!u.revealed;cellDesc.push(fd?'Hidden trap':(OWNER_LABEL[u.owner]||'')+(u.owner!==undefined?' ':'')+u.name+(u.currentHp?(' HP:'+u.currentHp):''));});div.setAttribute('aria-label','Row '+(r+1)+' Col '+(c+1)+(cellDesc.length?' — '+cellDesc.join(', '):''));var zl=document.createElement('div');zl.className='zone-label';zl.setAttribute('aria-hidden','true');zl.textContent=zone.replace('_p1','').replace('_p2','').toUpperCase();div.appendChild(zl);var stack=document.createElement('div');stack.className='cell-stack';var isSel=G.selectedCard&&G.selectedCard.source==='cell'&&G.selectedCard.row===r&&G.selectedCard.col===c;[{key:'obstacle',type:'obstacle'},{key:'trap',type:'trap'},{key:'artillery',type:'artillery'},{key:'conqueror',type:'conqueror'}].forEach(function(lk){var unit=cell[lk.key];if(!unit)return;if(lk.key==='trap'){if(unit.owner!==G.activePlayer)return;}if(lk.key==='obstacle'&&unit.multiCell){var isAnch=unit.anchorR===r&&unit.anchorC===c;var isSat=!isAnch&&unit.satelliteCells&&unit.satelliteCells.some(function(rc){return rc[0]===r&&rc[1]===c;});if(isAnch){var lyr=document.createElement('div');lyr.className='cell-layer layer-obstacle';var hp2=unit.maxhp?Math.round(((unit.currentHp||0)/unit.maxhp)*100):100;var ownerG=unit.owner!==undefined?'<span class="owner-glyph" aria-label="'+OWNER_LABEL[unit.owner]+'">'+OWNER_GLYPH[unit.owner]+'</span>':'';lyr.innerHTML=ownerG+'<div class="layer-name">'+unit.name+' ('+(unit.wallWidth||1)+'w)</div><div class="layer-hp"><div class="layer-hp-fill" style="width:'+hp2+'%"></div></div>';stack.appendChild(lyr);}else if(isSat){var lyr2=document.createElement('div');lyr2.className='cell-layer layer-obstacle';lyr2.style.cssText='border-style:dashed;opacity:0.75;';lyr2.innerHTML='<div class="layer-name" style="text-align:center;">\u2500\u2500\u2500</div>';stack.appendChild(lyr2);}return;}var lyr3=document.createElement('div');var own=unit.owner!==undefined?' p'+(unit.owner+1):'';var fd=lk.key==='trap'&&!unit.revealed;lyr3.className='cell-layer layer-'+lk.type+own+(unit.exhausted?' layer-exhausted':'')+(fd?' facedown':'');if(isSel&&(lk.key==='conqueror'||lk.key==='artillery'))lyr3.style.borderWidth='2px';var hpPct=unit.maxhp?Math.round(((unit.currentHp||0)/unit.maxhp)*100):100;var atk=(unit.atk||0)+(unit.atkMod||0);if(fd){lyr3.innerHTML='<div class="layer-name">??? <span class="owner-glyph" aria-label="'+OWNER_LABEL[unit.owner]+'">'+OWNER_GLYPH[unit.owner]+'</span></div>';}else{var ownerGlyph=unit.owner!==undefined?'<span class="owner-glyph" aria-label="'+OWNER_LABEL[unit.owner]+'">'+OWNER_GLYPH[unit.owner]+'</span>':'';lyr3.innerHTML=ownerGlyph+'<div class="layer-name">'+unit.name+'</div>'+((unit.atk||0)>0?'<div class="layer-stats"><span>\u2694'+atk+'</span><span>\u2764'+(unit.currentHp||0)+'</span></div>':'')+((unit.hp||0)>0?'<div class="layer-hp"><div class="layer-hp-fill" style="width:'+hpPct+'%"></div></div>':'');}stack.appendChild(lyr3);});div.appendChild(stack);if(G.actionMode==='attack'&&G.selectedCard&&G.selectedCard.source==='cell'&&hl&&hl.type==='attack'){var pv=previewDamageAt(G.selectedCard.card,r,c);if(pv){var bd=document.createElement('div');bd.className='dmg-badge'+(pv.lethal?' lethal':'');bd.innerHTML=(pv.lethal?'☠':'')+pv.dmg+(pv.mult>0?'<span class="wk">+'+pv.mult+'</span>':'');bd.title='Deals '+pv.dmg+' to '+pv.name+(pv.mult>0?' (weakness +'+pv.mult+')':'')+(pv.lethal?' — lethal!':'');div.appendChild(bd);}}if(G._fx&&G._fx.length){G._fx.forEach(function(f){if(f.r===r&&f.c===c)div.classList.add('fx-'+f.kind);});}(function(row,col){div.onclick=function(){if(['strategize','combat','recover'].indexOf(G.phase)>=0||G.actionMode)onCellClick(row,col);};div.onmouseenter=function(e){showCellTooltip(e,row,col);};div.onmousemove=function(e){var tip=document.getElementById('cell-tooltip');if(tip.style.display==='block')positionCellTooltip(e,tip);};div.onmouseleave=function(){hideCellTooltip();};})(r,c);bf.appendChild(div);}G._fx=[];}
+function renderHand(){var ap=G.activePlayer,p=G.players[ap];var ha=document.getElementById('hand-area');ha.innerHTML='';document.getElementById('hand-panel-title').textContent=p.name.substring(0,9).toUpperCase()+"'S HAND";p.hand.forEach(function(card,i){var canPlay=canPlayCard(ap,card);var isSel=G.selectedCard&&G.selectedCard.source==='hand'&&G.selectedCard.index===i;var div=document.createElement('div');div.className='hand-card'+(isSel?' selected':'')+(canPlay?'':' unplayable');div.setAttribute('tabindex','0');div.setAttribute('role','button');div.setAttribute('aria-label',card.name+', '+card.type+', cost '+fmtCost(card.cost||{})+(canPlay?'':' (unaffordable)'));div.setAttribute('aria-pressed',isSel?'true':'false');div.innerHTML='<div class="hc-name">'+card.name+'<span class="ab ab-'+(card.attr||'NA')+'">'+(card.attr||'NA')+'</span></div><div class="hc-type">'+card.type+(card.subtype&&card.subtype!==card.type?' \xb7 '+card.subtype:'')+'</div><div class="hc-cost">'+fmtCost(card.cost||{})+'</div>'+(card.type==='Conqueror'?'<div class="hc-stats">ATK:'+(card.atk||0)+' HP:'+(card.hp||0)+' MV:'+(card.move||0)+' RNG:'+(card.range||card.rangeMax||'—')+'</div>':'');(function(idx){div.onclick=function(){onHandClick(idx);};div.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();onHandClick(idx);}};})(i);ha.appendChild(div);});}
+function renderRes(){var ap=G.activePlayer,res=G.players[ap].resources;var el=document.getElementById('resource-display');el.innerHTML='';RES.forEach(function(t){var d=document.createElement('div');d.className='res-token';d.setAttribute('aria-label',RES_NAME[t]+': '+(res[t]||0));d.innerHTML='<div class="res-dot res-'+t+'" aria-hidden="true"></div><span style="font-size:10px;color:#c0b090;flex:1;">'+RES_NAME[t]+'</span><span style="color:#f0e6d0;font-size:12px;">'+(res[t]||0)+'</span>';el.appendChild(d);});}
+function renderPhase(){['draw','pillage','strategize','combat','recover','end'].forEach(function(ph){var el=document.getElementById('ph-'+ph);if(el){el.className='phase-tab'+(G.phase===ph?' active':'');el.setAttribute('aria-selected',G.phase===ph?'true':'false');}});}
+function renderBars(){var ap=G.activePlayer;document.getElementById('opp-name').textContent=G.players[1].name;document.getElementById('opp-glory').textContent=G.players[1].glory;document.getElementById('opp-deck-info').textContent='Deck:'+G.players[1].deck.length;document.getElementById('opp-fc').innerHTML=G.players[1].inFinalCharge?'<span class="final-charge-badge">FINAL CHARGE</span>':'';document.getElementById('act-name').textContent=G.players[0].name;document.getElementById('act-glory').textContent=G.players[0].glory;document.getElementById('act-final-charge').innerHTML=G.players[0].inFinalCharge?'<span class="final-charge-badge">FINAL CHARGE</span>':'';document.getElementById('turn-player-label').textContent=G.players[ap].name+"'s Turn";var fx='';if(G.armorActive)fx+='\ud83d\udee1 ';if(G.energyDrainActive)fx+='\u26a1 ';document.getElementById('turn-charge-label').textContent='Charge '+G.charge+(fx?' \xb7 '+fx:'');}
+function renderBtns(){var ph=G.phase,ap=G.activePlayer,inAI=G.mode==='ai'&&ap===1;function b(id){return document.getElementById(id);}b('btn-draw').disabled=ph!=='draw'||inAI;b('btn-pillage').disabled=ph!=='pillage'||G.players[ap].pillagedThisTurn||inAI;b('btn-strategize').disabled=(ph!=='pillage'&&ph!=='strategize')||inAI;b('btn-recruit').disabled=(ph!=='strategize'&&ph!=='recover')||!G.selectedCard||G.selectedCard.source!=='hand'||inAI;b('btn-move').disabled=(ph!=='strategize'&&ph!=='recover')||!G.selectedCard||G.selectedCard.source!=='cell'||inAI;b('btn-combat').disabled=(ph!=='strategize'&&ph!=='combat')||inAI;b('btn-recover').disabled=ph!=='combat'||inAI;b('btn-end').disabled=(ph!=='strategize'&&ph!=='combat'&&ph!=='recover')||inAI;b('btn-cancel').disabled=!G.actionMode||inAI;b('btn-undo').disabled=inAI||!G.undoStack||G.undoStack.length===0;}
+function renderDeck(){var ap=G.activePlayer,p=G.players[ap];document.getElementById('deck-info').textContent='Deck: '+p.deck.length+' | Undercroft: '+p.discard.length;}
+function renderLog(){document.getElementById('log-area').innerHTML=G.log.map(function(e){return'<div class="log-entry '+e.cls+'">'+e.msg+'</div>';}).join('');}
+function addLog(msg,cls){G.log.unshift({msg:msg,cls:cls||''});if(G.log.length>100)G.log.pop();}
+function showCardDetail(card){var el=document.getElementById('card-detail');var wStr=(card.weakness&&card.weakness.length)?card.weakness.map(function(w){return RES_NAME[w.a]+' +'+w.v;}).join(', '):'None';var ownerLine=card.owner!==undefined&&G.players&&G.players[card.owner]?'<div style="font-size:10px;color:#a08060;margin-bottom:2px;">Owner: '+OWNER_GLYPH[card.owner]+' '+G.players[card.owner].name+'</div>':'';el.innerHTML='<div class="cd-name">'+card.name+'</div><div class="cd-type">'+card.type+(card.subtype?' \xb7 '+card.subtype:'')+' <span class="ab ab-'+(card.attr||'NA')+'">'+(card.attr||'NA')+'</span></div>'+ownerLine+'<div class="cd-text">'+(card.text||'')+'</div>'+((card.atk||0)>0||(card.hp||0)>0?'<div class="cd-stats">'+(card.atk!==undefined?'<span class="cd-stat">\u2694 '+((card.atk||0)+(card.atkMod||0))+'</span>':'')+(card.hp?'<span class="cd-stat">\u2764 '+(card.currentHp!==undefined?card.currentHp:card.hp)+'/'+(card.maxhp||card.hp)+'</span>':'')+(card.move?'<span class="cd-stat">MV '+card.move+'</span>':'')+(card.range?'<span class="cd-stat">RNG '+card.range+'</span>':'')+(card.rangeMin?'<span class="cd-stat">RNG '+card.rangeMin+'-'+card.rangeMax+' aerial</span>':'')+'</div>':'')+(wStr!=='None'?'<div class="cd-weakness">\u26a0 Weak: '+wStr+'</div>':'')+(card.clearAttr?'<div style="font-size:9px;color:#00aa44;margin-top:2px;">Cleared by: '+RES_EMOJI[card.clearAttr]+' Conqueror</div>':'')+'<div style="font-size:9px;color:#a08060;margin-top:3px;">Cost: '+fmtCost(card.cost||{})+'</div>';}
+var DB={deck:[],filter:'All',selectedCard:null};
+function initDeckBuilder(){DB.deck=[];DB.filter='All';DB.selectedCard=null;renderDBFilters();renderDBLibrary();renderDBDeck();renderDBDetail(null);}
+function renderDBFilters(){var el=document.getElementById('db-filters');el.innerHTML='';['All','Conqueror','Artillery','Obstacle','Trap','Action','W','E','F','L','D'].forEach(function(t){var btn=document.createElement('button');btn.className='db-filter-btn'+(DB.filter===t?' active':'');btn.innerHTML=['W','E','F','L','D'].indexOf(t)>=0?'<span class="ab ab-'+t+'">'+t+'</span>':t;btn.onclick=function(){DB.filter=t;renderDBFilters();renderDBLibrary();};el.appendChild(btn);});}
+function renderDBLibrary(){var search=(document.getElementById('db-search')||{}).value||'';search=search.toLowerCase();var grid=document.getElementById('db-card-grid');grid.innerHTML='';var typeF=['Conqueror','Artillery','Obstacle','Trap','Action'];var attrF=['W','E','F','L','D'];Object.values(CARDS).forEach(function(card){if(DB.filter!=='All'){if(typeF.indexOf(DB.filter)>=0&&card.type!==DB.filter)return;if(attrF.indexOf(DB.filter)>=0&&card.attr!==DB.filter)return;}if(search&&card.name.toLowerCase().indexOf(search)<0)return;var inDeck=DB.deck.filter(function(id){return id===card.id;}).length;var maxed=inDeck>=(card.max||3);var isSel=DB.selectedCard&&DB.selectedCard.id===card.id;var rng='';if(card.rangeType==='aerial')rng=(card.rangeMin||1)+'-'+(card.rangeMax||2)+'\u2191';else if(card.rangeType==='splash')rng=(card.range||'')+'~';else if(card.range)rng=String(card.range);var div=document.createElement('div');div.className='db-card'+(maxed?' maxed':'');if(isSel)div.style.borderColor='#d4a843';div.innerHTML=(inDeck>0?'<div class="db-card-count">'+inDeck+'</div>':'')+'<div class="db-card-name">'+card.name+'</div><div class="db-card-meta">'+card.type+' <span class="ab ab-'+(card.attr||'NA')+'">'+(card.attr||'NA')+'</span></div><div class="db-card-cost">'+fmtCost(card.cost||{})+'</div>'+(card.type==='Conqueror'?'<div style="font-size:9px;color:#a08060;">ATK:'+card.atk+' HP:'+card.hp+' MV:'+card.move+(rng?' RNG:'+rng:'')+'</div>':'')+(card.type==='Artillery'?'<div style="font-size:9px;color:#a08060;">ATK:'+card.atk+' HP:'+card.hp+' RNG:'+(rng||'—')+'</div>':'') +((card.type==='Obstacle'||card.type==='Trap')&&card.hp?'<div style="font-size:9px;color:#a08060;">HP:'+card.hp+(card.multiCell?' ('+(card.cellShape?card.cellShape.length:1)+'\xd71)':' (1\xd71)')+'</div>':'')+(card.sorcererAttr?'<div style="font-size:9px;color:#4488aa;">Draw on '+RES_NAME[card.sorcererAttr]+' recruit</div>':'')+(card.clearAttr?'<div style="font-size:9px;color:#00aa44;">Cleared by '+RES_EMOJI[card.clearAttr]+'</div>':'')+(card.type==='Action'&&card.text?'<div style="font-size:9px;color:#887744;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:100%;">'+card.text+'</div>':'')+'<button class="db-card-info" title="Full details" onclick="event.stopPropagation();dbSelectCard(\''+card.id+'\')">i</button>';(function(cid){div.onclick=function(){dbSelectCard(cid);var maxed2=DB.deck.filter(function(id){return id===cid;}).length>=(CARDS[cid].max||3);if(!maxed2&&DB.deck.length<60){DB.deck.push(cid);renderDBLibrary();renderDBDeck();renderDBDetail(CARDS[cid]);}};;})(card.id);(function(cid){div.oncontextmenu=function(e){e.preventDefault();var i=DB.deck.lastIndexOf(cid);if(i>=0){DB.deck.splice(i,1);renderDBLibrary();renderDBDeck();renderDBDetail(DB.selectedCard);}};})(card.id);grid.appendChild(div);});}
+window.dbSelectCard=function(id){DB.selectedCard=CARDS[id]||null;renderDBDetail(DB.selectedCard);};
+function renderDBDeck(){var el=document.getElementById('db-deck-list');el.innerHTML='';var tot=DB.deck.length,valid=tot>=40&&tot<=60;document.getElementById('db-deck-stats').innerHTML='Deck: <b style="color:'+(valid?'#00cc66':'#cc4422')+'">'+tot+'</b>/40-60 '+(valid?'<span class="db-deck-valid">\u2713</span>':'<span class="db-deck-invalid">\u2717</span>');var counts={};DB.deck.forEach(function(id){counts[id]=(counts[id]||0)+1;});var order={Conqueror:0,Artillery:1,Obstacle:2,Trap:3,Action:4};Object.keys(counts).sort(function(a,b){return(order[CARDS[a].type]||9)-(order[CARDS[b].type]||9)||CARDS[a].name.localeCompare(CARDS[b].name);}).forEach(function(id){var card=CARDS[id],cnt=counts[id];var div=document.createElement('div');div.className='db-deck-entry';div.innerHTML='<span class="ab ab-'+(card.attr||'NA')+'">'+(card.attr||'NA')+'</span><span class="db-deck-entry-name">'+card.name+'</span><span class="db-deck-entry-count">\xd7'+cnt+'</span><button class="db-deck-entry-remove" onclick="dbRm1(\''+id+'\')">-</button><button class="db-deck-entry-remove" onclick="dbRmAll(\''+id+'\')" style="background:#220000;">\u2715</button>';el.appendChild(div);});}
+function renderDBDetail(card){var empty=document.getElementById('db-detail-empty');var content=document.getElementById('db-detail-content');if(!card){empty.style.display='';content.style.display='none';return;}empty.style.display='none';content.style.display='';var rangeStr='—';if(card.rangeType==='aerial')rangeStr=(card.rangeMin||1)+'-'+(card.rangeMax||2)+' (Aerial)';else if(card.rangeType==='splash')rangeStr=(card.range||'?')+' (Splash)';else if(card.rangeType==='normal')rangeStr=String(card.range||'—');var weakStr=(card.weakness&&card.weakness.length)?card.weakness.map(function(w){return RES_EMOJI[w.a]+' '+RES_NAME[w.a]+' +'+w.v;}).join('<br>'):'None';var sizeStr='';if(card.multiCell&&card.cellShape)sizeStr='1x'+card.cellShape.length;else if(card.type==='Obstacle'||card.type==='Trap')sizeStr='1x1';var typeColor={Conqueror:'#00cc66',Artillery:'#4488ff',Obstacle:'#aa9966',Trap:'#cc66aa',Action:'#d4a843'}[card.type]||'#a08060';var html='<div class="db-detail-name">'+card.name+'</div><div class="db-detail-meta"><span class="ab ab-'+(card.attr||'NA')+'">'+(card.attr==='NA'||!card.attr?'Universal':RES_NAME[card.attr]||card.attr)+'</span> <span style="color:'+typeColor+';font-size:10px;">'+card.type+'</span>'+(card.subtype&&card.subtype!==card.type?' <span style="color:#888;font-size:10px;">\xb7 '+card.subtype+'</span>':'')+'</div>';html+='<div class="db-detail-section"><div class="db-detail-label">Cost</div><div class="db-detail-text">'+fmtCostFull(card.cost||{})+'</div></div>';var hasStats=card.type==='Conqueror'||card.type==='Artillery'||card.type==='Obstacle'||card.type==='Trap';if(hasStats){html+='<div class="db-detail-section"><div class="db-detail-label">Stats</div>';if(card.atk!==undefined&&card.type!=='Obstacle')html+='<div class="db-detail-row"><span>Attack</span><span>'+card.atk+'</span></div>';if(card.hp)html+='<div class="db-detail-row"><span>HP</span><span>'+card.hp+'</span></div>';if(card.move!==undefined&&card.move>0)html+='<div class="db-detail-row"><span>Move</span><span>'+card.move+'</span></div>';if(rangeStr!=='—'&&card.type!=='Obstacle')html+='<div class="db-detail-row"><span>Range</span><span>'+rangeStr+'</span></div>';if(sizeStr)html+='<div class="db-detail-row"><span>Size</span><span>'+sizeStr+'</span></div>';html+='</div>';}if(card.sorcererAttr)html+='<div class="db-detail-section"><div class="db-detail-label">Sorcerer Ability</div><div class="db-detail-text" style="color:#4488aa;">When you recruit a '+RES_EMOJI[card.sorcererAttr]+' '+RES_NAME[card.sorcererAttr]+' Conqueror, draw 1 card.</div></div>';if(card.text)html+='<div class="db-detail-section"><div class="db-detail-label">Effect</div><div class="db-detail-text">'+card.text+'</div></div>';if(card.targetAttr)html+='<div class="db-detail-section"><div class="db-detail-label">AOE Target</div><div class="db-detail-text">Deals '+(card.aoeAtk||2)+' damage to all '+RES_EMOJI[card.targetAttr]+' <b>'+RES_NAME[card.targetAttr]+'</b> units in a 3x3 area.</div></div>';if(card.type==='Conqueror'||card.type==='Artillery'||card.type==='Obstacle')html+='<div class="db-detail-section"><div class="db-detail-label">Weaknesses</div><div class="db-detail-text db-detail-weak">'+weakStr+'</div></div>';if(card.clearAttr)html+='<div class="db-detail-section"><div class="db-detail-label">Cleared By</div><div class="db-detail-clear">'+RES_EMOJI[card.clearAttr]+' '+RES_NAME[card.clearAttr]+' Conqueror</div></div>';html+='<div class="db-detail-section"><div class="db-detail-label">Deck Limit</div><div class="db-detail-row"><span>Max copies</span><span>'+(card.max||3)+'</span></div></div>';var inDeck=DB.deck.filter(function(id){return id===card.id;}).length;var maxed=inDeck>=(card.max||3);html+='<button class="db-detail-add"'+(maxed?' disabled':'')+" onclick=\"dbAddFromDetail('"+card.id+"')\">"+(maxed?'\u2715 Max copies in deck':'+ Add to Deck'+(inDeck>0?' ('+inDeck+' in deck)':''))+'</button>';content.innerHTML=html;}
+window.dbRm1=function(id){var i=DB.deck.lastIndexOf(id);if(i>=0){DB.deck.splice(i,1);renderDBLibrary();renderDBDeck();renderDBDetail(DB.selectedCard);}};
+window.dbRmAll=function(id){DB.deck=DB.deck.filter(function(x){return x!==id;});renderDBLibrary();renderDBDeck();renderDBDetail(DB.selectedCard);};
+window.dbAddFromDetail=function(id){var card=CARDS[id];if(!card)return;var inDeck=DB.deck.filter(function(x){return x===id;}).length;if(inDeck>=(card.max||3)||DB.deck.length>=60)return;DB.deck.push(id);renderDBLibrary();renderDBDeck();renderDBDetail(card);};
+function loadPreset(n){DB.deck=DECKS[n]?DECKS[n].slice():[];DB.selectedCard=null;renderDBLibrary();renderDBDeck();renderDBDetail(null);}
+function clearDeck(){DB.deck=[];DB.selectedCard=null;renderDBLibrary();renderDBDeck();renderDBDetail(null);}
+function saveCustomDeck(){var t=DB.deck.length;if(t<40||t>60){showModal('Invalid Deck',t+' cards — must be 40-60.',[{label:'OK',fn:closeModal}]);return;}DECKS.custom=DB.deck.slice();document.getElementById('d1-custom-label').textContent='\u270f Custom \u2713';document.getElementById('d2-custom-label').textContent='\u270f Custom \u2713';showModal('Deck Saved!','Custom deck ('+t+' cards) saved and ready.',[{label:'Great!',fn:closeModal}]);}
+function showCardList(){
+  document.getElementById('library-backdrop').style.display='block';
+  var grid=document.getElementById('library-grid');
+  var html='';
+  Object.values(CARDS).forEach(function(c){var rng='';if(c.rangeType==='aerial')rng=(c.rangeMin||1)+'-'+(c.rangeMax||2)+' Aerial';else if(c.rangeType==='splash')rng=(c.range||'')+'~';else if(c.range)rng=String(c.range);var wStr=(c.weakness||[]).map(function(w){return RES_EMOJI[w.a]+' +'+w.v;}).join(' ')||'';html+='<div onclick="showCardDetailModal(\''+c.id+'\')" style="background:#1e1000;border:1px solid #3d2000;border-radius:3px;padding:5px;cursor:pointer;" onmouseover="this.style.borderColor=\'#d4a843\'" onmouseout="this.style.borderColor=\'#3d2000\'"><div style="color:#f0e6d0;font-weight:bold;font-size:11px;">'+c.name+' <span class="ab ab-'+(c.attr||'NA')+'">'+(c.attr||'NA')+'</span></div><div style="color:#a08060;font-size:9px;">'+c.type+' \xb7 '+fmtCost(c.cost||{})+'</div>'+((c.atk||c.hp)?'<div style="color:#c0a060;font-size:9px;">'+(c.atk!==undefined?'ATK:'+c.atk+' ':'')+''+(c.hp?'HP:'+c.hp+' ':'')+(rng?'RNG:'+rng:'')+'</div>':'')+(wStr?'<div style="color:#cc4422;font-size:9px;">Weak: '+wStr+'</div>':'')+(c.clearAttr?'<div style="color:#00aa44;font-size:9px;">Cleared by: '+RES_EMOJI[c.clearAttr]+'</div>':'')+'<div style="color:#554422;font-size:9px;">Click for full details</div></div>';});
+  grid.innerHTML=html;
+}
+function closeCardList(){document.getElementById('library-backdrop').style.display='none';}
+window.showCardDetailModal=function(id){var card=CARDS[id];if(!card)return;var rangeStr='—';if(card.rangeType==='aerial')rangeStr=(card.rangeMin||1)+'-'+(card.rangeMax||2)+' (Aerial)';else if(card.rangeType==='splash')rangeStr=(card.range||'?')+' (Splash)';else if(card.rangeType==='normal')rangeStr=String(card.range||'—');var weakStr=(card.weakness&&card.weakness.length)?card.weakness.map(function(w){return RES_EMOJI[w.a]+' '+RES_NAME[w.a]+' x'+w.v;}).join('<br>'):'None';var sizeStr='';if(card.multiCell&&card.cellShape)sizeStr='1x'+card.cellShape.length;else if(card.type==='Obstacle'||card.type==='Trap')sizeStr='1x1';var html='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"><div><div style="font-size:10px;color:#d4a843;letter-spacing:2px;margin-bottom:5px;">CARD INFO</div><div style="font-size:11px;color:#f0e6d0;margin-bottom:3px;"><b>Type:</b> '+card.type+(card.subtype&&card.subtype!==card.type?' / '+card.subtype:'')+'</div><div style="font-size:11px;color:#f0e6d0;margin-bottom:3px;"><b>Attribute:</b> '+(card.attr==='NA'||!card.attr?'Universal':RES_EMOJI[card.attr]+' '+RES_NAME[card.attr])+'</div><div style="font-size:11px;color:#f0e6d0;margin-bottom:8px;"><b>Cost:</b><br>'+fmtCostFull(card.cost||{})+'</div>';if(card.type==='Conqueror'||card.type==='Artillery'){html+='<div style="font-size:10px;color:#d4a843;letter-spacing:2px;margin-bottom:5px;">STATS</div>';if(card.atk!==undefined)html+='<div style="font-size:11px;color:#f0e6d0;margin-bottom:2px;"><b>ATK:</b> '+card.atk+'</div>';if(card.hp)html+='<div style="font-size:11px;color:#f0e6d0;margin-bottom:2px;"><b>HP:</b> '+card.hp+'</div>';if(card.move)html+='<div style="font-size:11px;color:#f0e6d0;margin-bottom:2px;"><b>Move:</b> '+card.move+'</div>';if(rangeStr!=='—')html+='<div style="font-size:11px;color:#f0e6d0;margin-bottom:2px;"><b>Range:</b> '+rangeStr+'</div>';}if(card.type==='Obstacle'||card.type==='Trap'){if(card.hp)html+='<div style="font-size:11px;color:#f0e6d0;margin-bottom:2px;"><b>HP:</b> '+card.hp+'</div>';if(card.atk&&card.type==='Trap')html+='<div style="font-size:11px;color:#f0e6d0;margin-bottom:2px;"><b>Damage:</b> '+card.atk+'</div>';if(sizeStr)html+='<div style="font-size:11px;color:#f0e6d0;margin-bottom:2px;"><b>Size:</b> '+sizeStr+'</div>';}html+='</div><div>';if(card.text)html+='<div style="font-size:10px;color:#d4a843;letter-spacing:2px;margin-bottom:5px;">EFFECT</div><div style="font-size:11px;color:#c0b090;line-height:1.5;margin-bottom:8px;">'+card.text+'</div>';if(card.sorcererAttr)html+='<div style="font-size:10px;color:#d4a843;letter-spacing:2px;margin-bottom:5px;">SORCERER</div><div style="font-size:11px;color:#4488aa;margin-bottom:8px;">Draw 1 when you recruit a '+RES_EMOJI[card.sorcererAttr]+' '+RES_NAME[card.sorcererAttr]+' Conqueror.</div>';if(card.targetAttr)html+='<div style="font-size:10px;color:#d4a843;letter-spacing:2px;margin-bottom:5px;">AOE TARGET</div><div style="font-size:11px;color:#c0b090;margin-bottom:8px;">Deals '+(card.aoeAtk||2)+' dmg to all '+RES_EMOJI[card.targetAttr]+' '+RES_NAME[card.targetAttr]+' units in 3x3.</div>';if(card.type==='Conqueror'||card.type==='Artillery'||card.type==='Obstacle')html+='<div style="font-size:10px;color:#d4a843;letter-spacing:2px;margin-bottom:5px;">WEAKNESSES</div><div style="font-size:11px;color:#cc4422;line-height:1.6;margin-bottom:8px;">'+weakStr+'</div>';if(card.clearAttr)html+='<div style="font-size:10px;color:#d4a843;letter-spacing:2px;margin-bottom:5px;">CLEARED BY</div><div style="font-size:11px;color:#00aa44;margin-bottom:8px;">'+RES_EMOJI[card.clearAttr]+' '+RES_NAME[card.clearAttr]+' Conqueror</div>';html+='<div style="font-size:10px;color:#a08060;">Max copies: '+(card.max||3)+'</div></div></div>';showModal(card.name,html,[{label:'\u2190 Back to Title',fn:function(){closeModal();closeCardList();showScreen('title-screen');}},{label:'Close',fn:closeModal}]);};
+function showModal(title,body,btns){document.getElementById('modal-title').textContent=title;document.getElementById('modal-body').innerHTML=body;var el=document.getElementById('modal-btns');el.innerHTML='';btns.forEach(function(b){var btn=document.createElement('button');btn.className='modal-btn'+(b.secondary?' secondary':'');btn.textContent=b.label;btn.onclick=b.fn;el.appendChild(btn);});document.getElementById('modal').classList.add('active');setTimeout(function(){var f=el.querySelector('button');if(f)f.focus();},50);}
+function closeModal(){document.getElementById('modal').classList.remove('active');}
+function showPassModal(){
+  if(autoSettings.passCurtain){
+    var overlay=document.getElementById('curtain-overlay');
+    document.getElementById('curtain-player-name').textContent=G.players[G.activePlayer].name;
+    overlay.style.display='flex';
+    document.getElementById('curtain-btn').onclick=function(){
+      overlay.style.display='none';
+      beginTurn();
+    };
+  } else {
+    showModal('Pass to '+G.players[G.activePlayer].name,"It's <b>"+G.players[G.activePlayer].name+"</b>'s turn.",[{label:'Begin Turn',fn:function(){closeModal();beginTurn();}}]);
+  }
+}
+function showScreen(id){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});document.getElementById(id).classList.add('active');}
+function confirmSurrender(){var name=G.players&&G.players[G.activePlayer]?G.players[G.activePlayer].name:'Current player';showModal('\u2691 Surrender?','<b>'+name+'</b>, are you sure you want to surrender?',[{label:'Yes, Surrender',fn:function(){closeModal();showScreen('title-screen');}},{label:'Keep Fighting',fn:closeModal,secondary:true}]);}
+function showRules(){showModal('How to Play Reconquesta','<b>Objective:</b> Reduce opponent\'s Glory to 0 by attacking from inside their Recruiting Zone.<br><br><b>Turn:</b> Draw \u2192 Pillage \u2192 Strategize \u2192 Combat \u2192 Recover \u2192 End<br><br><b>Resources:</b> W/E/F/L/D. Gain 3 different OR 2 same per Pillage. No more than 10 of any one resource may be accumulated.<br><br><b>Zones:</b> RZ = Recruit Zone \xb7 BURZ = unlocks when all 3 RZs occupied \xb7 A/D = Artillery & Defense \xb7 BF = Battlefield.<br><br><b>Stacking:</b> Up to Trap + Obstacle + Artillery + Conqueror on one square (1 of each, friendly only). Damage order: Obstacle \u2192 Artillery \u2192 Conqueror.<br><br><b>Movement:</b> Friendly Obstacles do not block own movement. Enemy units block passage and recruiting.<br><br><b>Glory Damage:</b> Move into enemy RZ, then attack to deal Glory damage.<br><br><b>Keys:</b> D=Draw, P=Pillage, S=Strategize, R=Recruit, M=Move, C=Combat, V=Recover, E=End, Esc=Cancel, U=Undo<br><br><b>Undo:</b> Press U or ↩ Undo to revert last move, placement, or action. Clears on combat or end of turn.<br><br><b>Undercroft:</b> Destroyed and discarded cards are placed in their respective Majesty\'s Undercroft.<br><br><b>Final Charge:</b> When a Majesty runs out of cards in their deck, they enter the Final Charge. If a Majesty ends their turn with no units on the board while in the Final Charge, their Glory drops to 0 and they lose immediately.',[{label:'Close',fn:closeModal}]);}
+function startGame(){var p1=document.getElementById('p1name').value||'Majesty 1';var p2=document.getElementById('p2name').value||'Majesty 2';var mode=document.querySelector('input[name="mode"]:checked').value;var resBefore=document.querySelector('input[name="resbefore"]:checked').value;var d1k=document.querySelector('input[name="deck1"]:checked').value;var d2k=document.querySelector('input[name="deck2"]:checked').value;if((d1k==='custom'||d2k==='custom')&&!DECKS.custom){showModal('No Custom Deck','Build a custom deck in the Deck Builder first.',[{label:'OK',fn:closeModal}]);return;}var d1=DECKS[d1k]||DECKS.balanced,d2=DECKS[d2k]||DECKS.balanced;initGame(p1,p2,mode,d1,d2,resBefore);showScreen('game-screen');var r1=Math.floor(Math.random()*6)+Math.floor(Math.random()*6)+2;var r2=Math.floor(Math.random()*6)+Math.floor(Math.random()*6)+2;G.activePlayer=r1>=r2?0:1;addLog(p1+' rolls '+r1+', '+p2+' rolls '+r2+'. '+G.players[G.activePlayer].name+' goes first!','important');refreshUI();if(resBefore==='after'&&mode==='pvp'){showModal('Pass to '+G.players[0].name,'Hand the device to <b>'+G.players[0].name+'</b> to view hand and choose resources.',[{label:'Ready',fn:function(){closeModal();showSetupResourceModal(0);}}]);}else{showSetupResourceModal(0);}}
+document.addEventListener('DOMContentLoaded',function(){
+  document.getElementById('btn-new-game').onclick=function(){showScreen('setup-screen');};
+  document.getElementById('btn-tutorial').onclick=function(){InteractiveTutorial.start();};
+  document.getElementById('btn-deck-builder').onclick=function(){showScreen('deckbuilder-screen');initDeckBuilder();};
+  document.getElementById('btn-rules').onclick=function(){showRules();};
+  document.getElementById('btn-card-library').onclick=function(){showCardList();};
+  document.getElementById('btn-library-back').onclick=function(){closeCardList();showScreen('title-screen');};
+  document.getElementById('btn-setup-back').onclick=function(){showScreen('title-screen');};
+  document.getElementById('btn-setup-start').onclick=function(){startGame();};
+  document.getElementById('btn-db-save').onclick=function(){saveCustomDeck();};
+  document.getElementById('btn-db-clear').onclick=function(){clearDeck();};
+  document.getElementById('btn-db-back').onclick=function(){showScreen('title-screen');};
+  document.getElementById('db-search').oninput=function(){renderDBLibrary();};
+  document.getElementById('btn-draw').onclick=function(){doDrawPhase();};
+  document.getElementById('btn-pillage').onclick=function(){doPillagePhase();};
+  document.getElementById('btn-strategize').onclick=function(){enterStrategize();};
+  document.getElementById('btn-recruit').onclick=function(){handleRecruit();};
+  document.getElementById('btn-move').onclick=function(){startMove();};
+  document.getElementById('btn-combat').onclick=function(){enterCombat();};
+  document.getElementById('btn-recover').onclick=function(){enterRecover();};
+  document.getElementById('btn-end').onclick=function(){endTurn();};
+  document.getElementById('btn-cancel').onclick=function(){cancelAction();};
+  document.getElementById('btn-undo').onclick=function(){handleUndo();};
+  document.getElementById('btn-surrender').onclick=function(){confirmSurrender();};
+  var presets=document.getElementById('db-presets');
+  [{n:'Balanced',k:'balanced'},{n:'\ud83d\udd25',k:'fire'},{n:'\ud83d\udca7',k:'water'},{n:'\ud83c\udf11',k:'dark'},{n:'\ud83c\udf0d',k:'earth'},{n:'\u2728',k:'light'}].forEach(function(p){
+    var btn=document.createElement('button');btn.className='db-preset-btn';btn.textContent=p.n;btn.onclick=function(){loadPreset(p.k);};presets.appendChild(btn);
+  });
+  renderAutoFlowPanel();
+  document.getElementById('btn-autoflow').onclick=function(){
+    document.getElementById('af-modal').classList.add('active');
+    renderAutoFlowPanel();
+    setTimeout(function(){var f=document.getElementById('af-close');if(f)f.focus();},50);
+  };
+  document.getElementById('af-close').onclick=function(){
+    document.getElementById('af-modal').classList.remove('active');
+  };
+  document.getElementById('af-toggle-all').onclick=function(){
+    var anyOn=Object.values(autoSettings).some(Boolean);
+    Object.keys(autoSettings).forEach(function(k){autoSettings[k]=!anyOn;});
+    renderAutoFlowPanel();
+  };
+});
+
+var InteractiveTutorial=(function(){
+  var _step=0,_active=false,_waitingForAction=false,_actionType=null;
+  var _tutTurn=1;
+  var _history=[]; // stack of {step, tutTurn, snap} — snap is state as of the START of `step`
+  var _stepEntrySnap=null; // snapshot captured the moment the CURRENT step began
+  var _origDraw,_origPillage,_origStrategize,_origRecruit,_origCombat,_origEndTurn;
+  var _origDoPillagePhase,_origHandleRecruit,_origStartMove,_origEnterRecover,_origOnHandClick,_origOnCellClick,_origMoveUnit,_origDoAttack;
+  var _patchesApplied=false;
+  var TUT_HAND=['soldier','cannon','small_stone_wall','rain_spell','archer'];
+  // Maps a requested action to whether it's the action this tutorial step wants
+  function _isAllowed(action){
+    if(!_active)return true; // tutorial not running — no restriction
+    if(_actionType==null)return false; // informational step — no game actions allowed
+    return _actionType===action;
+  }
+  function _blocked(){
+    addLog('\u26a0 Follow the tutorial instructions to continue.','important');
+    refreshUI();
+  }
+  var _steps=[
+    {title:'Welcome to Reconquesta!',body:'This tutorial walks you through the UI and core rules one step at a time.<br><br>Click <b>Next \u2192</b> to advance, or <b>Exit Tutorial</b> to quit at any time.',highlight:null,actionHint:''},
+    {title:'How to Win',body:'Each player starts with <b>20 Glory</b>. Reduce your opponent\'s Glory to 0 to win.<br><br>Move a Conqueror into the enemy <b>Recruit Zone (RZ)</b>, then attack from there to deal direct Glory damage.',highlight:null,actionHint:''},
+    {title:'The Battlefield',body:'The central grid is 8 rows \u00d7 5 columns.<br><br>\u2022 <b>RZ</b> \u2013 your home rows; where Conquerors spawn.<br>\u2022 <b>BURZ</b> \u2013 corner backup squares, unlocked under pressure.<br>\u2022 <b>AD</b> \u2013 Artillery &amp; Defence zone.<br>\u2022 <b>BF</b> \u2013 the middle battlefield where units clash.',highlight:'.battlefield-wrap',actionHint:''},
+    {title:'Your Hand',body:'The <b>left panel</b> shows your hand \u2014 cards available to play. Affordable cards are fully lit; cards you cannot pay for are dimmed.<br><br>Your starting hand contains: <b>Soldier</b>, <b>Cannon</b>, <b>Small Stone Wall</b>, <b>Rain Spell</b>, and <b>Archer</b>.',highlight:'.left-panel',actionHint:''},
+    {title:'Resources',body:'Below your hand are your five resource types:<br>Water \ud83d\udca7, Earth \ud83c\udf3f, Fire \ud83d\udd25, Light \u2600\ufe0f, Dark \ud83c\udf11.<br><br>You start with <b>1 of each</b>. Spend resources to recruit units and play Action cards. Gain more each turn during the <b>Pillage</b> phase.',highlight:'.left-panel',actionHint:''},
+    {title:'Turn Phases',body:'Each turn follows this order:<br><br><b>Draw</b> \u2192 draw a card from your deck.<br><b>Pillage</b> \u2192 gain resources (3 different types, or 2 of the same).<br><b>Strategize</b> \u2192 place units, play spells, move troops.<br><b>Combat</b> \u2192 attack with your units.<br><b>Recover</b> \u2192 extra moves &amp; plays after combat.<br><b>End Turn</b> \u2192 pass to your opponent.',highlight:'.phase-bar',actionHint:''},
+    {title:'Action Buttons',body:'The right panel lists your action buttons:<br><br>\u2022 <b>Draw Card</b> \u2013 draw for this turn.<br>\u2022 <b>Pillage Resources</b> \u2013 open the resource picker.<br>\u2022 <b>Strategize Phase</b> \u2013 advance to Strategize.<br>\u2022 <b>Combat Phase</b> \u2013 enter Combat.<br>\u2022 <b>Recover Phase</b> \u2013 enter Recovery.<br>\u2022 <b>End Turn</b> \u2013 finish your turn.<br>\u2022 <b>Recruit / Play Card</b> \u2013 place a selected hand card.<br>\u2022 <b>Move Selected</b> \u2013 move a selected field unit.<br>\u2022 <b>Cancel / Undo</b> \u2013 cancel or revert the last action.',highlight:'nav[aria-label="Turn actions"]',actionHint:''},
+    {title:'Auto-Flow Settings',body:'The <b>Auto-Flow</b> panel has toggles that automate common steps:<br><br>\u2022 Auto-draw at turn start.<br>\u2022 Auto-advance Pillage \u2192 Strategize.<br>\u2022 Auto-play from hand on click.<br>\u2022 Auto-combat / Auto-move on unit click.<br><br>These are all <b>off</b> during the tutorial so you can practice each step manually.',highlight:'.af-panel',actionHint:''},
+    {title:'Battle Log',body:'The <b>Battle Log</b> at the bottom right records every action \u2014 attacks, damage, placements, resource changes. Scroll up to review recent history.',highlight:'.log-area',actionHint:''},
+    {title:'Card Types',body:'\u2022 <b>Conquerors</b> \u2013 main fighters; they move and attack.<br>\u2022 <b>Artillery</b> \u2013 ranged units placed in AD zones; can attack on the turn played.<br>\u2022 <b>Obstacles</b> \u2013 terrain and walls placed in AD zones.<br>\u2022 <b>Traps</b> \u2013 face-down cards that trigger when an enemy steps on them.<br>\u2022 <b>Actions</b> \u2013 instant spell cards with a variety of effects.',highlight:'.hand-area',actionHint:''},
+    {title:'Attributes &amp; Weaknesses',body:'Units have attributes: Water, Earth, Fire, Light, or Dark (some are Universal).<br><br>Each unit may be <b>weak</b> to certain attribute types \u2014 attacks from those types deal bonus damage. Click any card to view its weaknesses in the detail panel on the right.',highlight:'#card-detail',actionHint:''},
+    {title:'Turn 1 \u2013 Draw a Card',body:'Your first action every turn is to <b>draw a card</b>.<br><br>You will draw a <b>Soldier</b> \u2014 a reliable Conqueror that costs 2 Earth and has Move 2.',highlight:'#btn-draw',actionHint:'\ud83d\udc49 Click <b>Draw Card</b> (or press D).',waitFor:'draw'},
+    {title:'Turn 1 \u2013 Pillage Resources',body:'Now gain resources. Choose <b>2 Earth</b> (same type) or any 3 different types.<br><br>Tip: picking 2 Earth will let you afford the Soldier you just drew (cost: 2 Earth).',highlight:'#btn-pillage',actionHint:'\ud83d\udc49 Click <b>Pillage Resources</b> and confirm.',waitFor:'pillage'},
+    {title:'Turn 1 \u2013 Strategize',body:'Click <b>Strategize Phase</b> to enter the main action phase where you can place units and play cards.',highlight:'#btn-strategize',actionHint:'\ud83d\udc49 Click <b>Strategize Phase</b>.',waitFor:'strategize'},
+    {title:'Turn 1 \u2013 Recruit Your Soldier',body:'Select the <b>Soldier</b> card from your hand (left panel), then click <b>Recruit / Play Card</b>.<br><br>Green squares will highlight your valid RZ placement spots. Click one to place the Soldier.',highlight:'.hand-area',actionHint:'\ud83d\udc49 Click the Soldier card, then click <b>Recruit / Play Card</b>.',waitFor:'recruit'},
+    {title:'Turn 1 \u2013 End Your Turn',body:'Great work! Now click <b>End Turn</b> to pass to the next turn.<br><br>In a real game your opponent would now play \u2014 but in this tutorial you get Turn 2 right away.',highlight:'#btn-end',actionHint:'\ud83d\udc49 Click <b>End Turn</b>.',waitFor:'endturn'},
+    {title:'Turn 2 \u2013 Move &amp; Attack',body:'Welcome to Turn 2! Your Soldier is now on the board. This turn you will:<br><br>1. Draw and Pillage as before.<br>2. <b>Move</b> your Soldier toward the enemy.<br>3. <b>Attack</b> the enemy Soldier in the middle of the board.',highlight:null,actionHint:''},
+    {title:'Turn 2 \u2013 Draw',body:'Draw your card for this turn.',highlight:'#btn-draw',actionHint:'\ud83d\udc49 Click <b>Draw Card</b>.',waitFor:'draw'},
+    {title:'Turn 2 \u2013 Pillage',body:'Gain your resources for this turn.',highlight:'#btn-pillage',actionHint:'\ud83d\udc49 Click <b>Pillage Resources</b> and confirm.',waitFor:'pillage'},
+    {title:'Turn 2 \u2013 Strategize',body:'Enter the Strategize phase so you can move your Soldier.',highlight:'#btn-strategize',actionHint:'\ud83d\udc49 Click <b>Strategize Phase</b>.',waitFor:'strategize'},
+    {title:'Turn 2 \u2013 Move Your Soldier',body:'Click your <b>Soldier</b> on the battlefield to select it, then click <b>Move Selected</b>.<br><br>Blue squares show where it can move. Move it closer to the enemy Soldier in row 4.',highlight:'.battlefield-wrap',actionHint:'\ud83d\udc49 Select your Soldier, click <b>Move Selected</b>, then pick a destination.',waitFor:'move'},
+    {title:'Turn 2 \u2013 Enter Combat',body:'Now click <b>Combat Phase</b> to enter combat.',highlight:'#btn-combat',actionHint:'\ud83d\udc49 Click <b>Combat Phase</b>.',waitFor:'combat'},
+    {title:'Turn 2 \u2013 Attack!',body:'Click your <b>Soldier</b> on the battlefield. Red squares will highlight valid targets.<br><br>Click the enemy Soldier to attack it!',highlight:'.battlefield-wrap',actionHint:'\ud83d\udc49 Click your Soldier, then click the enemy unit.',waitFor:'attack'},
+    {title:'Unit Stacking',body:'Each square can hold up to one of each type: Trap + Obstacle + Artillery + Conqueror (friendly only).<br><br>When a square is attacked, damage hits in order: <b>Obstacle \u2192 Artillery \u2192 Conqueror</b>.',highlight:'.battlefield-wrap',actionHint:''},
+    {title:'The Final Charge',body:'When a player\'s deck runs out of cards they enter <b>The Final Charge</b>.<br><br>If they end a turn with no units on the board, their Glory drops to 0 and they lose immediately.',highlight:null,actionHint:''},
+    {title:'Tutorial Complete! \ud83c\udf89',body:'You now know the basics of Reconquesta! Head back to the title screen and start a real game \u2014 good luck, Majesty.<br><br>Remember: push Conquerors into the enemy RZ and strike their Glory to 0 to win.',highlight:null,actionHint:''}
+  ];
+  function _clearHighlight(){document.querySelectorAll('.tut-highlighted').forEach(function(el){el.classList.remove('tut-highlighted');el.style.removeProperty('box-shadow');el.style.removeProperty('z-index');});}
+  function _highlightEl(sel){_clearHighlight();if(!sel)return;var el=document.querySelector(sel);if(!el)return;el.classList.add('tut-highlighted');el.style.zIndex='199';el.style.boxShadow='0 0 0 3px #d4a843,0 0 0 6px #d4a84340';_positionBox(el);}
+  function _positionBox(el){var box=document.getElementById('tut-box');var rect=el.getBoundingClientRect();var vw=window.innerWidth,vh=window.innerHeight,bw=470,bh=340;var left,top;if(rect.right+bw+16<vw){left=rect.right+12;top=Math.max(8,rect.top);}else if(rect.left-bw-16>0){left=rect.left-bw-12;top=Math.max(8,rect.top);}else if(rect.bottom+bh+16<vh){left=Math.max(8,rect.left);top=rect.bottom+12;}else{left=(vw-bw)/2;top=(vh-bh)/2;}left=Math.max(8,Math.min(left,vw-bw-8));top=Math.max(8,Math.min(top,vh-bh-8));box.style.left=left+'px';box.style.top=top+'px';}
+  function _centerBox(){var box=document.getElementById('tut-box');var vw=window.innerWidth,vh=window.innerHeight;box.style.left=Math.max(8,(vw-470)/2)+'px';box.style.top=Math.max(8,(vh-340)/2)+'px';}
+  function _unlockNext(hint){_waitingForAction=false;_actionType=null;var nb=document.getElementById('tut-next');nb.disabled=false;nb.style.opacity='1';nb.style.cursor='pointer';document.getElementById('tut-action-hint').textContent=hint||'\u2713 Done! Click Next \u2192 to continue.';}
+  function _render(){var s=_steps[_step];document.getElementById('tut-step-label').textContent='Step '+(_step+1)+' of '+_steps.length;document.getElementById('tut-title').innerHTML=s.title;document.getElementById('tut-body').innerHTML=s.body;document.getElementById('tut-action-hint').innerHTML=s.actionHint||'';var nb=document.getElementById('tut-next');    nb.innerHTML=(_step===_steps.length-1)?'Finish \u2713':'Next \u2192 <span class="kbd" style="color:#d4a84390;border-color:#664400;background:#2a1800;">N</span>';_waitingForAction=!!(s.waitFor);_actionType=s.waitFor||null;nb.disabled=_waitingForAction;nb.style.opacity=_waitingForAction?'0.35':'1';nb.style.cursor=_waitingForAction?'default':'pointer';if(s.highlight){_highlightEl(s.highlight);}else{_clearHighlight();_centerBox();}}
+  function _applyPatches(){
+    if(_patchesApplied)return;_patchesApplied=true;
+    _origDraw=window.doDrawPhase;
+    window.doDrawPhase=function(){
+      if(_active&&!_isAllowed('draw')){_blocked();return;}
+      if(_active&&_tutTurn===1){
+        var p=G.players[0];
+        // Ensure a Soldier sits on top of the deck so the draw is a real, reversible deck-pop
+        var topIdx=-1;
+        for(var i=p.deck.length-1;i>=0;i--){if(p.deck[i]==='soldier'){topIdx=i;break;}}
+        if(topIdx>=0){p.deck.splice(topIdx,1);}
+        p.deck.push('soldier'); // deck.pop() draws from the end, so push puts it "on top"
+        var soldierInst=newInst(p.deck.pop());
+        soldierInst.justRecruited=false;
+        p.hand.push(soldierInst);
+        p.drawnThisTurn=true;G.phase='pillage';addLog('You (tutorial) draw a Soldier.','p1');refreshUI();
+      }else{_origDraw.apply(this,arguments);}
+      if(_active&&_actionType==='draw')_unlockNext();
+    };
+    _origDoPillagePhase=window.doPillagePhase;
+    window.doPillagePhase=function(){
+      if(_active&&!_isAllowed('pillage')){_blocked();return;}
+      _origDoPillagePhase.apply(this,arguments);
+    };
+    _origPillage=window.confirmPillage;
+    window.confirmPillage=function(){
+      if(_active&&!_isAllowed('pillage')){_blocked();return;}
+      _origPillage.apply(this,arguments);
+      if(_active&&_actionType==='pillage')_unlockNext();
+    };
+    _origStrategize=window.enterStrategize;
+    window.enterStrategize=function(){
+      if(_active&&!_isAllowed('strategize')){_blocked();return;}
+      _origStrategize.apply(this,arguments);
+      if(_active&&_actionType==='strategize')_unlockNext();
+    };
+    _origHandleRecruit=window.handleRecruit;
+    window.handleRecruit=function(){
+      if(_active&&!_isAllowed('recruit')){_blocked();return;}
+      _origHandleRecruit.apply(this,arguments);
+    };
+    _origRecruit=window.placeCard;
+    window.placeCard=function(){
+      if(_active&&!_isAllowed('recruit')){_blocked();return;}
+      _origRecruit.apply(this,arguments);
+      if(_active&&_actionType==='recruit')_unlockNext();
+    };
+    _origCombat=window.enterCombat;
+    window.enterCombat=function(){
+      if(_active&&!_isAllowed('combat')){_blocked();return;}
+      _origCombat.apply(this,arguments);
+      if(_active&&_actionType==='combat')_unlockNext();
+    };
+    _origStartMove=window.startMove;
+    window.startMove=function(){
+      if(_active&&!_isAllowed('move')){_blocked();return;}
+      _origStartMove.apply(this,arguments);
+    };
+    var _origMoveUnit2=window.moveUnit;
+    _origMoveUnit=_origMoveUnit2;
+    window.moveUnit=function(){
+      if(_active&&!_isAllowed('move')){_blocked();return;}
+      _origMoveUnit2.apply(this,arguments);
+      if(_active&&_actionType==='move')_unlockNext();
+    };
+    var _origDoAttack2=window.doAttack;
+    _origDoAttack=_origDoAttack2;
+    window.doAttack=function(){
+      if(_active&&!_isAllowed('attack')){_blocked();return;}
+      _origDoAttack2.apply(this,arguments);
+      if(_active&&_actionType==='attack')_unlockNext('\u2713 Attack landed! Click Next \u2192 to continue.');
+    };
+    _origEnterRecover=window.enterRecover;
+    window.enterRecover=function(){
+      if(_active&&_actionType!=null&&!_isAllowed('recover')){_blocked();return;}
+      _origEnterRecover.apply(this,arguments);
+    };
+    _origEndTurn=window.endTurn;
+    window.endTurn=function(){
+      if(_active&&!_isAllowed('endturn')){_blocked();return;}
+      if(_active&&_tutTurn===1){var ap=G.activePlayer,p=G.players[ap];addLog(p.name+' ends Turn 1 (tutorial).','p1');for(var r=0;r<8;r++)for(var c=0;c<5;c++){['conqueror','artillery'].forEach(function(lk){var u=G.cells[r][c][lk];if(u&&u.owner===0){u.movedThisTurn=false;u.attackedThisTurn=false;u.exhausted=false;u.justRecruited=false;}});}G.armorActive=false;G.energyDrainActive=false;p.pillagedThisTurn=false;p.drawnThisTurn=false;clearUndo();G.activePlayer=0;G.charge++;G.phase='draw';G.selectedCard=null;G.actionMode=null;G.highlightCells=[];_tutTurn=2;refreshUI();if(_active&&_actionType==='endturn')_unlockNext();}else{_origEndTurn.apply(this,arguments);if(_active&&_actionType==='endturn')_unlockNext();}
+    };
+    // Hand and battlefield clicks: only allow when the current step needs interaction with them
+    _origOnHandClick=window.onHandClick;
+    window.onHandClick=function(i){
+      if(_active&&_actionType!=='recruit'){_blocked();return;}
+      _origOnHandClick.apply(this,arguments);
+    };
+    _origOnCellClick=window.onCellClick;
+    window.onCellClick=function(r,c){
+      if(_active&&(_actionType==='move'||_actionType==='attack'||_actionType==='recruit')){
+        _origOnCellClick.apply(this,arguments);
+        return;
+      }
+      if(_active){_blocked();return;}
+      _origOnCellClick.apply(this,arguments);
+    };
+  }
+  function _removePatches(){if(!_patchesApplied)return;window.doDrawPhase=_origDraw;window.doPillagePhase=_origDoPillagePhase;window.confirmPillage=_origPillage;window.enterStrategize=_origStrategize;window.handleRecruit=_origHandleRecruit;window.placeCard=_origRecruit;window.enterCombat=_origCombat;window.startMove=_origStartMove;window.enterRecover=_origEnterRecover;window.endTurn=_origEndTurn;window.onHandClick=_origOnHandClick;window.onCellClick=_origOnCellClick;window.moveUnit=_origMoveUnit;window.doAttack=_origDoAttack;_patchesApplied=false;}
+  function _initTutorialGame(){initGame('You','Opponent','pvp',DECKS.balanced.slice(),DECKS.balanced.slice(),'before');G.activePlayer=0;G.phase='draw';G.mode='tutorial';G.players[0].resources={W:1,E:1,F:1,L:1,D:1};RES.forEach(function(t){G.cellar[t]=15-1;});G.players[0].hand=[];TUT_HAND.forEach(function(cid){var inst=newInst(cid);inst.justRecruited=false;G.players[0].hand.push(inst);});var opp=newInst('soldier');opp.owner=1;opp.justRecruited=false;opp.currentHp=6;G.cells[5][2].conqueror=opp;Object.keys(autoSettings).forEach(function(k){autoSettings[k]=false;});renderAutoFlowPanel();_tutTurn=1;showScreen('game-screen');refreshUI();}
+  function start(){_step=0;_active=true;_tutTurn=1;_history=[];_applyPatches();_initTutorialGame();document.getElementById('tutorial-overlay').style.display='block';var box=document.getElementById('tut-box');box.style.display='block';box.style.pointerEvents='all';document.getElementById('tut-next').onclick=function(){next();};document.getElementById('tut-prev').onclick=function(){prev();};document.getElementById('tut-exit').onclick=function(){exit();};_render();}
+  function next(){if(_waitingForAction)return;if(_step>=_steps.length-1){exit();return;}_history.push({step:_step,tutTurn:_tutTurn,snap:snapshotState()});_step++;_render();}
+  function prev(){if(!_history.length)return;var entry=_history.pop();var s=entry.snap;G.cells=s.cells;G.players.forEach(function(p,i){p.hand=s.players[i].hand;p.resources=s.players[i].resources;p.discard=s.players[i].discard;p.deck=s.players[i].deck;p.glory=s.players[i].glory;p.inFinalCharge=s.players[i].inFinalCharge;p.depressedNextTurn=s.players[i].depressedNextTurn;});G.phase=s.phase;G.armorActive=s.armorActive;G.energyDrainActive=s.energyDrainActive;G.log=s.log;G.selectedCard=null;G.actionMode=null;G.highlightCells=[];G.activePlayer=0;
+    // Explicitly reset per-turn draw/pillage flags so the restored step can be re-attempted
+    G.players[0].drawnThisTurn=false;
+    G.players[0].pillagedThisTurn=false;
+    _tutTurn=entry.tutTurn;_step=entry.step;refreshUI();_render();}
+  function exit(){_active=false;_waitingForAction=false;_actionType=null;_tutTurn=1;_removePatches();_clearHighlight();autoSettings.autoDrawOnTurnStart=true;autoSettings.autoAdvancePillageToStrategize=true;autoSettings.autoPlayFromHand=true;autoSettings.autoCombatSelect=true;autoSettings.autoMoveSelect=true;renderAutoFlowPanel();document.getElementById('tutorial-overlay').style.display='none';document.getElementById('tut-box').style.display='none';showScreen('title-screen');}
+  return {start:start,next:next,exit:exit};
+})();
+</script>
+</body>
+</html>
