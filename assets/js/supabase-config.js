@@ -8,7 +8,7 @@
  *    password to be (this is a light client-side gate only —
  *    see README.md for a note on stronger admin security).
  */
-const SUPABASE_URL = "https://voaoagabjoryhyctihyk.supabase.co/rest/v1/";
+const SUPABASE_URL = "https://voaoagabjoryhyctihyk.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_Y_7pFnkRibMSegVYmuIT-Q_IvEAoxOz";
 const ADMIN_PASSWORD = "NottodaySir!";
 
