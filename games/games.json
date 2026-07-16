@@ -15,18 +15,18 @@
     "file": "reconquesta.html"
   },
   {
-    "slug": "card-crawl",
-    "title": "Card Crawl: Deep Roots",
-    "category": "Solo Card Dungeon Crawler",
+    "slug": "rankers",
+    "title": "Rankers",
+    "category": "Competitive/Strategy",
     "status": "in-testing",
-    "version": "0.5",
-    "description": "A solitaire dungeon crawler played entirely with a standard deck. Descend through 4 floors, manage a shrinking hand, and survive the boss encounter.",
-    "instructions": "Shuffle the deck. Draw floor cards one at a time — face cards are monsters, number cards are loot or traps. Your hand is your health. Reach the King on floor 4 with any cards left in hand to win.",
+    "version": "1.73",
+    "description": "Rankers is a strategic card game where players race to complete a communal pyramid — from Rank 8 up to King Ranker — by matching arrow-support rules, with Power-up cards adding tactical twists.",
+    "instructions": "Players start with 5 cards and build a shared pyramid upward from Rank 8, playing cards only when arrows from the row below "support" the space above, with single arrows dictating left/right placement. Each turn, draw back up to 5 cards, then take 3 actions — playing Rank cards, using Power-ups (Draw 2, Peek & Take, Pyramid Grab), or discarding — and reshuffle the discard pile if the draw pile ever runs out. Power-ups are removed from the game after the 5th Rank is completed. The first player to place the King Ranker at the top wins.",
     "knownIssues": [
-      "Undo button currently allows infinite undo (balance issue, not a bug).",
-      "Floor 3 trap text is unclear — feedback wanted specifically here."
+      "AI difficulties are inconsistent.",
+      "The size of cards in hand may cause some UI issues and inconveniences."
     ],
-    "file": "card-crawl.html"
+    "file": "rankers.html"
   },
   {
     "slug": "trade-routes",
