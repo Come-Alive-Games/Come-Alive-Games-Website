@@ -47,7 +47,7 @@
     "category": "Strategy/Memory",
     "status": "new",
     "version": "1.0",
-    "description": "Jaywalking is a race game where 1–6 players dodge pixel-art traffic across 16 lanes of road, betting on safe paths while avoiding cars that send them back to start.",
+    "description": "Jaywalking is a Frogger inspired strategy and memory game where 1–6 players dodge pixel-art traffic across 16 lanes of road, betting on safe paths while avoiding cars that send them back to start.",
     "instructions": "Each round, all players simultaneously choose to move -2, -1, 0, +1, or +2 lanes toward the finish line, then one road card is revealed per lane showing either a safe road, a pothole, or a car. Any player whose lane reveals a car is sent all the way back to the start. The first player to cross all 16 lanes and reach the finish line wins!",
     "knownIssues": [
       "Lots of UI and UX issues.",
