@@ -1,0 +1,391 @@
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #111; color: #fff; font-family: 'Press Start 2P', monospace; image-rendering: pixelated; }
+  .game-wrap { padding: 1rem; min-height: 100vh; background: #111; }
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  .setup-card { background: #000; border: 3px solid #fff; padding: 1.5rem; max-width: 500px; margin: 0 auto; }
+  .setup-title { font-size: 18px; color: #fff; margin-bottom: 4px; letter-spacing: 1px; text-shadow: 3px 3px #333; }
+  .setup-sub { font-size: 7px; color: #aaa; margin-bottom: 1.5rem; line-height: 1.8; }
+  .section-label { font-size: 7px; color: #f5c518; margin-bottom: 10px; letter-spacing: 1px; }
+  .char-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 1.5rem; }
+  .char-btn { border: 2px solid #444; padding: 10px 6px; background: #1a1a1a; cursor: pointer; text-align: center; transition: all 0.1s; }
+  .char-btn:hover { border-color: #f5c518; background: #222; }
+  .char-btn.selected { border: 3px solid #f5c518; background: #2a2000; }
+  .char-emoji { font-size: 24px; display: block; margin-bottom: 5px; }
+  .char-name { font-size: 6px; color: #aaa; }
+  .char-btn.selected .char-name { color: #f5c518; }
+  .player-select { display: flex; gap: 6px; margin-bottom: 1.5rem; }
+  .player-btn { flex: 1; border: 2px solid #444; padding: 8px 4px; background: #1a1a1a; cursor: pointer; font-size: 6px; font-family: 'Press Start 2P', monospace; color: #aaa; transition: all 0.1s; }
+  .player-btn:hover { border-color: #f5c518; color: #fff; }
+  .player-btn.selected { border: 3px solid #f5c518; background: #2a2000; color: #f5c518; }
+  .mode-select { display: flex; gap: 6px; margin-bottom: 1.5rem; }
+  .mode-btn { flex: 1; border: 2px solid #444; padding: 10px 6px; background: #1a1a1a; cursor: pointer; font-size: 6px; font-family: 'Press Start 2P', monospace; color: #aaa; text-align: center; transition: all 0.1s; line-height: 2; }
+  .mode-btn:hover { border-color: #f5c518; color: #fff; }
+  .mode-btn.selected { border: 3px solid #f5c518; background: #2a2000; color: #f5c518; }
+  .mode-btn .mode-name { display: block; font-size: 8px; margin-bottom: 4px; }
+  .mode-btn .mode-desc { display: block; font-size: 5px; color: #777; line-height: 1.8; }
+  .mode-btn.selected .mode-desc { color: #a07800; }
+  .start-btn { width: 100%; padding: 12px; border: 3px solid #fff; background: #000; color: #fff; font-size: 10px; font-family: 'Press Start 2P', monospace; cursor: pointer; letter-spacing: 1px; transition: all 0.1s; }
+  .start-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .start-btn:hover:not(:disabled) { background: #fff; color: #000; }
+
+  .game-layout { display: grid; grid-template-columns: 1fr 180px; gap: 12px; }
+  .finish-zone, .start-zone { text-align: center; padding: 7px; font-size: 7px; letter-spacing: 1px; margin-bottom: 4px; border: 2px solid #fff; }
+  .finish-zone { background: #003300; color: #00ff44; border-color: #00ff44; }
+  .start-zone { background: #000033; color: #4488ff; border-color: #4488ff; margin-top: 4px; margin-bottom: 0; }
+  .mode-badge { display: inline-block; font-size: 5px; padding: 2px 6px; border: 1px solid #f5c518; color: #f5c518; margin-left: 8px; vertical-align: middle; }
+  .mode-badge.hard { border-color: #ff4444; color: #ff4444; }
+
+  .lane-row { display: grid; grid-template-columns: 20px repeat(6, 1fr) 20px; gap: 2px; align-items: center; margin-bottom: 2px; }
+  .lane-num { font-size: 6px; color: #555; text-align: center; }
+
+  .road-card {
+    height: 40px; background: #000; border: none; display: flex; align-items: center; justify-content: center;
+    font-size: 14px; position: relative; overflow: visible;
+    box-shadow: inset 8px 0 0 #fff, inset -8px 0 0 #fff, inset 0 8px 0 #fff, inset 0 -8px 0 #fff,
+                inset 16px 0 0 #000, inset -16px 0 0 #000, inset 0 16px 0 #000, inset 0 -16px 0 #000;
+  }
+  .road-card.face-down::after { content: '?'; color: #555; font-size: 12px; font-family: 'Press Start 2P', monospace; }
+  .road-card.revealed-safe { background: #111; }
+  .road-card.revealed-car { background: #000033; box-shadow: inset 8px 0 0 #1a6bb5, inset -8px 0 0 #1a6bb5, inset 0 8px 0 #1a6bb5, inset 0 -8px 0 #1a6bb5, inset 16px 0 0 #000033, inset -16px 0 0 #000033, inset 0 16px 0 #000033, inset 0 -16px 0 #000033; }
+  .road-card.revealed-pothole { background: #1a1a1a; box-shadow: inset 8px 0 0 #555, inset -8px 0 0 #555, inset 0 8px 0 #555, inset 0 -8px 0 #555, inset 16px 0 0 #1a1a1a, inset -16px 0 0 #1a1a1a, inset 0 16px 0 #1a1a1a, inset 0 -16px 0 #1a1a1a; }
+  .card-icon { position: relative; z-index: 2; font-size: 14px; }
+  .player-token { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 14px; background: #000; border: 2px solid #f5c518; position: absolute; z-index: 3; }
+
+  .side-panel { display: flex; flex-direction: column; gap: 8px; }
+  .panel-card { background: #000; border: 2px solid #333; padding: 10px; }
+  .panel-title { font-size: 6px; color: #f5c518; margin-bottom: 8px; letter-spacing: 1px; }
+  .player-row { display: flex; align-items: center; gap: 6px; padding: 5px 0; border-bottom: 1px solid #222; font-size: 6px; color: #ccc; }
+  .player-row:last-child { border-bottom: none; }
+  .player-lane-badge { font-size: 5px; padding: 2px 5px; background: #1a3a1a; color: #00ff44; margin-left: auto; white-space: nowrap; border: 1px solid #00ff44; }
+  .player-lane-badge.at-start { background: #1a1a1a; color: #555; border-color: #333; }
+
+  .move-label { font-size: 6px; color: #aaa; margin-bottom: 7px; line-height: 1.8; }
+  .move-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 3px; margin-bottom: 8px; }
+  .move-btn { border: 2px solid #444; padding: 7px 0; background: #111; cursor: pointer; font-size: 8px; font-family: 'Press Start 2P', monospace; color: #aaa; text-align: center; transition: all 0.1s; }
+  .move-btn:hover:not(:disabled) { border-color: #f5c518; color: #fff; }
+  .move-btn.selected { border: 2px solid #f5c518; background: #2a2000; color: #f5c518; }
+  .move-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+  .action-btn { width: 100%; padding: 8px; border: 2px solid #fff; background: #000; color: #fff; font-size: 6px; font-family: 'Press Start 2P', monospace; cursor: pointer; margin-bottom: 4px; letter-spacing: 1px; transition: all 0.1s; }
+  .action-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .action-btn:hover:not(:disabled) { background: #fff; color: #000; }
+  .action-btn.secondary { border-color: #555; color: #aaa; display: none; }
+  .action-btn.secondary:hover { background: #333; color: #fff; }
+
+  .log-area { background: #0a0a0a; border: 1px solid #222; padding: 6px 8px; font-size: 5px; color: #666; max-height: 72px; overflow-y: auto; line-height: 2; }
+  .round-badge { font-size: 7px; color: #555; text-align: right; margin-bottom: 5px; }
+  .menu-btn { font-size: 6px; padding: 5px 9px; border: 2px solid #444; background: #000; cursor: pointer; color: #888; font-family: 'Press Start 2P', monospace; transition: all 0.1s; }
+  .menu-btn:hover { border-color: #f5c518; color: #f5c518; }
+
+  .winner-card { text-align: center; background: #000; border: 3px solid #f5c518; padding: 2rem; max-width: 360px; margin: 2rem auto; }
+  .winner-emoji { font-size: 48px; margin-bottom: 12px; }
+  .winner-title { font-size: 14px; color: #f5c518; margin-bottom: 10px; text-shadow: 2px 2px #000; }
+  .winner-sub { font-size: 7px; color: #aaa; margin-bottom: 1.5rem; line-height: 2; }
+  .play-again-btn { padding: 10px 20px; border: 3px solid #fff; background: #000; color: #fff; font-size: 8px; font-family: 'Press Start 2P', monospace; cursor: pointer; }
+  .play-again-btn:hover { background: #fff; color: #000; }
+</style>
+
+<div class="game-wrap">
+  <!-- SETUP -->
+  <div class="screen active" id="screen-setup">
+    <div class="setup-card">
+      <div class="setup-title">JAYWALKING</div>
+      <div class="setup-sub">Cross all 16 lanes before the cars get you.</div>
+      <div class="section-label">&gt; CHOOSE YOUR CHARACTER</div>
+      <div class="char-grid" id="char-grid"></div>
+      <div class="section-label">&gt; NUMBER OF PLAYERS</div>
+      <div class="player-select" id="player-select"></div>
+      <div class="section-label">&gt; GAME MODE</div>
+      <div class="mode-select">
+        <button class="mode-btn selected" id="mode-easy" onclick="selectMode('easy')">
+          <span class="mode-name">EASY</span>
+          <span class="mode-desc">Revealed cards stay visible. Learn the pattern.</span>
+        </button>
+        <button class="mode-btn" id="mode-hard" onclick="selectMode('hard')">
+          <span class="mode-name">HARD</span>
+          <span class="mode-desc">Cards hide each round. Memory required.</span>
+        </button>
+      </div>
+      <button class="start-btn" id="start-btn" disabled onclick="startGame()">[ START GAME ]</button>
+    </div>
+  </div>
+
+  <!-- GAME -->
+  <div class="screen" id="screen-game">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+      <button class="menu-btn" onclick="resetGame()">&lt; MENU</button>
+      <div class="round-badge" id="round-badge">ROUND 1</div>
+    </div>
+    <div class="game-layout">
+      <div class="board-area">
+        <div class="finish-zone">&#x1F3C1; FINISH LINE</div>
+        <div id="lanes-container"></div>
+        <div class="start-zone">&#x25A6; START</div>
+      </div>
+      <div class="side-panel">
+        <div class="panel-card">
+          <div class="panel-title">// PLAYERS</div>
+          <div id="players-list"></div>
+        </div>
+        <div class="panel-card">
+          <div class="move-label" id="move-prompt">CHOOSE YOUR MOVE</div>
+          <div class="move-grid" id="move-grid"></div>
+          <button class="action-btn" id="confirm-btn" disabled onclick="confirmMove()">CONFIRM</button>
+          <button class="action-btn secondary" id="reveal-btn" onclick="revealCards()">REVEAL ROAD</button>
+        </div>
+        <div class="panel-card">
+          <div class="panel-title">// LOG</div>
+          <div class="log-area" id="log-area"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WINNER -->
+  <div class="screen" id="screen-winner">
+    <div class="winner-card">
+      <div class="winner-emoji" id="win-emoji"></div>
+      <div class="winner-title" id="win-title"></div>
+      <div class="winner-sub" id="win-sub"></div>
+      <button class="play-again-btn" onclick="resetGame()">[ PLAY AGAIN ]</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const CHARS = [
+  {name:'CHICKEN',emoji:'🐔'},{name:'PIG',emoji:'🐷'},{name:'BUNNY',emoji:'🐰'},
+  {name:'DUCK',emoji:'🦆'},{name:'SQUIRREL',emoji:'🐿️'},{name:'TURTLE',emoji:'🐢'}
+];
+const MOVES = [-2,-1,0,1,2];
+const LANES = 16, CPL = 6;
+const DECK_TEMPLATE = [
+  ...Array(120).fill('blank'),
+  ...Array(16).fill('pothole'),
+  ...Array(32).fill('car')
+];
+
+let selChar = null, numPlayers = 2, gameMode = 'easy', S = {};
+
+function selectMode(mode) {
+  gameMode = mode;
+  document.getElementById('mode-easy').classList.toggle('selected', mode === 'easy');
+  document.getElementById('mode-hard').classList.toggle('selected', mode === 'hard');
+}
+
+function buildSetup() {
+  const cg = document.getElementById('char-grid');
+  cg.innerHTML = '';
+  CHARS.forEach((c, i) => {
+    const b = document.createElement('button');
+    b.className = 'char-btn';
+    b.innerHTML = `<span class="char-emoji">${c.emoji}</span><span class="char-name">${c.name}</span>`;
+    b.onclick = () => { selChar = i; document.querySelectorAll('.char-btn').forEach(x => x.classList.remove('selected')); b.classList.add('selected'); checkReady(); };
+    cg.appendChild(b);
+  });
+  const ps = document.getElementById('player-select');
+  ps.innerHTML = '';
+  [1,2,3,4].forEach(n => {
+    const b = document.createElement('button');
+    b.className = 'player-btn' + (n === 2 ? ' selected' : '');
+    b.textContent = n === 1 ? '1P SOLO' : `${n}P`;
+    b.onclick = () => { numPlayers = n; document.querySelectorAll('.player-btn').forEach(x => x.classList.remove('selected')); b.classList.add('selected'); checkReady(); };
+    ps.appendChild(b);
+  });
+  // reset mode UI
+  selectMode('easy');
+}
+
+function checkReady() { document.getElementById('start-btn').disabled = selChar === null; }
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+
+function startGame() {
+  const cpuChars = shuffle(CHARS.filter((_, i) => i !== selChar)).slice(0, numPlayers - 1);
+  const deck = shuffle(DECK_TEMPLATE);
+  const laneDecks = Array.from({length: LANES}, (_, l) => deck.slice(l * CPL, l * CPL + CPL));
+  S = {
+    players: [
+      {name:'YOU', emoji:CHARS[selChar].emoji, char:CHARS[selChar].name, lane:0, cpu:false},
+      ...cpuChars.map((c, i) => ({name:`CPU${i+1}`, emoji:c.emoji, char:c.name, lane:0, cpu:true}))
+    ],
+    laneDecks,
+    lanePointers: Array(LANES).fill(0),
+    laneRevealedCount: Array(LANES).fill(0),
+    round: 1, phase: 'move', playerMove: null, log: [],
+    mode: gameMode
+  };
+  showScreen('game');
+  // Update round badge with mode indicator
+  const modeBadge = `<span class="mode-badge${gameMode === 'hard' ? ' hard' : ''}">${gameMode.toUpperCase()}</span>`;
+  document.getElementById('round-badge').innerHTML = `ROUND 1 ${modeBadge}`;
+  renderBoard();
+  renderPlayers();
+  renderMovePanel();
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+}
+
+function renderBoard() {
+  const c = document.getElementById('lanes-container');
+  c.innerHTML = '';
+  for (let l = 0; l < LANES; l++) {
+    const row = document.createElement('div');
+    row.className = 'lane-row'; row.id = 'lane-row-' + l;
+    const nl = document.createElement('div'); nl.className = 'lane-num'; nl.textContent = LANES - l; row.appendChild(nl);
+    for (let ci = 0; ci < CPL; ci++) {
+      const card = document.createElement('div');
+      card.id = `card-${l}-${ci}`; card.className = 'road-card face-down';
+      row.appendChild(card);
+    }
+    const nr = document.createElement('div'); nr.className = 'lane-num'; nr.textContent = LANES - l; row.appendChild(nr);
+    c.appendChild(row);
+  }
+  updateTokens();
+}
+
+function updateTokens() {
+  document.querySelectorAll('.player-token').forEach(t => t.remove());
+  S.players.forEach((p, pi) => {
+    if (p.lane <= 0 || p.lane > LANES) return;
+    const li = LANES - p.lane;
+    const row = document.getElementById('lane-row-' + li);
+    if (!row) return;
+    const cards = row.querySelectorAll('.road-card');
+    const ci = Math.min(pi, cards.length - 1);
+    const tok = document.createElement('div');
+    tok.className = 'player-token'; tok.textContent = p.emoji; tok.title = p.name;
+    cards[ci].appendChild(tok);
+  });
+}
+
+function renderPlayers() {
+  const list = document.getElementById('players-list');
+  list.innerHTML = '';
+  S.players.forEach(p => {
+    const row = document.createElement('div'); row.className = 'player-row';
+    const badge = document.createElement('span');
+    badge.className = 'player-lane-badge' + (p.lane === 0 ? ' at-start' : '');
+    badge.textContent = p.lane > LANES ? 'DONE!' : p.lane === 0 ? 'START' : `LN ${p.lane}`;
+    row.innerHTML = `<span style="font-size:15px">${p.emoji}</span><span>${p.name}</span>`;
+    row.appendChild(badge); list.appendChild(row);
+  });
+}
+
+function renderMovePanel() {
+  const grid = document.getElementById('move-grid');
+  const prompt = document.getElementById('move-prompt');
+  const confirmBtn = document.getElementById('confirm-btn');
+  const revealBtn = document.getElementById('reveal-btn');
+  grid.innerHTML = '';
+  if (S.phase === 'move') {
+    prompt.textContent = 'CHOOSE YOUR MOVE';
+    confirmBtn.style.display = 'block'; confirmBtn.disabled = S.playerMove === null;
+    revealBtn.style.display = 'none';
+    MOVES.forEach(m => {
+      const b = document.createElement('button');
+      b.className = 'move-btn' + (S.playerMove === m ? ' selected' : '');
+      b.textContent = m > 0 ? `+${m}` : `${m}`;
+      b.onclick = () => { S.playerMove = m; document.querySelectorAll('.move-btn').forEach(x => x.classList.remove('selected')); b.classList.add('selected'); confirmBtn.disabled = false; };
+      grid.appendChild(b);
+    });
+  } else if (S.phase === 'reveal') {
+    prompt.textContent = 'MOVES SET!';
+    confirmBtn.style.display = 'none'; revealBtn.style.display = 'block';
+    MOVES.forEach(m => { const b = document.createElement('button'); b.className = 'move-btn'; b.textContent = m > 0 ? `+${m}` : `${m}`; b.disabled = true; grid.appendChild(b); });
+  } else {
+    prompt.textContent = ''; confirmBtn.style.display = 'none'; revealBtn.style.display = 'none';
+  }
+}
+
+function confirmMove() {
+  if (S.playerMove === null) return;
+  S.players.forEach((p, i) => {
+    const move = i === 0 ? S.playerMove : (() => {
+      const opts = MOVES.filter(m => { const n = p.lane + m; return n >= 0 && n <= LANES + 1; });
+      return opts[Math.floor(Math.random() * opts.length)] ?? 0;
+    })();
+    p.lane = Math.max(0, Math.min(LANES + 1, p.lane + move));
+    addLog(`${p.emoji} ${p.name}: ${move === 0 ? 'STAY' : 'MOVE ' + (move > 0 ? '+' : '') + move} → LN${p.lane}`);
+  });
+  S.phase = 'reveal';
+  updateTokens(); renderPlayers(); renderMovePanel();
+}
+
+function revealCards() {
+  // Hard mode: reset all cards to face-down before revealing this round's cards
+  if (S.mode === 'hard') {
+    for (let l = 0; l < LANES; l++) {
+      for (let ci = 0; ci < CPL; ci++) {
+        const el = document.getElementById(`card-${l}-${ci}`);
+        if (el) { el.className = 'road-card face-down'; el.innerHTML = ''; }
+      }
+    }
+  }
+
+  // Reveal one card per lane (the current card in that lane's deck)
+  for (let l = 0; l < LANES; l++) {
+    const ptr = S.lanePointers[l];
+    const cardType = S.laneDecks[l][ptr];
+    // In hard mode, always use slot 0 (only one card shown per lane at a time)
+    // In easy mode, use the rolling revealed index
+    const revIdx = S.mode === 'hard' ? 0 : S.laneRevealedCount[l] % CPL;
+    S.lanePointers[l] = (ptr + 1) % CPL;
+    S.laneRevealedCount[l]++;
+    if (S.lanePointers[l] === 0) addLog(`LN${LANES - l}: DECK RESET`);
+
+    const el = document.getElementById(`card-${l}-${revIdx}`);
+    if (el) {
+      el.className = 'road-card';
+      const icon = document.createElement('span'); icon.className = 'card-icon';
+      if (cardType === 'car') { el.classList.add('revealed-car'); icon.textContent = '🚙'; }
+      else if (cardType === 'pothole') { el.classList.add('revealed-pothole'); icon.textContent = '🕳️'; }
+      else { el.classList.add('revealed-safe'); icon.textContent = ''; }
+      el.innerHTML = ''; el.appendChild(icon);
+    }
+
+    const lane = LANES - l;
+    if (cardType === 'car') {
+      S.players.forEach(p => { if (p.lane === lane) { addLog(`🚙 ${p.name} HIT! BACK TO START`); p.lane = 0; } });
+    }
+  }
+
+  const winners = S.players.filter(p => p.lane > LANES);
+  if (winners.length) { S.phase = 'done'; showWinner(winners); return; }
+
+  S.round++;
+  const modeBadge = `<span class="mode-badge${S.mode === 'hard' ? ' hard' : ''}">${S.mode.toUpperCase()}</span>`;
+  document.getElementById('round-badge').innerHTML = `ROUND ${S.round} ${modeBadge}`;
+  S.phase = 'move'; S.playerMove = null;
+  updateTokens(); renderPlayers(); renderMovePanel();
+}
+
+function showWinner(w) {
+  document.getElementById('win-emoji').textContent = w.map(x => x.emoji).join(' ');
+  document.getElementById('win-title').textContent = w.length === 1 ? `${w[0].name} WINS!` : `TIE GAME!`;
+  document.getElementById('win-sub').textContent = w.length === 1
+    ? `${w[0].emoji} ${w[0].char} crossed all 16 lanes!`
+    : `${w.map(x => x.name).join(' & ')} reached the finish together!`;
+  showScreen('winner');
+}
+
+function addLog(msg) {
+  S.log.unshift(msg);
+  const el = document.getElementById('log-area');
+  if (el) el.innerHTML = S.log.slice(0, 20).join('<br>');
+}
+
+function resetGame() { selChar = null; numPlayers = 2; S = {}; buildSetup(); showScreen('setup'); }
+
+buildSetup();
+</script>
