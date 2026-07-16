@@ -1,18 +1,18 @@
 [
   {
-    "slug": "dice-duel",
-    "title": "Dice Duel",
-    "category": "Dice & Push-Your-Luck",
+    "slug": "reconquesta",
+    "title": "Reconquesta",
+    "category": "CCG/Deck Builder",
     "status": "in-testing",
-    "version": "0.3",
-    "description": "A fast, two-player dice-battling game where you allocate risk across three arenas and bluff your opponent into overcommitting.",
-    "instructions": "Each round, secretly assign your 5 dice across the 3 arenas. Reveal simultaneously. Highest total in an arena wins it. Win 2 of 3 arenas to win the round. First to 3 round wins takes the match.",
+    "version": "1.3.5",
+    "description": "Reconquesta is a medieval, tactical collectable card and board hybrid where you, as a Majesty, Recruit Conquerors to siege rival realms and reduce their Glory Points to zero.",
+    "instructions": "On your turn, draw a card, Pillage Resources, then Recruit, move, and battle with your Conquerors on the Battlefield, using Actions, Artillery, and Defenses to push into enemy zones and strike the opposing Majesty’s Glory Points. An interactive tutorial and full 'how to play' guide are available in-game to walk you step-by-step through your first Reconquesta battles.",
     "knownIssues": [
-      "Arena 2 tie-breaker sometimes doesn't trigger on mobile Safari.",
-      "Score history panel can overflow on small screens.",
-      "No sound effects yet — placeholder only."
+      "Action cards are not playable in response to your opponent's actions.",
+      "Some parts of the Interactive Tutorial are buggy.",
+      "No sound effects yet."
     ],
-    "file": "dice-duel.html"
+    "file": "reconquesta.html"
   },
   {
     "slug": "card-crawl",
