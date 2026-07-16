@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Trade Routes — Playtest Build</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  body{font-family:system-ui,sans-serif;background:#0f2027;color:#e8f1f2;display:flex;flex-direction:column;align-items:center;padding:40px 20px;margin:0;}
+  h1{margin-bottom:4px;} p.sub{color:#8fb3ba;margin-top:0;}
+  .cities{display:flex;gap:14px;margin:24px 0;flex-wrap:wrap;justify-content:center;}
+  .city{background:#16333a;border:1px solid #26525c;border-radius:8px;padding:14px;width:110px;text-align:center;}
+  .city h3{margin:0 0 6px;font-size:0.85rem;color:#7fd1c8;}
+  button{background:#3fa796;border:none;padding:10px 18px;border-radius:6px;font-weight:bold;cursor:pointer;color:#04201c;margin-top:20px;}
+  button:hover{background:#5cc6b4;}
+  .gold{margin-top:16px;font-size:1.2rem;}
+  .note{margin-top:40px;font-size:0.8rem;color:#5f838a;max-width:420px;text-align:center;}
+</style>
+</head>
+<body>
+  <h1>Trade Routes</h1>
+  <p class="sub">Playtest build v0.1 — replace this file with your real game export</p>
+
+  <div class="cities" id="cities"></div>
+  <button onclick="trade()">Trade at Random City</button>
+  <div class="gold">Gold: <span id="gold">10</span></div>
+
+  <p class="note">This is a placeholder demo so you can see the site pipeline working end-to-end.
+  To use your real game, export it as a single self-contained .html file and replace
+  <code>games/trade-routes.html</code> — no other changes needed.</p>
+
+<script>
+  const cityNames = ["Elmara","Portow","Sundale","Krevik","Ashport","Vellum"];
+  let gold = 10;
+  const cont = document.getElementById("cities");
+  cityNames.forEach(name => {
+    const div = document.createElement("div");
+    div.className = "city";
+    const price = Math.ceil(Math.random()*8)+2;
+    div.innerHTML = `<h3>${name}</h3><div>Price: ${price}g</div>`;
+    div.dataset.price = price;
+    cont.appendChild(div);
+  });
+  function trade() {
+    const cities = document.querySelectorAll(".city");
+    const c = cities[Math.floor(Math.random()*cities.length)];
+    const price = parseInt(c.dataset.price);
+    const delta = Math.random() < 0.5 ? price : -Math.ceil(price/2);
+    gold = Math.max(gold + delta, 0);
+    document.getElementById("gold").textContent = gold;
+    if (gold >= 30) alert("You reached 30 gold! (placeholder win state)");
+  }
+</script>
+</body>
+</html>

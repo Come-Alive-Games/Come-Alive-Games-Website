@@ -1,0 +1,45 @@
+[
+  {
+    "slug": "dice-duel",
+    "title": "Dice Duel",
+    "category": "Dice & Push-Your-Luck",
+    "status": "in-testing",
+    "version": "0.3",
+    "description": "A fast, two-player dice-battling game where you allocate risk across three arenas and bluff your opponent into overcommitting.",
+    "instructions": "Each round, secretly assign your 5 dice across the 3 arenas. Reveal simultaneously. Highest total in an arena wins it. Win 2 of 3 arenas to win the round. First to 3 round wins takes the match.",
+    "knownIssues": [
+      "Arena 2 tie-breaker sometimes doesn't trigger on mobile Safari.",
+      "Score history panel can overflow on small screens.",
+      "No sound effects yet — placeholder only."
+    ],
+    "file": "dice-duel.html"
+  },
+  {
+    "slug": "card-crawl",
+    "title": "Card Crawl: Deep Roots",
+    "category": "Solo Card Dungeon Crawler",
+    "status": "in-testing",
+    "version": "0.5",
+    "description": "A solitaire dungeon crawler played entirely with a standard deck. Descend through 4 floors, manage a shrinking hand, and survive the boss encounter.",
+    "instructions": "Shuffle the deck. Draw floor cards one at a time — face cards are monsters, number cards are loot or traps. Your hand is your health. Reach the King on floor 4 with any cards left in hand to win.",
+    "knownIssues": [
+      "Undo button currently allows infinite undo (balance issue, not a bug).",
+      "Floor 3 trap text is unclear — feedback wanted specifically here."
+    ],
+    "file": "card-crawl.html"
+  },
+  {
+    "slug": "trade-routes",
+    "title": "Trade Routes",
+    "category": "Economic Strategy",
+    "status": "new",
+    "version": "0.1",
+    "description": "A lightweight economic strategy prototype about building caravan routes between 6 cities with fluctuating resource prices.",
+    "instructions": "On your turn, move your caravan along one route, buy low, sell high, and invest in route upgrades. First to 30 gold wins. This is an early digital mock of the physical prototype — expect rough edges.",
+    "knownIssues": [
+      "Price fluctuation algorithm is a placeholder — feedback on pacing especially welcome.",
+      "No end-game screen yet, game just stops at 30 gold."
+    ],
+    "file": "trade-routes.html"
+  }
+]

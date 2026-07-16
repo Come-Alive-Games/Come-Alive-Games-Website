@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Come Alive Games — Playtest Library</title>
+<meta name="description" content="Playtest unreleased tabletop games from Come Alive Games. Play in your browser, rate, and help shape what gets made.">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.html">
+      <span class="brand-mark">COME ALIVE <span class="accent">GAMES</span></span>
+    </a>
+    <nav class="site-nav">
+      <a href="#offer">What is this</a>
+      <a href="#library">Game library</a>
+      <a href="#join">Join playtesting</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="eyebrow">// Come Alive Games — Design Lab</span>
+      <h1>Tabletop games,<span class="line2">before the box exists.</span></h1>
+      <p class="lede">We're a tabletop game studio. Before any game goes to print, it comes here — playable in your browser — so real players can break it, question it, and help us make it better.</p>
+      <div class="hero-cta">
+        <a href="#library" class="btn btn-primary">Browse the library</a>
+        <a href="#offer" class="btn btn-ghost">What is playtesting?</a>
+      </div>
+    </div>
+    <div class="card-stack" aria-hidden="true">
+      <div class="stat-card c1"><div class="k">Games in testing</div><div class="v" id="statGames">3</div></div>
+      <div class="stat-card c2"><div class="k">Feedback welcome</div><div class="v">24/7</div></div>
+      <div class="stat-card c3"><div class="k">Cost to play</div><div class="v">$0</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="offer">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">// What's on this site</span>
+      <h2>Play the game before it's ever produced.</h2>
+    </div>
+    <div class="offer-grid">
+      <div class="offer-card">
+        <div class="num">01</div>
+        <h3>Play in your browser</h3>
+        <p>Every game here is a working digital build — no download, no account required. Click a game and start playing immediately.</p>
+      </div>
+      <div class="offer-card">
+        <div class="num">02</div>
+        <h3>Tell us what broke</h3>
+        <p>Rate the game and leave notes on what worked, what didn't, and what confused you. Rules, balance, pacing — it's all fair game.</p>
+      </div>
+      <div class="offer-card">
+        <div class="num">03</div>
+        <h3>Shape what gets made</h3>
+        <p>Your feedback directly informs the next revision. Games that test well move toward physical production — with your name on the credits list.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="cta-band" id="join">
+  <div class="wrap">
+    <div>
+      <h2>Join the playtesting community</h2>
+      <p>No sign-up, no cost. Pick a game below, play a round, and tell us what you think. Every rating and comment gets read.</p>
+    </div>
+    <a href="#library" class="btn btn-primary">See available games</a>
+  </div>
+</div>
+
+<section class="section" id="library">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">// Game Library</span>
+      <h2>Currently in testing</h2>
+    </div>
+    <div class="library-controls" id="categoryFilters" role="group" aria-label="Filter by category"></div>
+    <div class="game-grid" id="gameGrid">
+      <p class="empty-state">Loading games…</p>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <span>© <span id="year"></span> Come Alive Games</span>
+    <span><a href="admin.html">Admin</a></span>
+  </div>
+</footer>
+
+<script src="assets/js/main.js"></script>
+<script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

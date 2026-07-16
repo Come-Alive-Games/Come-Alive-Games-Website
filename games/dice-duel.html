@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Dice Duel — Playtest Build</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  body{font-family:system-ui,sans-serif;background:#111;color:#eee;display:flex;flex-direction:column;align-items:center;padding:40px 20px;margin:0;}
+  h1{margin-bottom:4px;} p.sub{color:#999;margin-top:0;}
+  .arenas{display:flex;gap:16px;margin:24px 0;flex-wrap:wrap;justify-content:center;}
+  .arena{background:#1e1e1e;border:1px solid #333;border-radius:8px;padding:16px;width:150px;text-align:center;}
+  .arena h3{margin:0 0 8px;font-size:0.9rem;color:#f0a35c;}
+  .dice{font-size:2rem;margin:8px 0;}
+  button{background:#f0a35c;border:none;padding:10px 18px;border-radius:6px;font-weight:bold;cursor:pointer;margin-top:20px;}
+  button:hover{background:#ffb877;}
+  .result{margin-top:16px;font-size:1.1rem;}
+  .note{margin-top:40px;font-size:0.8rem;color:#666;max-width:420px;text-align:center;}
+</style>
+</head>
+<body>
+  <h1>🎲 Dice Duel</h1>
+  <p class="sub">Playtest build v0.3 — replace this file with your real game export</p>
+
+  <div class="arenas" id="arenas"></div>
+  <button onclick="rollAll()">Roll All Arenas</button>
+  <div class="result" id="result"></div>
+
+  <p class="note">This is a placeholder demo so you can see the site pipeline working end-to-end.
+  To use your real game, export it as a single self-contained .html file and replace
+  <code>games/dice-duel.html</code> — no other changes needed.</p>
+
+<script>
+  const arenaNames = ["Arena I", "Arena II", "Arena III"];
+  const container = document.getElementById("arenas");
+  arenaNames.forEach((name, i) => {
+    const div = document.createElement("div");
+    div.className = "arena";
+    div.innerHTML = `<h3>${name}</h3><div class="dice" id="a${i}">🎲</div><div id="s${i}">--</div>`;
+    container.appendChild(div);
+  });
+
+  function rollAll() {
+    let total = 0;
+    arenaNames.forEach((_, i) => {
+      const roll = Math.ceil(Math.random() * 6);
+      document.getElementById(`a${i}`).textContent = "⚅".repeat(1) + " " + roll;
+      document.getElementById(`s${i}`).textContent = "Roll: " + roll;
+      total += roll;
+    });
+    document.getElementById("result").textContent = `Total this pass: ${total}`;
+  }
+</script>
+</body>
+</html>

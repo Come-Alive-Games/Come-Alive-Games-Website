@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title id="pageTitle">Loading game… — Come Alive Games</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.html">
+      <span class="brand-mark">COME ALIVE <span class="accent">GAMES</span></span>
+    </a>
+    <nav class="site-nav">
+      <a href="index.html#library">All games</a>
+      <a href="index.html#join">Join playtesting</a>
+    </nav>
+  </div>
+</header>
+
+<section class="game-header">
+  <div class="wrap">
+    <a class="breadcrumb" href="index.html#library">&larr; Back to library</a>
+    <div class="game-title-row">
+      <div>
+        <span class="eyebrow" id="gameCategory">CATEGORY</span>
+        <h1 id="gameTitle">Loading…</h1>
+      </div>
+    </div>
+    <div class="badge-row">
+      <span class="badge" id="gameStatus">Status</span>
+      <span class="badge" id="gameVersion">v0.0</span>
+    </div>
+  </div>
+</section>
+
+<div class="wrap">
+  <div class="game-frame-wrap">
+    <div class="game-frame-toolbar">
+      <span>PLAYTEST BUILD — runs in your browser</span>
+      <a id="openNewTab" href="#" target="_blank" rel="noopener">Open in new tab ↗</a>
+    </div>
+    <iframe id="gameFrame" title="Game"></iframe>
+  </div>
+
+  <div class="two-col">
+    <div>
+      <div class="info-block">
+        <h2>About this build</h2>
+        <div class="card"><p id="gameDescription">—</p></div>
+      </div>
+      <div class="info-block">
+        <h2>How to play</h2>
+        <div class="card"><p id="gameInstructions">—</p></div>
+      </div>
+      <div class="info-block">
+        <h2>Known issues</h2>
+        <div class="card">
+          <ul class="known-issues" id="gameIssues"></ul>
+        </div>
+      </div>
+
+      <div class="info-block">
+        <h2>Playtester feedback</h2>
+        <div class="comments" id="commentsList">
+          <p class="empty-state">Loading feedback…</p>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="rating-summary">
+        <div class="stars-big" id="avgStars">☆☆☆☆☆</div>
+        <div class="big" id="avgNumber">–</div>
+        <div class="count" id="ratingCount">0 ratings</div>
+      </div>
+
+      <h2>Leave feedback</h2>
+      <form class="feedback-form" id="feedbackForm">
+        <label for="name">Your name (or handle)</label>
+        <input type="text" id="name" required maxlength="60" placeholder="e.g. Jordan T.">
+
+        <label>Your rating</label>
+        <div class="star-picker" id="starPicker" role="radiogroup" aria-label="Rating out of 5">
+          <button type="button" data-value="1" aria-label="1 star">★</button>
+          <button type="button" data-value="2" aria-label="2 stars">★</button>
+          <button type="button" data-value="3" aria-label="3 stars">★</button>
+          <button type="button" data-value="4" aria-label="4 stars">★</button>
+          <button type="button" data-value="5" aria-label="5 stars">★</button>
+        </div>
+
+        <label for="comment">What worked, what didn't, what would you change?</label>
+        <textarea id="comment" required maxlength="1000" placeholder="Be specific — rules confusion, pacing, balance, anything."></textarea>
+
+        <button type="submit" class="btn btn-primary" style="margin-top:16px;">Submit feedback</button>
+        <div class="form-msg" id="formMsg"></div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <span>© <span id="year"></span> Come Alive Games</span>
+    <span><a href="admin.html">Admin</a></span>
+  </div>
+</footer>
+
+<script src="assets/js/supabase-config.js"></script>
+<script src="assets/js/game.js"></script>
+<script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

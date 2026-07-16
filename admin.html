@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Admin — Come Alive Games</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.html">
+      <span class="brand-mark">COME ALIVE <span class="accent">GAMES</span></span>
+    </a>
+    <nav class="site-nav"><a href="index.html">Back to site</a></nav>
+  </div>
+</header>
+
+<div class="wrap">
+  <div id="gate" class="admin-gate">
+    <span class="eyebrow">// Admin</span>
+    <h1 style="font-size:1.8rem;margin:12px 0 20px;">Moderation login</h1>
+    <form id="gateForm" class="feedback-form" style="text-align:left;">
+      <label for="pw">Admin password</label>
+      <input type="password" id="pw" required>
+      <button type="submit" class="btn btn-primary" style="margin-top:16px;width:100%;">Enter</button>
+      <div class="form-msg err" id="gateMsg"></div>
+    </form>
+    <p style="font-family:var(--mono);font-size:0.72rem;color:var(--pencil);margin-top:16px;">
+      This is a lightweight client-side gate. For stronger protection, see the README note on Supabase Auth.
+    </p>
+  </div>
+
+  <div id="panel" class="section" style="display:none;">
+    <div class="section-head">
+      <span class="eyebrow">// Admin</span>
+      <h2>Moderate feedback</h2>
+      <p style="color:var(--pencil);font-family:var(--mono);font-size:0.8rem;margin-top:8px;">Remove offensive or spam comments below. Removal is permanent.</p>
+    </div>
+    <div class="library-controls" id="gameFilter"></div>
+    <table class="admin-table" id="feedbackTable">
+      <thead>
+        <tr><th>Game</th><th>Name</th><th>Rating</th><th>Comment</th><th>Date</th><th></th></tr>
+      </thead>
+      <tbody id="feedbackBody">
+        <tr><td colspan="6">Loading…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <div class="wrap"><span>© <span id="year"></span> Come Alive Games</span></div>
+</footer>
+
+<script src="assets/js/supabase-config.js"></script>
+<script src="assets/js/admin.js"></script>
+<script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>
