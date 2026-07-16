@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Junban 順番 — A Peaceful Dice Sliding Puzzle</title>
+<style>
+  :root{
+    --blue: #2f7af0;
+    --blue-deep: #1f5fd0;
+    --blue-pale: #eaf2ff;
+    --ink: #11203a;
+    --cream: #fffdf6;
+    --gold: #f5b942;
+  }
+  *{ box-sizing: border-box; }
+  html, body{
+    margin:0; padding:0;
+    min-height:100%;
+    background: radial-gradient(circle at 50% -10%, #5b9bff 0%, var(--blue) 45%, var(--blue-deep) 100%);
+    font-family: 'Trebuchet MS', 'Segoe UI', system-ui, sans-serif;
+    color: var(--ink);
+    display:flex;
+    justify-content:center;
+  }
+  .app{
+    width:100%;
+    max-width: 620px;
+    padding: 18px 16px 48px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+  .title-wrap{
+    text-align:center;
+    margin-bottom: 6px;
+  }
+  .title{
+    font-size: 2.6rem;
+    font-weight: 900;
+    letter-spacing: 1px;
+    color: var(--cream);
+    text-shadow: 3px 3px 0 var(--ink);
+    margin: 6px 0 0;
+  }
+  .title .jp{
+    font-weight: 700;
+  }
+  .subtitle{
+    color: var(--blue-pale);
+    font-size: 0.95rem;
+    margin: 4px 0 18px;
+    font-style: italic;
+    opacity: 0.9;
+  }
+
+  .panel{
+    background: var(--cream);
+    border-radius: 18px;
+    padding: 16px;
+    width: 100%;
+    box-shadow: 0 10px 30px rgba(10,30,70,0.35);
+  }
+
+  .difficulty-row{
+    display:flex;
+    gap:8px;
+    justify-content:center;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+  .diff-btn{
+    border: 2px solid var(--blue-deep);
+    background: white;
+    color: var(--blue-deep);
+    font-weight: 800;
+    padding: 8px 16px;
+    border-radius: 999px;
+    cursor:pointer;
+    font-size: 0.9rem;
+    transition: all 0.15s;
+  }
+  .diff-btn.active{
+    background: var(--blue-deep);
+    color: white;
+  }
+  .diff-btn:hover{ transform: translateY(-1px); }
+
+  .stats-row{
+    display:flex;
+    justify-content: space-between;
+    gap:6px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+  .stat{
+    flex: 1;
+    min-width: 78px;
+    background: var(--blue-pale);
+    border-radius: 12px;
+    text-align:center;
+    padding: 6px 4px;
+  }
+  .stat .label{
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--blue-deep);
+    font-weight: 700;
+  }
+  .stat .value{
+    font-size: 1.15rem;
+    font-weight: 900;
+    color: var(--ink);
+  }
+
+  .board-wrap{
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    margin: 0 auto 16px;
+    background: linear-gradient(160deg, #cfe1ff, #a9c8ff);
+    border-radius: 14px;
+    border: 4px solid var(--blue-deep);
+    overflow:hidden;
+  }
+  .board{
+    position:absolute;
+    inset: 0;
+  }
+
+  .die{
+    position:absolute;
+    background: linear-gradient(160deg, #ffffff, #f1f5fb);
+    border-radius: 14%;
+    box-shadow:
+      inset 0 0 0 2px rgba(31,95,208,0.25),
+      0 4px 8px rgba(10,30,70,0.35);
+    display:grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr 1fr;
+    padding: 4%;
+    cursor:pointer;
+    transition: top 0.16s ease, left 0.16s ease, transform 0.12s ease;
+    user-select:none;
+  }
+  .die:hover{ filter: brightness(1.03); }
+  .die:active{ transform: scale(0.96); }
+  .die.movable::after{
+    content:'';
+  }
+  .pip{
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: var(--blue-deep);
+    align-self:center;
+    justify-self:center;
+    transform: scale(0.85);
+  }
+  /* grid positions for pip layout, using named areas via nth-child placement */
+  .p2{ grid-row:1; grid-column:1; }
+  .p8{ grid-row:1; grid-column:3; }
+  .p4{ grid-row:2; grid-column:1; }
+  .p5{ grid-row:2; grid-column:2; }
+  .p6{ grid-row:2; grid-column:3; }
+  .p1{ grid-row:3; grid-column:1; }
+  .p7{ grid-row:3; grid-column:3; }
+  .pmid{ grid-row:2; grid-column:2; }
+
+  .blank-slot{
+    position:absolute;
+    border-radius: 14%;
+    background: rgba(255,255,255,0.18);
+    box-shadow: inset 0 0 0 3px rgba(255,255,255,0.3);
+  }
+
+  .controls-row{
+    display:flex;
+    justify-content:center;
+    gap: 10px;
+  }
+  .main-btn{
+    background: var(--gold);
+    border: none;
+    color: var(--ink);
+    font-weight: 900;
+    padding: 10px 22px;
+    border-radius: 999px;
+    font-size: 0.95rem;
+    cursor:pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    transition: transform 0.1s;
+  }
+  .main-btn:hover{ transform: translateY(-1px); }
+  .main-btn.secondary{
+    background: white;
+    border: 2px solid var(--blue-deep);
+    color: var(--blue-deep);
+  }
+
+  .win-overlay{
+    position: fixed;
+    inset: 0;
+    background: rgba(10,30,70,0.55);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index: 50;
+    opacity:0;
+    pointer-events:none;
+    transition: opacity 0.25s;
+  }
+  .win-overlay.show{
+    opacity:1;
+    pointer-events:all;
+  }
+  .win-card{
+    background: var(--cream);
+    border-radius: 18px;
+    padding: 28px 26px;
+    text-align:center;
+    max-width: 320px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+    transform: scale(0.85);
+    transition: transform 0.25s;
+  }
+  .win-overlay.show .win-card{ transform: scale(1); }
+  .win-card h2{
+    margin: 0 0 4px;
+    color: var(--blue-deep);
+    font-size: 1.6rem;
+  }
+  .win-card p{ margin: 4px 0; font-size: 0.95rem; }
+  .win-stats{
+    display:flex;
+    justify-content: space-around;
+    margin: 14px 0;
+  }
+  .win-stats div{ font-weight:800; color: var(--ink); }
+  .win-stats span{ display:block; font-size:0.7rem; color:#6b7a99; font-weight:600;}
+
+  footer{
+    color: var(--blue-pale);
+    font-size: 0.75rem;
+    margin-top: 18px;
+    text-align:center;
+    opacity:0.85;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="title-wrap">
+    <div class="title">Junban <span class="jp">順番</span></div>
+    <div class="subtitle">a peaceful, meditative dice sliding puzzle</div>
+  </div>
+
+  <div class="panel">
+    <div class="difficulty-row" id="diffRow">
+      <button class="diff-btn" data-diff="easy">Easy · 3×3</button>
+      <button class="diff-btn" data-diff="medium">Medium · 4×4</button>
+      <button class="diff-btn" data-diff="hard">Hard · 5×5</button>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat"><div class="label">Moves</div><div class="value" id="movesVal">0</div></div>
+      <div class="stat"><div class="label">Time</div><div class="value" id="timeVal">0:00</div></div>
+      <div class="stat"><div class="label">Streak</div><div class="value" id="streakVal">0</div></div>
+      <div class="stat"><div class="label">Best</div><div class="value" id="bestVal">—</div></div>
+    </div>
+
+    <div class="board-wrap">
+      <div class="board" id="board"></div>
+    </div>
+
+    <div class="controls-row">
+      <button class="main-btn" id="newGameBtn">🎲 New Game</button>
+      <button class="main-btn secondary" id="resetBtn">↺ Reshuffle</button>
+    </div>
+  </div>
+
+  <footer>Slide the dice into ascending order, smallest to largest. Matching numbers settle together in line.</footer>
+</div>
+
+<div class="win-overlay" id="winOverlay">
+  <div class="win-card">
+    <h2>順番 Complete</h2>
+    <p>The dice have found their order.</p>
+    <div class="win-stats">
+      <div><span>Moves</span><span id="winMoves">0</span></div>
+      <div><span>Time</span><span id="winTime">0:00</span></div>
+      <div><span>Streak</span><span id="winStreak">0</span></div>
+    </div>
+    <button class="main-btn" id="playAgainBtn">Play Again</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  const DIFFS = {
+    easy:   { size: 3, count: 8 },
+    medium: { size: 4, count: 15 },
+    hard:   { size: 5, count: 24 }
+  };
+
+  let currentDiff = 'easy';
+  let gridSize = 3;
+  let tiles = [];        // values, length size*size, one entry is null (blank)
+  let blankIndex = 0;
+  let moves = 0;
+  let timerSeconds = 0;
+  let timerHandle = null;
+  let timerStarted = false;
+  let solving = false;   // true once a fresh game has started and not yet won
+  let streak = 0;
+
+  const bestStats = { easy: null, medium: null, hard: null }; // {moves, time} session best
+
+  const boardEl = document.getElementById('board');
+  const movesEl = document.getElementById('movesVal');
+  const timeEl = document.getElementById('timeVal');
+  const streakEl = document.getElementById('streakVal');
+  const bestEl = document.getElementById('bestVal');
+  const winOverlay = document.getElementById('winOverlay');
+
+  function formatTime(s){
+    const m = Math.floor(s/60);
+    const sec = s % 60;
+    return m + ':' + (sec < 10 ? '0' : '') + sec;
+  }
+
+  function updateBestDisplay(){
+    const b = bestStats[currentDiff];
+    bestEl.textContent = b ? (b.moves + ' mv / ' + formatTime(b.time)) : '—';
+  }
+
+  function setDifficulty(diff){
+    currentDiff = diff;
+    gridSize = DIFFS[diff].size;
+    document.querySelectorAll('.diff-btn').forEach(b=>{
+      b.classList.toggle('active', b.dataset.diff === diff);
+    });
+    updateBestDisplay();
+    startNewGame();
+  }
+
+  function diceValues(count){
+    // random dice 1-6 for each die in play
+    const arr = [];
+    for(let i=0;i<count;i++){
+      arr.push(1 + Math.floor(Math.random()*6));
+    }
+    return arr;
+  }
+
+  function buildSolvedState(){
+    const count = DIFFS[currentDiff].count;
+    const values = diceValues(count).sort((a,b)=>a-b);
+    const arr = values.slice();
+    arr.push(null); // blank goes last in solved order
+    return arr;
+  }
+
+  function idxToRC(i){ return { r: Math.floor(i/gridSize), c: i % gridSize }; }
+  function rcToIdx(r,c){ return r*gridSize + c; }
+
+  function shuffleBoard(){
+    tiles = buildSolvedState();
+    blankIndex = tiles.length - 1;
+    // perform many random valid slides to guarantee solvability & good scramble
+    const shuffleMoves = gridSize*gridSize*40;
+    let lastIdx = -1;
+    for(let i=0;i<shuffleMoves;i++){
+      const neighbors = getNeighbors(blankIndex).filter(n => n !== lastIdx);
+      const pick = neighbors[Math.floor(Math.random()*neighbors.length)];
+      lastIdx = blankIndex;
+      swapTiles(pick, blankIndex);
+      blankIndex = pick;
+    }
+  }
+
+  function getNeighbors(idx){
+    const {r,c} = idxToRC(idx);
+    const result = [];
+    if(r>0) result.push(rcToIdx(r-1,c));
+    if(r<gridSize-1) result.push(rcToIdx(r+1,c));
+    if(c>0) result.push(rcToIdx(r,c-1));
+    if(c<gridSize-1) result.push(rcToIdx(r,c+1));
+    return result;
+  }
+
+  function swapTiles(a,b){
+    const tmp = tiles[a];
+    tiles[a] = tiles[b];
+    tiles[b] = tmp;
+  }
+
+  function isSolved(){
+    for(let i=0;i<tiles.length-1;i++){
+      if(tiles[i] === null) return false;
+      if(i>0 && tiles[i] < tiles[i-1]) return false;
+    }
+    return tiles[tiles.length-1] === null;
+  }
+
+  function pipPositions(value){
+    const layouts = {
+      1: ['pmid'],
+      2: ['p2','p7'],
+      3: ['p2','pmid','p7'],
+      4: ['p2','p8','p1','p7'],
+      5: ['p2','p8','pmid','p1','p7'],
+      6: ['p2','p8','p4','p6','p1','p7']
+    };
+    return layouts[value];
+  }
+
+  function renderBoard(){
+    boardEl.innerHTML = '';
+    const wrapRect = boardEl.getBoundingClientRect();
+    const tileSize = wrapRect.width / gridSize;
+    
+    let innerFactor;
+    if (gridSize === 3) {
+      innerFactor = 0.82;
+    } else if (gridSize === 4) {
+      innerFactor = 0.90;
+    } else {
+      innerFactor = 1.00;
+}
+
+    const inner = tileSize * innerFactor;
+    const offset = (tileSize - inner) / 2;
+
+    tiles.forEach((val, idx)=>{
+      const {r,c} = idxToRC(idx);
+      const top = r*tileSize + offset;
+      const left = c*tileSize + offset;
+      if(val === null){
+        const slot = document.createElement('div');
+        slot.className = 'blank-slot';
+        slot.style.width = inner+'px';
+        slot.style.height = inner+'px';
+        slot.style.top = top+'px';
+        slot.style.left = left+'px';
+        boardEl.appendChild(slot);
+        return;
+      }
+      const die = document.createElement('div');
+      die.className = 'die';
+      die.dataset.idx = idx;
+      die.style.width = inner+'px';
+      die.style.height = inner+'px';
+      die.style.top = top+'px';
+      die.style.left = left+'px';
+      pipPositions(val).forEach(cls=>{
+        const pip = document.createElement('div');
+        pip.className = 'pip ' + cls;
+        die.appendChild(pip);
+      });
+      die.addEventListener('click', ()=> attemptMove(idx));
+      boardEl.appendChild(die);
+    });
+  }
+
+  function attemptMove(idx){
+    if(getNeighbors(idx).includes(blankIndex)){
+      if(!timerStarted){ startTimer(); }
+      swapTiles(idx, blankIndex);
+      blankIndex = idx;
+      moves++;
+      movesEl.textContent = moves;
+      renderBoard();
+      if(isSolved()){
+        handleWin();
+      }
+    }
+  }
+
+  function startTimer(){
+    timerStarted = true;
+    timerSeconds = 0;
+    timeEl.textContent = formatTime(0);
+    timerHandle = setInterval(()=>{
+      timerSeconds++;
+      timeEl.textContent = formatTime(timerSeconds);
+    }, 1000);
+  }
+
+  function stopTimer(){
+    if(timerHandle){ clearInterval(timerHandle); timerHandle = null; }
+  }
+
+  function handleWin(){
+    solving = false;
+    stopTimer();
+    streak++;
+    streakEl.textContent = streak;
+
+    const best = bestStats[currentDiff];
+    if(!best || moves < best.moves || (moves === best.moves && timerSeconds < best.time)){
+      bestStats[currentDiff] = { moves, time: timerSeconds };
+    }
+    updateBestDisplay();
+
+    document.getElementById('winMoves').textContent = moves;
+    document.getElementById('winTime').textContent = formatTime(timerSeconds);
+    document.getElementById('winStreak').textContent = streak;
+    winOverlay.classList.add('show');
+  }
+
+  function startNewGame(){
+    // if a previous round was abandoned unsolved, break the streak
+    if(solving){
+      streak = 0;
+      streakEl.textContent = streak;
+    }
+    stopTimer();
+    timerStarted = false;
+    moves = 0;
+    timerSeconds = 0;
+    movesEl.textContent = '0';
+    timeEl.textContent = '0:00';
+    winOverlay.classList.remove('show');
+    shuffleBoard();
+    // ensure not already solved by sheer luck (re-shuffle if so)
+    let guard = 0;
+    while(isSolved() && guard < 5){ shuffleBoard(); guard++; }
+    solving = true;
+    renderBoard();
+  }
+
+  document.querySelectorAll('.diff-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=> setDifficulty(btn.dataset.diff));
+  });
+  document.getElementById('newGameBtn').addEventListener('click', startNewGame);
+  document.getElementById('resetBtn').addEventListener('click', startNewGame);
+  document.getElementById('playAgainBtn').addEventListener('click', startNewGame);
+
+  window.addEventListener('resize', renderBoard);
+
+  // init
+  document.querySelector('[data-diff="easy"]').classList.add('active');
+  setDifficulty('easy');
+})();
+</script>
+</body>
+</html>
