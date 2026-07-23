@@ -36,7 +36,7 @@
 <section class="hero">
   <div class="wrap hero-grid">
     <div>
-      <span class="eyebrow">// Come Alive Games — Design Lab</span>
+      <span class="eyebrow">// Playtest Lab — Open to the public</span>
       <h1>Tabletop games,<span class="line2">before the box exists.</span></h1>
       <p class="lede">We're a tabletop game studio. Before any game goes to print, it comes here — playable in your browser — so real players can break it, question it, and help us make it better.</p>
       <div class="hero-cta">
@@ -96,7 +96,10 @@
     </div>
     <div class="library-controls" id="categoryFilters" role="group" aria-label="Filter by category"></div>
     <div class="game-grid" id="gameGrid">
-      <p class="empty-state">Loading games…</p>
+      <!-- Skeleton cards shown while games.json loads — replaced by JS — Principle: Loading states -->
+      <div class="game-card-skeleton" aria-hidden="true"></div>
+      <div class="game-card-skeleton" aria-hidden="true"></div>
+      <div class="game-card-skeleton" aria-hidden="true"></div>
     </div>
   </div>
 </section>

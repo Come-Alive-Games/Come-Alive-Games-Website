@@ -14,8 +14,8 @@
   --chalk: #FBF8EF;
   --red: #C4432B;
   --red-dark: #9B3521;
-  --green: #4C6B4F;
-  --pencil: #6B6559;
+  --green: #3D5C40;        /* darkened slightly for WCAG AA on light bg */
+  --pencil: #52504A;       /* darkened from #6B6559 — improves contrast on kraft */
   --line: rgba(27, 36, 48, 0.14);
 
   /* type */
@@ -23,10 +23,23 @@
   --body: "IBM Plex Sans", system-ui, sans-serif;
   --mono: "IBM Plex Mono", "SFMono-Regular", monospace;
 
-  /* layout */
+  /* layout — 8pt spacing scale */
+  --space-1: 8px;
+  --space-2: 16px;
+  --space-3: 24px;
+  --space-4: 32px;
+  --space-5: 40px;
+  --space-6: 48px;
+  --space-8: 64px;
+  --space-10: 80px;
   --max: 1180px;
   --radius: 3px;
   --shadow-card: 0 1px 0 rgba(27,36,48,0.05), 0 8px 20px -12px rgba(27,36,48,0.35);
+  --shadow-card-hover: 5px 6px 0 var(--ink);
+
+  /* transitions */
+  --t-fast: 0.12s ease;
+  --t-base: 0.18s ease;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -44,8 +57,10 @@ body {
   background-size: 22px 22px;
   color: var(--ink);
   font-family: var(--body);
-  line-height: 1.55;
+  font-size: 1rem;          /* explicit base — prevents browser default variance */
+  line-height: 1.6;         /* raised from 1.55 for readability — Principle: Typography legibility */
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 a { color: inherit; }
@@ -123,6 +138,8 @@ h1, h2, h3 {
   padding-bottom: 2px;
 }
 .site-nav a:hover { border-color: var(--red); color: var(--ink); }
+/* Active section indicator set by scroll-spy in main.js — Principle: Visual hierarchy */
+.site-nav a.nav-active { border-color: var(--red); color: var(--ink); font-weight: 700; }
 
 /* ---------- buttons ---------- */
 .btn {
@@ -133,20 +150,29 @@ h1, h2, h3 {
   text-transform: uppercase;
   letter-spacing: 0.06em;
   font-size: 0.82rem;
-  padding: 12px 22px;
+  padding: 12px 24px;       /* widened slightly — Principle: Buttons ~2× width:height */
   border: 2px solid var(--ink);
   border-radius: var(--radius);
   text-decoration: none;
   cursor: pointer;
   background: transparent;
   color: var(--ink);
-  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  transition: transform var(--t-fast), box-shadow var(--t-fast), background var(--t-fast);
+  user-select: none;
 }
-.btn:hover { transform: translate(-1px, -1px); box-shadow: 3px 3px 0 var(--ink); }
+/* hover — lift + shadow — Principle: Interaction feedback */
+.btn:hover { transform: translate(-1px, -2px); box-shadow: 3px 4px 0 var(--ink); }
+/* active/pressed — pushes back down — Principle: Interaction feedback on all states */
+.btn:active { transform: translate(1px, 1px); box-shadow: none; }
+
 .btn-primary { background: var(--red); border-color: var(--red-dark); color: var(--chalk); }
-.btn-primary:hover { box-shadow: 3px 3px 0 var(--red-dark); }
+.btn-primary:hover { box-shadow: 3px 4px 0 var(--red-dark); }
+.btn-primary:active { background: var(--red-dark); }
+
 .btn-ghost { border-color: var(--pencil); color: var(--pencil); }
-.btn-small { padding: 7px 12px; font-size: 0.72rem; }
+.btn-ghost:hover { border-color: var(--ink); color: var(--ink); box-shadow: 3px 4px 0 var(--ink); }
+
+.btn-small { padding: 7px 14px; font-size: 0.72rem; }
 
 /* ---------- hero ---------- */
 .hero {
@@ -194,29 +220,34 @@ h1, h2, h3 {
 .stat-card.c3 { top: 190px; left: 6%; transform: rotate(2deg); z-index: 1; background: var(--kraft-dark); }
 
 /* ---------- about / offer section ---------- */
-.section { padding: 64px 0; }
-.section-head { max-width: 62ch; margin-bottom: 36px; }
-.section-head h2 { font-size: clamp(1.7rem, 3vw, 2.4rem); margin-top: 8px; }
+/* Consistent 8pt-grid vertical rhythm — Principle: Spacing system */
+.section { padding: var(--space-10) 0; }
+.section-head { max-width: 62ch; margin-bottom: var(--space-5); }
+.section-head h2 { font-size: clamp(1.7rem, 3vw, 2.4rem); margin-top: var(--space-1); }
 
 .offer-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 22px;
+  gap: var(--space-3);     /* 24px — on 8pt grid */
 }
 .offer-card {
   background: var(--paper);
   border: 2px solid var(--ink);
   border-radius: var(--radius);
-  padding: 22px;
+  padding: var(--space-4) var(--space-3); /* 32px 24px — more breathing room — Principle: Whitespace */
   box-shadow: var(--shadow-card);
+  transition: box-shadow var(--t-base), transform var(--t-base);
 }
+/* Offer cards are informational, not links — subtle lift only — Principle: Depth and Shadows */
+.offer-card:hover { box-shadow: 3px 4px 0 var(--ink); transform: translateY(-2px); }
 .offer-card .num {
   font-family: var(--display);
   color: var(--red);
-  font-size: 1.1rem;
+  font-size: 1.25rem;      /* slightly larger — strengthens visual hierarchy */
 }
-.offer-card h3 { font-size: 1.15rem; margin-top: 10px; }
-.offer-card p { color: var(--ink-soft); font-size: 0.95rem; margin-top: 8px; }
+.offer-card h3 { font-size: 1.15rem; margin-top: var(--space-1); }
+/* Raised from 0.95rem — Principle: Typography legibility (minimum 1rem body) */
+.offer-card p { color: var(--ink-soft); font-size: 1rem; margin-top: var(--space-1); line-height: 1.6; }
 
 /* ---------- CTA banner ---------- */
 .cta-band {
@@ -229,7 +260,13 @@ h1, h2, h3 {
 .cta-band .wrap { display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
 .cta-band h2 { color: var(--chalk); font-size: clamp(1.5rem, 3vw, 2rem); }
 .cta-band p { color: var(--kraft-dark); margin-top: 8px; max-width: 50ch; }
-.cta-band .btn-primary { border-color: var(--red); }
+/* CTA band button slightly larger — it's the page's secondary conversion point — Principle: Visual hierarchy */
+.cta-band .btn-primary {
+  border-color: var(--red);
+  padding: 14px 28px;
+  font-size: 0.88rem;
+  white-space: nowrap;
+}
 
 /* ---------- library ---------- */
 .library-controls {
@@ -243,19 +280,42 @@ h1, h2, h3 {
   font-size: 0.76rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  padding: 8px 14px;
+  padding: 8px 16px;
   border: 2px solid var(--ink);
   border-radius: 999px;
   background: var(--paper);
   cursor: pointer;
+  transition: background var(--t-fast), color var(--t-fast), box-shadow var(--t-fast);
 }
-.chip[aria-pressed="true"] { background: var(--ink); color: var(--chalk); }
+/* hover state was missing — Principle: Interaction feedback on all states */
+.chip:hover { background: var(--kraft-dark); }
+.chip:active { box-shadow: inset 2px 2px 0 rgba(27,36,48,0.2); }
+.chip[aria-pressed="true"] {
+  background: var(--ink);
+  color: var(--chalk);
+  box-shadow: inset 2px 2px 0 rgba(0,0,0,0.25); /* pressed appearance — Principle: Interaction feedback */
+}
 
 .game-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 24px;
+  gap: var(--space-3);
 }
+
+/* Entrance animation on grid load — Principle: Microinteractions that make async feel intentional */
+@keyframes cardEnter {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.game-card {
+  animation: cardEnter 0.28s ease both;
+}
+/* Stagger each card slightly — max 5 cards staggered, rest enter together */
+.game-card:nth-child(1) { animation-delay: 0.04s; }
+.game-card:nth-child(2) { animation-delay: 0.09s; }
+.game-card:nth-child(3) { animation-delay: 0.14s; }
+.game-card:nth-child(4) { animation-delay: 0.18s; }
+.game-card:nth-child(5) { animation-delay: 0.22s; }
 
 /* signature: index-card game tile with stamp */
 .game-card {
@@ -285,8 +345,11 @@ h1, h2, h3 {
   letter-spacing: 0.08em;
   color: var(--pencil);
 }
-.game-card h3 { font-size: 1.3rem; margin-top: 8px; }
-.game-card .desc { font-size: 0.9rem; color: var(--ink-soft); margin-top: 10px; flex: 1; }
+.game-card h3 { font-size: 1.3rem; margin-top: var(--space-1); }
+/* Raised from 0.9rem — Principle: Typography legibility */
+.game-card .desc { font-size: 1rem; color: var(--ink-soft); margin-top: 10px; flex: 1; line-height: 1.55; }
+/* Category label warms on card hover — Principle: Microinteractions that confirm */
+.game-card:hover .category { color: var(--ink); }
 .game-card .meta-row {
   display: flex;
   align-items: center;
@@ -317,6 +380,26 @@ h1, h2, h3 {
 .stamp.closed { color: var(--pencil); border-color: var(--pencil); }
 .stamp.new { color: var(--green); border-color: var(--green); }
 
+/* ---------- skeleton loading cards ---------- */
+@keyframes shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position: 600px 0; }
+}
+/* Shimmer placeholder cards while games.json is fetched — Principle: Loading states */
+.game-card-skeleton {
+  min-height: 230px;
+  border: 2px solid var(--line);
+  border-radius: var(--radius);
+  background: linear-gradient(
+    90deg,
+    var(--paper) 25%,
+    var(--chalk) 50%,
+    var(--paper) 75%
+  );
+  background-size: 1200px 100%;
+  animation: shimmer 1.6s infinite linear;
+}
+
 /* ---------- footer ---------- */
 .site-footer {
   border-top: 3px solid var(--ink);
@@ -334,6 +417,13 @@ h1, h2, h3 {
   font-size: 0.75rem;
   color: var(--pencil);
 }
+/* Admin link is intentionally subtle — not for public use — Principle: Color with purpose */
+.site-footer a[href="admin.html"] {
+  opacity: 0.35;
+  text-decoration: none;
+  transition: opacity var(--t-fast);
+}
+.site-footer a[href="admin.html"]:hover { opacity: 0.75; }
 
 /* ---------- game page ---------- */
 .game-header { background: var(--paper); border-bottom: 3px solid var(--ink); padding: 40px 0 30px; }
@@ -429,7 +519,19 @@ form.feedback-form textarea { min-height: 100px; resize: vertical; }
 .comment .date { font-family: var(--mono); font-size: 0.68rem; color: var(--pencil); }
 .comment p { margin: 8px 0 0; font-size: 0.92rem; }
 .comment .admin-remove { margin-top: 8px; }
-.empty-state { font-family: var(--mono); color: var(--pencil); font-size: 0.85rem; }
+/* Styled as intentional state, not broken text — Principle: Empty states are invitations to act */
+.empty-state {
+  font-family: var(--mono);
+  color: var(--pencil);
+  font-size: 0.85rem;
+  padding: var(--space-4) var(--space-3);
+  border: 2px dashed var(--kraft-dark);
+  border-radius: var(--radius);
+  background: var(--paper);
+  text-align: center;
+  grid-column: 1 / -1;   /* spans full grid width when inside .game-grid */
+  letter-spacing: 0.04em;
+}
 
 /* ---------- admin ---------- */
 .admin-gate { max-width: 420px; margin: 90px auto; text-align: center; }

@@ -92,3 +92,26 @@ async function loadRatingSummary(slug) {
 }
 
 loadGames();
+
+/* ---------- scroll-spy nav active state ----------
+   Highlights the nav link matching the section currently in view.
+   Principle: Visual hierarchy — user always knows where they are. */
+(function initScrollSpy() {
+  const sections = ["offer", "library", "join"].map(id => document.getElementById(id)).filter(Boolean);
+  const navLinks = document.querySelectorAll(".site-nav a");
+
+  function onScroll() {
+    const scrollY = window.scrollY + 100;
+    let current = "";
+    sections.forEach(sec => {
+      if (sec.offsetTop <= scrollY) current = sec.id;
+    });
+    navLinks.forEach(link => {
+      const href = link.getAttribute("href").replace("#", "");
+      link.classList.toggle("nav-active", href === current);
+    });
+  }
+
+  window.addEventListener("scroll", onScroll, { passive: true });
+  onScroll(); // run once on load
+})();
