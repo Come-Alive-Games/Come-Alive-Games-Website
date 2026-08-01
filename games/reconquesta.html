@@ -9,7 +9,7 @@
     h1 { font-weight: normal; }
     body { font-family: Georgia, serif; background: #1a0a00; color: #f0e6d0; min-height: 100vh; overflow-x: hidden; }
     :focus-visible { outline: 2px solid #d4a843; outline-offset: 2px; }
-    .screen { display: none; min-height: 100vh; }
+    .screen { display: none; min-height: 100vh; min-height: 100dvh; }
     .screen.active { display: flex; flex-direction: column; align-items: center; justify-content: center; }
     #title-screen { background: radial-gradient(ellipse at center, #2d0a00 0%, #1a0a00 70%); text-align: center; padding: 40px 20px; }
     .game-title { font-size: 52px; color: #d4a843; letter-spacing: 6px; text-shadow: 0 0 20px #d4a84380; margin-bottom: 8px; }
@@ -18,7 +18,7 @@
     .menu-btn:hover { background: #d4a84320; }
     #game-screen { background: #1a0a00; padding: 0; }
     #game-screen.active { display: block; }
-    .game-layout { display: grid; grid-template-columns: 185px 1fr 205px; height: 100vh; }
+    .game-layout { display: grid; grid-template-columns: 185px 1fr 205px; height: 100vh; height: 100dvh; }
     .left-panel, .right-panel { background: #120800; display: flex; flex-direction: column; padding: 10px; gap: 8px; overflow-y: auto; }
     .left-panel { border-right: 1px solid #3d2000; }
     .right-panel { border-left: 1px solid #3d2000; }
@@ -131,7 +131,7 @@
     .kbd-hint { font-size: 9px; color: #a08060; text-align: center; padding: 2px 0; letter-spacing: 1px; }
     #deckbuilder-screen { background: #1a0a00; padding: 0; }
     #deckbuilder-screen.active { display: block; }
-    .db-layout { display: grid; grid-template-columns: 1fr 220px 260px; height: 100vh; }
+    .db-layout { display: grid; grid-template-columns: 1fr 220px 260px; height: 100vh; height: 100dvh; }
     .db-library { background: #0d0500; border-right: 1px solid #3d2000; display: flex; flex-direction: column; padding: 12px; overflow: hidden; }
     .db-deck-panel { background: #120800; border-right: 1px solid #3d2000; display: flex; flex-direction: column; padding: 12px; overflow: hidden; }
     .db-detail-panel { background: #0a0500; display: flex; flex-direction: column; padding: 12px; overflow-y: auto; }
@@ -174,7 +174,73 @@
     .db-detail-add { width: 100%; padding: 7px; background: transparent; border: 1px solid #d4a843; color: #d4a843; font-family: Georgia, serif; font-size: 11px; cursor: pointer; border-radius: 2px; margin-top: 8px; }
     .db-detail-add:hover { background: #2a1800; } .db-detail-add:disabled { opacity: 0.4; cursor: default; }
     ::-webkit-scrollbar { width: 3px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: #3d2000; border-radius: 2px; }
+
+    /* ===== Mobile/tablet (<=900px) overrides — desktop layout above is untouched ===== */
+    @media (max-width: 900px) {
+      /* --- Step 1: readable text sizes + bigger tap targets --- */
+      .cell-layer { font-size: 11px; }
+      .layer-stats { font-size: 10px; }
+      .owner-glyph { font-size: 9px; }
+      .bf-cell { min-height: 46px; }
+      .hc-type, .hc-cost, .hc-stats { font-size: 12px; }
+      .cd-type { font-size: 12px; }
+      .log-entry { font-size: 12px; }
+      .db-card-name { font-size: 12px; }
+      .db-card-meta, .db-card-cost { font-size: 11px; }
+      .db-detail-text, .db-detail-row, .db-detail-meta { font-size: 12px; }
+      .af-row { font-size: 11px; }
+      .turn-charge, .deck-info { font-size: 11px; }
+      .db-card-info { width: 22px; height: 22px; line-height: 22px; font-size: 11px; }
+      .db-deck-entry-remove { width: 22px; height: 22px; font-size: 12px; }
+      .action-btn, .db-btn, .modal-btn { padding-top: 10px; padding-bottom: 10px; }
+      .rl { padding: 8px 12px; }
+
+      /* --- Step 2: keyboard-shortcut hints are meaningless on touch devices --- */
+      .kbd, .kbd-hint { display: none; }
+
+      /* --- Step 4: stack the two setup-screen name fields instead of squeezing them --- */
+      .setup-row { flex-direction: column; }
+
+      /* --- Step 6: stack the 3-column Game and Deck Builder layouts --- */
+      .game-layout {
+        display: flex;
+        flex-direction: column;
+        height: auto;
+        min-height: 100vh;
+        min-height: 100dvh;
+      }
+      .center-area { order: 1; }
+      .left-panel { order: 2; border-right: none; border-top: 1px solid #3d2000; }
+      .right-panel { order: 3; border-left: none; border-top: 1px solid #3d2000; }
+      .hand-area { flex: none; max-height: 38vh; }
+      .log-area { flex: none; max-height: 180px; }
+      .battlefield-wrap { flex: none; overflow: visible; }
+      .battlefield { max-width: 100%; }
+
+      .db-layout {
+        display: flex;
+        flex-direction: column;
+        height: auto;
+        min-height: 100vh;
+        min-height: 100dvh;
+      }
+      .db-library, .db-deck-panel, .db-detail-panel {
+        border-right: none;
+        border-top: 1px solid #3d2000;
+        overflow: visible;
+      }
+      .db-card-grid { flex: none; max-height: 50vh; }
+      .db-deck-list { flex: none; max-height: 30vh; }
+    }
   </style>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-2QTVG7MMCP"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-2QTVG7MMCP');
+  </script>
 </head>
 <body>
 
@@ -188,7 +254,7 @@
       <button class="menu-btn" id="btn-rules">📜 How to Play</button>
       <button class="menu-btn" id="btn-card-library">📖 Card Library</button>
     </nav>
-    <div style="position:fixed;bottom:12px;right:16px;font-size:14px;color:#a08060;letter-spacing:1px;font-family:Georgia,serif;">v 1.3.5</div>
+    <div style="position:fixed;bottom:12px;right:16px;font-size:14px;color:#a08060;letter-spacing:1px;font-family:Georgia,serif;">v 1.4.0</div>
   </main>
 
   <div id="tutorial-overlay" style="display:none;position:fixed;inset:0;z-index:200;pointer-events:none;">
@@ -696,7 +762,7 @@ function positionCellTooltip(e,tip){
   tip.style.top=top+'px';
 }
 function hideCellTooltip(){document.getElementById('cell-tooltip').style.display='none';}
-function renderBF(){var bf=document.getElementById('battlefield');bf.innerHTML='';if(!G._fx)G._fx=[];for(var r=0;r<8;r++)for(var c=0;c<5;c++){var zone=zoneOf(r,c),cell=G.cells[r][c];var hl=G.highlightCells.find(function(h){return h.row===r&&h.col===c;});var hlClass='';if(hl){if(hl.type==='obstacle'&&hl.isAnchor)hlClass=' highlight-anchor';else if(hl.type==='obstacle-preview')hlClass=' highlight-obstacle-preview';else if(hl.type==='obstacle')hlClass=' highlight-obstacle';else hlClass=' highlight-'+hl.type;}var div=document.createElement('div');div.className='bf-cell zone-'+zone+hlClass;div.setAttribute('role','gridcell');var cellDesc=[];['conqueror','artillery','obstacle','trap'].forEach(function(lk){var u=cell[lk];if(!u)return;var fd=lk==='trap'&&!u.revealed;cellDesc.push(fd?'Hidden trap':(OWNER_LABEL[u.owner]||'')+(u.owner!==undefined?' ':'')+u.name+(u.currentHp?(' HP:'+u.currentHp):''));});div.setAttribute('aria-label','Row '+(r+1)+' Col '+(c+1)+(cellDesc.length?' — '+cellDesc.join(', '):''));var zl=document.createElement('div');zl.className='zone-label';zl.setAttribute('aria-hidden','true');zl.textContent=zone.replace('_p1','').replace('_p2','').toUpperCase();div.appendChild(zl);var stack=document.createElement('div');stack.className='cell-stack';var isSel=G.selectedCard&&G.selectedCard.source==='cell'&&G.selectedCard.row===r&&G.selectedCard.col===c;[{key:'obstacle',type:'obstacle'},{key:'trap',type:'trap'},{key:'artillery',type:'artillery'},{key:'conqueror',type:'conqueror'}].forEach(function(lk){var unit=cell[lk.key];if(!unit)return;if(lk.key==='trap'){if(unit.owner!==G.activePlayer)return;}if(lk.key==='obstacle'&&unit.multiCell){var isAnch=unit.anchorR===r&&unit.anchorC===c;var isSat=!isAnch&&unit.satelliteCells&&unit.satelliteCells.some(function(rc){return rc[0]===r&&rc[1]===c;});if(isAnch){var lyr=document.createElement('div');lyr.className='cell-layer layer-obstacle';var hp2=unit.maxhp?Math.round(((unit.currentHp||0)/unit.maxhp)*100):100;var ownerG=unit.owner!==undefined?'<span class="owner-glyph" aria-label="'+OWNER_LABEL[unit.owner]+'">'+OWNER_GLYPH[unit.owner]+'</span>':'';lyr.innerHTML=ownerG+'<div class="layer-name">'+unit.name+' ('+(unit.wallWidth||1)+'w)</div><div class="layer-hp"><div class="layer-hp-fill" style="width:'+hp2+'%"></div></div>';stack.appendChild(lyr);}else if(isSat){var lyr2=document.createElement('div');lyr2.className='cell-layer layer-obstacle';lyr2.style.cssText='border-style:dashed;opacity:0.75;';lyr2.innerHTML='<div class="layer-name" style="text-align:center;">\u2500\u2500\u2500</div>';stack.appendChild(lyr2);}return;}var lyr3=document.createElement('div');var own=unit.owner!==undefined?' p'+(unit.owner+1):'';var fd=lk.key==='trap'&&!unit.revealed;lyr3.className='cell-layer layer-'+lk.type+own+(unit.exhausted?' layer-exhausted':'')+(fd?' facedown':'');if(isSel&&(lk.key==='conqueror'||lk.key==='artillery'))lyr3.style.borderWidth='2px';var hpPct=unit.maxhp?Math.round(((unit.currentHp||0)/unit.maxhp)*100):100;var atk=(unit.atk||0)+(unit.atkMod||0);if(fd){lyr3.innerHTML='<div class="layer-name">??? <span class="owner-glyph" aria-label="'+OWNER_LABEL[unit.owner]+'">'+OWNER_GLYPH[unit.owner]+'</span></div>';}else{var ownerGlyph=unit.owner!==undefined?'<span class="owner-glyph" aria-label="'+OWNER_LABEL[unit.owner]+'">'+OWNER_GLYPH[unit.owner]+'</span>':'';lyr3.innerHTML=ownerGlyph+'<div class="layer-name">'+unit.name+'</div>'+((unit.atk||0)>0?'<div class="layer-stats"><span>\u2694'+atk+'</span><span>\u2764'+(unit.currentHp||0)+'</span></div>':'')+((unit.hp||0)>0?'<div class="layer-hp"><div class="layer-hp-fill" style="width:'+hpPct+'%"></div></div>':'');}stack.appendChild(lyr3);});div.appendChild(stack);if(G.actionMode==='attack'&&G.selectedCard&&G.selectedCard.source==='cell'&&hl&&hl.type==='attack'){var pv=previewDamageAt(G.selectedCard.card,r,c);if(pv){var bd=document.createElement('div');bd.className='dmg-badge'+(pv.lethal?' lethal':'');bd.innerHTML=(pv.lethal?'☠':'')+pv.dmg+(pv.mult>0?'<span class="wk">+'+pv.mult+'</span>':'');bd.title='Deals '+pv.dmg+' to '+pv.name+(pv.mult>0?' (weakness +'+pv.mult+')':'')+(pv.lethal?' — lethal!':'');div.appendChild(bd);}}if(G._fx&&G._fx.length){G._fx.forEach(function(f){if(f.r===r&&f.c===c)div.classList.add('fx-'+f.kind);});}(function(row,col){div.onclick=function(){if(['strategize','combat','recover'].indexOf(G.phase)>=0||G.actionMode)onCellClick(row,col);};div.onmouseenter=function(e){showCellTooltip(e,row,col);};div.onmousemove=function(e){var tip=document.getElementById('cell-tooltip');if(tip.style.display==='block')positionCellTooltip(e,tip);};div.onmouseleave=function(){hideCellTooltip();};})(r,c);bf.appendChild(div);}G._fx=[];}
+function renderBF(){var bf=document.getElementById('battlefield');bf.innerHTML='';if(!G._fx)G._fx=[];for(var r=0;r<8;r++)for(var c=0;c<5;c++){var zone=zoneOf(r,c),cell=G.cells[r][c];var hl=G.highlightCells.find(function(h){return h.row===r&&h.col===c;});var hlClass='';if(hl){if(hl.type==='obstacle'&&hl.isAnchor)hlClass=' highlight-anchor';else if(hl.type==='obstacle-preview')hlClass=' highlight-obstacle-preview';else if(hl.type==='obstacle')hlClass=' highlight-obstacle';else hlClass=' highlight-'+hl.type;}var div=document.createElement('div');div.className='bf-cell zone-'+zone+hlClass;div.setAttribute('role','gridcell');var cellDesc=[];['conqueror','artillery','obstacle','trap'].forEach(function(lk){var u=cell[lk];if(!u)return;var fd=lk==='trap'&&!u.revealed;cellDesc.push(fd?'Hidden trap':(OWNER_LABEL[u.owner]||'')+(u.owner!==undefined?' ':'')+u.name+(u.currentHp?(' HP:'+u.currentHp):''));});div.setAttribute('aria-label','Row '+(r+1)+' Col '+(c+1)+(cellDesc.length?' — '+cellDesc.join(', '):''));var zl=document.createElement('div');zl.className='zone-label';zl.setAttribute('aria-hidden','true');zl.textContent=zone.replace('_p1','').replace('_p2','').toUpperCase();div.appendChild(zl);var stack=document.createElement('div');stack.className='cell-stack';var isSel=G.selectedCard&&G.selectedCard.source==='cell'&&G.selectedCard.row===r&&G.selectedCard.col===c;[{key:'obstacle',type:'obstacle'},{key:'trap',type:'trap'},{key:'artillery',type:'artillery'},{key:'conqueror',type:'conqueror'}].forEach(function(lk){var unit=cell[lk.key];if(!unit)return;if(lk.key==='trap'){if(unit.owner!==G.activePlayer)return;}if(lk.key==='obstacle'&&unit.multiCell){var isAnch=unit.anchorR===r&&unit.anchorC===c;var isSat=!isAnch&&unit.satelliteCells&&unit.satelliteCells.some(function(rc){return rc[0]===r&&rc[1]===c;});if(isAnch){var lyr=document.createElement('div');lyr.className='cell-layer layer-obstacle';var hp2=unit.maxhp?Math.round(((unit.currentHp||0)/unit.maxhp)*100):100;var ownerG=unit.owner!==undefined?'<span class="owner-glyph" aria-label="'+OWNER_LABEL[unit.owner]+'">'+OWNER_GLYPH[unit.owner]+'</span>':'';lyr.innerHTML=ownerG+'<div class="layer-name">'+unit.name+' ('+(unit.wallWidth||1)+'w)</div><div class="layer-hp"><div class="layer-hp-fill" style="width:'+hp2+'%"></div></div>';stack.appendChild(lyr);}else if(isSat){var lyr2=document.createElement('div');lyr2.className='cell-layer layer-obstacle';lyr2.style.cssText='border-style:dashed;opacity:0.75;';lyr2.innerHTML='<div class="layer-name" style="text-align:center;">\u2500\u2500\u2500</div>';stack.appendChild(lyr2);}return;}var lyr3=document.createElement('div');var own=unit.owner!==undefined?' p'+(unit.owner+1):'';var fd=lk.key==='trap'&&!unit.revealed;lyr3.className='cell-layer layer-'+lk.type+own+(unit.exhausted?' layer-exhausted':'')+(fd?' facedown':'');if(isSel&&(lk.key==='conqueror'||lk.key==='artillery'))lyr3.style.borderWidth='2px';var hpPct=unit.maxhp?Math.round(((unit.currentHp||0)/unit.maxhp)*100):100;var atk=(unit.atk||0)+(unit.atkMod||0);if(fd){lyr3.innerHTML='<div class="layer-name">??? <span class="owner-glyph" aria-label="'+OWNER_LABEL[unit.owner]+'">'+OWNER_GLYPH[unit.owner]+'</span></div>';}else{var ownerGlyph=unit.owner!==undefined?'<span class="owner-glyph" aria-label="'+OWNER_LABEL[unit.owner]+'">'+OWNER_GLYPH[unit.owner]+'</span>':'';lyr3.innerHTML=ownerGlyph+'<div class="layer-name">'+unit.name+'</div>'+((unit.atk||0)>0?'<div class="layer-stats"><span>\u2694'+atk+'</span><span>\u2764'+(unit.currentHp||0)+'</span></div>':'')+((unit.hp||0)>0?'<div class="layer-hp"><div class="layer-hp-fill" style="width:'+hpPct+'%"></div></div>':'');}stack.appendChild(lyr3);});div.appendChild(stack);if(G.actionMode==='attack'&&G.selectedCard&&G.selectedCard.source==='cell'&&hl&&hl.type==='attack'){var pv=previewDamageAt(G.selectedCard.card,r,c);if(pv){var bd=document.createElement('div');bd.className='dmg-badge'+(pv.lethal?' lethal':'');bd.innerHTML=(pv.lethal?'☠':'')+pv.dmg+(pv.mult>0?'<span class="wk">+'+pv.mult+'</span>':'');bd.title='Deals '+pv.dmg+' to '+pv.name+(pv.mult>0?' (weakness +'+pv.mult+')':'')+(pv.lethal?' — lethal!':'');div.appendChild(bd);}}if(G._fx&&G._fx.length){G._fx.forEach(function(f){if(f.r===r&&f.c===c)div.classList.add('fx-'+f.kind);});}(function(row,col){div.onclick=function(){if(['strategize','combat','recover'].indexOf(G.phase)>=0||G.actionMode)onCellClick(row,col);};div.onmouseenter=function(e){showCellTooltip(e,row,col);};div.onmousemove=function(e){var tip=document.getElementById('cell-tooltip');if(tip.style.display==='block')positionCellTooltip(e,tip);};div.onmouseleave=function(){hideCellTooltip();};div.ontouchstart=function(e){var t=e.touches[0];showCellTooltip({clientX:t.clientX,clientY:t.clientY},row,col);clearTimeout(window._cellTipTimer);window._cellTipTimer=setTimeout(hideCellTooltip,2500);};})(r,c);bf.appendChild(div);}G._fx=[];}
 function renderHand(){var ap=G.activePlayer,p=G.players[ap];var ha=document.getElementById('hand-area');ha.innerHTML='';document.getElementById('hand-panel-title').textContent=p.name.substring(0,9).toUpperCase()+"'S HAND";p.hand.forEach(function(card,i){var canPlay=canPlayCard(ap,card);var isSel=G.selectedCard&&G.selectedCard.source==='hand'&&G.selectedCard.index===i;var div=document.createElement('div');div.className='hand-card'+(isSel?' selected':'')+(canPlay?'':' unplayable');div.setAttribute('tabindex','0');div.setAttribute('role','button');div.setAttribute('aria-label',card.name+', '+card.type+', cost '+fmtCost(card.cost||{})+(canPlay?'':' (unaffordable)'));div.setAttribute('aria-pressed',isSel?'true':'false');div.innerHTML='<div class="hc-name">'+card.name+'<span class="ab ab-'+(card.attr||'NA')+'">'+(card.attr||'NA')+'</span></div><div class="hc-type">'+card.type+(card.subtype&&card.subtype!==card.type?' \xb7 '+card.subtype:'')+'</div><div class="hc-cost">'+fmtCost(card.cost||{})+'</div>'+(card.type==='Conqueror'?'<div class="hc-stats">ATK:'+(card.atk||0)+' HP:'+(card.hp||0)+' MV:'+(card.move||0)+' RNG:'+(card.range||card.rangeMax||'—')+'</div>':'');(function(idx){div.onclick=function(){onHandClick(idx);};div.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();onHandClick(idx);}};})(i);ha.appendChild(div);});}
 function renderRes(){var ap=G.activePlayer,res=G.players[ap].resources;var el=document.getElementById('resource-display');el.innerHTML='';RES.forEach(function(t){var d=document.createElement('div');d.className='res-token';d.setAttribute('aria-label',RES_NAME[t]+': '+(res[t]||0));d.innerHTML='<div class="res-dot res-'+t+'" aria-hidden="true"></div><span style="font-size:10px;color:#c0b090;flex:1;">'+RES_NAME[t]+'</span><span style="color:#f0e6d0;font-size:12px;">'+(res[t]||0)+'</span>';el.appendChild(d);});}
 function renderPhase(){['draw','pillage','strategize','combat','recover','end'].forEach(function(ph){var el=document.getElementById('ph-'+ph);if(el){el.className='phase-tab'+(G.phase===ph?' active':'');el.setAttribute('aria-selected',G.phase===ph?'true':'false');}});}
