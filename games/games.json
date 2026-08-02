@@ -4,7 +4,7 @@
     "title": "Reconquesta",
     "category": "CCG/Deck Builder",
     "status": "in-testing",
-    "version": "1.3.5",
+    "version": "1.4.0",
     "description": "Reconquesta is a medieval, tactical collectable card game where you, as a Majesty, Recruit Conquerors to siege rival realms and reduce their Glory Points to zero.",
     "instructions": "On your turn, draw a card, Pillage Resources, then Recruit, move, and battle with your Conquerors on the Battlefield, using Actions, Artillery, and Defenses to push into enemy zones and strike the opposing Majesty’s Glory Points. An interactive tutorial and full 'how to play' guide are available in-game to walk you step-by-step through your first Reconquesta battles.",
     "knownIssues": [

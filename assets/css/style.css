@@ -181,7 +181,9 @@ h1, h2, h3 {
   border-bottom: 3px solid var(--ink);
   background: var(--ink);
   overflow: hidden;
-  min-height: 640px;
+  /* Taller on wide screens so the container's aspect ratio sits closer to the
+     16:9 source photo — otherwise cover-fit crops the top/bottom off. */
+  min-height: clamp(640px, 82vh, 880px);
   display: flex;
   align-items: center;
 }
@@ -239,6 +241,7 @@ h1, h2, h3 {
   padding: 10px 16px;
   box-shadow: var(--shadow-card);
   font-family: var(--mono);
+  text-align: center;
 }
 .stat-pill .k { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--pencil); display: block; }
 .stat-pill .v { font-family: var(--display); font-size: 1.35rem; color: var(--ink); }
