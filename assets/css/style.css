@@ -175,49 +175,73 @@ h1, h2, h3 {
 .btn-small { padding: 7px 14px; font-size: 0.72rem; }
 
 /* ---------- hero ---------- */
+/* Full-bleed background photo with overlaid text — Principle: reference layout (Haiven) */
 .hero {
-  padding: 76px 0 64px;
-  border-bottom: 3px solid var(--ink);
-  background: var(--paper);
   position: relative;
+  border-bottom: 3px solid var(--ink);
+  background: var(--ink);
   overflow: hidden;
-}
-.hero .wrap { position: relative; z-index: 2; }
-.hero-grid {
-  display: grid;
-  grid-template-columns: 1.15fr 0.85fr;
-  gap: 48px;
+  min-height: 640px;
+  display: flex;
   align-items: center;
 }
-.hero h1 {
+.hero-media {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+}
+.hero-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 60% 40%;
+}
+/* Scrim ensures left-aligned text stays legible over the photo at every width */
+.hero-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    linear-gradient(100deg, rgba(15,10,6,0.88) 0%, rgba(15,10,6,0.68) 38%, rgba(15,10,6,0.22) 66%, rgba(15,10,6,0.4) 100%),
+    linear-gradient(to top, rgba(15,10,6,0.55) 0%, transparent 32%);
+}
+.hero .wrap.hero-content {
+  position: relative;
+  z-index: 2;
+  padding: 90px 0;
+  max-width: 640px;
+}
+.eyebrow-light { color: var(--kraft-dark); }
+.hero-h1 {
   font-size: clamp(2.6rem, 5.2vw, 4.4rem);
   margin: 14px 0 20px;
+  color: var(--chalk);
 }
-.hero h1 .line2 { color: var(--red); display: block; }
-.hero p.lede {
+.hero-h1 .line2 { color: var(--red); display: block; }
+.hero-lede {
   font-size: 1.08rem;
   max-width: 46ch;
-  color: var(--ink-soft);
+  color: var(--kraft);
 }
 .hero-cta { margin-top: 30px; display: flex; gap: 14px; flex-wrap: wrap; }
+.btn-ghost-light { border-color: var(--kraft); color: var(--chalk); }
+.btn-ghost-light:hover { border-color: var(--chalk); color: var(--chalk); box-shadow: 3px 4px 0 var(--chalk); }
 
-/* signature: stacked "index card" illustration in hero */
-.card-stack { position: relative; height: 320px; }
-.stat-card {
-  position: absolute;
-  width: 240px;
-  background: var(--chalk);
+/* signature: stat pills sitting over the hero photo */
+.hero-stats { margin-top: 38px; display: flex; gap: 14px; flex-wrap: wrap; }
+.stat-pill {
+  background: rgba(251, 248, 239, 0.94);
   border: 2px solid var(--ink);
   border-radius: var(--radius);
-  padding: 18px 18px 16px;
+  padding: 10px 16px;
   box-shadow: var(--shadow-card);
   font-family: var(--mono);
 }
-.stat-card .k { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--pencil); }
-.stat-card .v { font-family: var(--display); font-size: 1.7rem; margin-top: 4px; }
-.stat-card.c1 { top: 0; left: 10%; transform: rotate(-6deg); z-index: 3; }
-.stat-card.c2 { top: 90px; left: 42%; transform: rotate(4deg); z-index: 2; }
-.stat-card.c3 { top: 190px; left: 6%; transform: rotate(2deg); z-index: 1; background: var(--kraft-dark); }
+.stat-pill .k { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--pencil); display: block; }
+.stat-pill .v { font-family: var(--display); font-size: 1.35rem; color: var(--ink); }
 
 /* ---------- about / offer section ---------- */
 /* Consistent 8pt-grid vertical rhythm — Principle: Spacing system */
@@ -541,10 +565,17 @@ form.feedback-form textarea { min-height: 100px; resize: vertical; }
 
 /* ---------- responsive ---------- */
 @media (max-width: 900px) {
-  .hero-grid { grid-template-columns: 1fr; }
-  .card-stack { height: 220px; margin-top: 20px; }
+  .hero { min-height: 560px; }
+  .hero .wrap.hero-content { padding: 64px 0; max-width: 100%; }
   .offer-grid { grid-template-columns: 1fr; }
   .two-col { grid-template-columns: 1fr; }
   #gameFrame { height: 520px; }
   .site-nav { display: none; }
+}
+
+@media (max-width: 560px) {
+  .hero { min-height: 480px; }
+  .hero-media img { object-position: 70% 40%; }
+  .hero-stats { gap: 10px; }
+  .stat-pill { padding: 8px 12px; }
 }

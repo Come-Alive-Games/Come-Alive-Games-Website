@@ -34,20 +34,33 @@
 </header>
 
 <section class="hero">
-  <div class="wrap hero-grid">
-    <div>
-      <span class="eyebrow">// Playtest Lab — Open to the public</span>
-      <h1>Tabletop games,<span class="line2">before the box exists.</span></h1>
-      <p class="lede">We're a tabletop game studio. Before any game goes to print, it comes here — playable in your browser — so real players can break it, question it, and help us make it better.</p>
-      <div class="hero-cta">
-        <a href="#library" class="btn btn-primary">Browse the library</a>
-        <a href="#offer" class="btn btn-ghost">What is playtesting?</a>
-      </div>
+  <picture class="hero-media">
+    <source
+      type="image/webp"
+      srcset="assets/images/hero-knight-360.webp 360w, assets/images/hero-knight-768.webp 768w, assets/images/hero-knight-1920.webp 1920w"
+      sizes="100vw">
+    <img
+      src="assets/images/hero-knight-1920.jpg"
+      srcset="assets/images/hero-knight-360.jpg 360w, assets/images/hero-knight-768.jpg 768w, assets/images/hero-knight-1920.jpg 1920w"
+      sizes="100vw"
+      width="1920" height="1080"
+      alt="Armored knight raising a sword before a burning castle skyline"
+      fetchpriority="high"
+      loading="eager">
+  </picture>
+  <div class="hero-scrim" aria-hidden="true"></div>
+  <div class="wrap hero-content">
+    <span class="eyebrow eyebrow-light">// Playtest Lab — Open to the public</span>
+    <h1 class="hero-h1">Tabletop games,<span class="line2">before the box exists.</span></h1>
+    <p class="lede hero-lede">We're a tabletop game studio. Before any game goes to print, it comes here — playable in your browser — so real players can break it, question it, and help us make it better.</p>
+    <div class="hero-cta">
+      <a href="#library" class="btn btn-primary">Browse the library</a>
+      <a href="#offer" class="btn btn-ghost btn-ghost-light">What is playtesting?</a>
     </div>
-    <div class="card-stack" aria-hidden="true">
-      <div class="stat-card c1"><div class="k">Games in testing</div><div class="v" id="statGames">3</div></div>
-      <div class="stat-card c2"><div class="k">Feedback welcome</div><div class="v">24/7</div></div>
-      <div class="stat-card c3"><div class="k">Cost to play</div><div class="v">$0</div></div>
+    <div class="hero-stats" aria-hidden="true">
+      <div class="stat-pill"><span class="k">Games in testing</span><span class="v" id="statGames">3</span></div>
+      <div class="stat-pill"><span class="k">Feedback welcome</span><span class="v">24/7</span></div>
+      <div class="stat-pill"><span class="k">Cost to play</span><span class="v">$0</span></div>
     </div>
   </div>
 </section>
