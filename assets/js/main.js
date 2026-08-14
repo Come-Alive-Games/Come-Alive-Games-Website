@@ -54,18 +54,22 @@ async function renderGrid() {
   grid.innerHTML = games.map(g => {
     const status = STATUS_LABEL[g.status] || STATUS_LABEL["in-testing"];
     return `
-      <a class="game-card" href="game.html?slug=${encodeURIComponent(g.slug)}">
+      <div class="game-card">
+        <a class="card-link-overlay" href="game.html?slug=${encodeURIComponent(g.slug)}" aria-label="${g.title}"></a>
         <span class="stamp ${status.cls}">${status.text}</span>
-        ${g.gameCrafterUrl ? `<span class="buy-icon" title="Available on The Game Crafter">🛒</span>` : ""}
         <span class="category">${g.category}</span>
         <h3>${g.title}</h3>
         <p class="desc">${g.description}</p>
         <div class="rule-top"></div>
+        ${g.gameCrafterUrl ? `
+        <div class="buy-icon-row">
+          <a class="buy-icon" href="${g.gameCrafterUrl}" target="_blank" rel="noopener" title="Buy ${g.title} on The Game Crafter" aria-label="Buy ${g.title} on The Game Crafter">🛒</a>
+        </div>` : ""}
         <div class="meta-row">
           <span>v${g.version}</span>
           <span class="stars" id="stars-${g.slug}">Loading ratings…</span>
         </div>
-      </a>
+      </div>
     `;
   }).join("");
 

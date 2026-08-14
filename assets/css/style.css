@@ -389,10 +389,16 @@ h1, h2, h3 {
   padding-top: 12px;
 }
 .stars { color: var(--red); letter-spacing: 1px; }
+.card-link-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
 .stamp {
   position: absolute;
-  top: 14px;
+  top: 44px;
   right: 14px;
+  z-index: 2;
   transform: rotate(8deg);
   font-family: var(--mono);
   font-size: 0.62rem;
@@ -403,16 +409,26 @@ h1, h2, h3 {
   padding: 3px 8px;
   border-radius: 4px;
   opacity: 0.9;
+  background: var(--chalk);
 }
 .stamp.closed { color: var(--pencil); border-color: var(--pencil); }
 .stamp.new { color: var(--green); border-color: var(--green); }
+.buy-icon-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
 .buy-icon {
-  position: absolute;
-  top: 14px;
-  left: 14px;
+  position: relative;
+  z-index: 2;
   font-size: 1rem;
   line-height: 1;
+  padding: 3px 6px;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: background 0.14s ease, transform 0.14s ease;
 }
+.buy-icon:hover { background: var(--paper); transform: translateY(-1px); }
 
 /* ---------- skeleton loading cards ---------- */
 @keyframes shimmer {
