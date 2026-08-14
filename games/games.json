@@ -26,7 +26,8 @@
       "AI difficulties are inconsistent.",
       "The size of cards in hand may cause some UI issues and inconveniences."
     ],
-    "file": "rankers.html"
+    "file": "rankers.html",
+    "gameCrafterUrl": "https://www.thegamecrafter.com/games/rankers"
   },
   {
     "slug": "junban",
@@ -54,6 +55,7 @@
       "Difficult to track which lane set is relevant each round.",
       "Character images may not load properly."
     ],
-    "file": "jaywalking.html"
+    "file": "jaywalking.html",
+    "gameCrafterUrl": "https://www.thegamecrafter.com/games/jaywalking"
   }
 ]

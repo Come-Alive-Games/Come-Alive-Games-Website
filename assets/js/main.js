@@ -56,6 +56,7 @@ async function renderGrid() {
     return `
       <a class="game-card" href="game.html?slug=${encodeURIComponent(g.slug)}">
         <span class="stamp ${status.cls}">${status.text}</span>
+        ${g.gameCrafterUrl ? `<span class="buy-icon" title="Available on The Game Crafter">🛒</span>` : ""}
         <span class="category">${g.category}</span>
         <h3>${g.title}</h3>
         <p class="desc">${g.description}</p>

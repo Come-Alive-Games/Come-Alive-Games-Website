@@ -406,6 +406,13 @@ h1, h2, h3 {
 }
 .stamp.closed { color: var(--pencil); border-color: var(--pencil); }
 .stamp.new { color: var(--green); border-color: var(--green); }
+.buy-icon {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  font-size: 1rem;
+  line-height: 1;
+}
 
 /* ---------- skeleton loading cards ---------- */
 @keyframes shimmer {

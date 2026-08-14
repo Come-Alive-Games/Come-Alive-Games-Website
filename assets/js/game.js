@@ -36,6 +36,12 @@ async function init() {
   const issuesList = document.getElementById("gameIssues");
   issuesList.innerHTML = (currentGame.knownIssues || []).map(i => `<li>${i}</li>`).join("") || "<li>No known issues reported yet.</li>";
 
+  const buyLink = document.getElementById("buyLink");
+  if (currentGame.gameCrafterUrl) {
+    buyLink.href = currentGame.gameCrafterUrl;
+    buyLink.style.display = "";
+  }
+
   const framePath = `games/${currentGame.file}`;
   document.getElementById("gameFrame").src = framePath;
   document.getElementById("openNewTab").href = framePath;
