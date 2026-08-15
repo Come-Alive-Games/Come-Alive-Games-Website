@@ -109,10 +109,13 @@ h1, h2, h3 {
 }
 .brand {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 10px;
   text-decoration: none;
 }
+/* Matches .brand-mark's 1.5rem (24px) font-size so the mark reads at the
+   same visual size as the wordmark next to it — used in header and footer. */
+.site-logo { height: 24px; width: auto; display: block; }
 .brand-mark {
   font-family: var(--display);
   font-size: 1.5rem;
@@ -467,6 +470,7 @@ h1, h2, h3 {
   font-size: 0.75rem;
   color: var(--pencil);
 }
+.footer-admin { display: flex; align-items: center; gap: 8px; }
 /* Admin link is intentionally subtle — not for public use — Principle: Color with purpose */
 .site-footer a[href="admin.html"] {
   opacity: 0.35;
