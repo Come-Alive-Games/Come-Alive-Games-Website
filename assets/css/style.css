@@ -116,6 +116,7 @@ h1, h2, h3 {
 /* 2x .brand-mark's 1.5rem (24px) font-size — sized up for visual presence,
    used in header and footer. */
 .site-logo { height: 48px; width: auto; display: block; }
+.site-header .site-logo { position: relative; top: -2px; }
 .brand-mark {
   font-family: var(--display);
   font-size: 1.5rem;
