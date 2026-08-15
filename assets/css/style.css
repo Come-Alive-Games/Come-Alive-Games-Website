@@ -113,9 +113,9 @@ h1, h2, h3 {
   gap: 10px;
   text-decoration: none;
 }
-/* Matches .brand-mark's 1.5rem (24px) font-size so the mark reads at the
-   same visual size as the wordmark next to it — used in header and footer. */
-.site-logo { height: 24px; width: auto; display: block; }
+/* 2x .brand-mark's 1.5rem (24px) font-size — sized up for visual presence,
+   used in header and footer. */
+.site-logo { height: 48px; width: auto; display: block; }
 .brand-mark {
   font-family: var(--display);
   font-size: 1.5rem;
