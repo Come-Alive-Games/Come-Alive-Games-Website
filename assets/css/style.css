@@ -204,6 +204,12 @@ h1, h2, h3 {
   height: 100%;
   object-fit: cover;
   object-position: 60% 40%;
+  /* Slow, subtle Ken Burns zoom — .hero has overflow:hidden to clip it */
+  animation: hero-zoom 20s ease-in-out infinite alternate;
+}
+@keyframes hero-zoom {
+  from { transform: scale(1); }
+  to { transform: scale(1.08); }
 }
 /* Scrim ensures left-aligned text stays legible over the photo at every width */
 .hero-scrim {
