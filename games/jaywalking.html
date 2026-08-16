@@ -2,31 +2,37 @@
   @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: #111; color: #fff; font-family: 'Press Start 2P', monospace; image-rendering: pixelated; }
-  .game-wrap { padding: 1rem; min-height: 100vh; background: #111; }
-  .screen { display: none; }
+  .game-wrap { padding: 1rem; min-height: 100vh; background: #111; display: flex; align-items: center; justify-content: center; }
+  .screen { display: none; width: 100%; }
   .screen.active { display: block; }
 
   .setup-card { background: #000; border: 3px solid #fff; padding: 1.5rem; max-width: 500px; margin: 0 auto; }
   .setup-title { font-size: 18px; color: #fff; margin-bottom: 4px; letter-spacing: 1px; text-shadow: 3px 3px #333; }
   .setup-sub { font-size: 7px; color: #aaa; margin-bottom: 1.5rem; line-height: 1.8; }
   .section-label { font-size: 7px; color: #f5c518; margin-bottom: 10px; letter-spacing: 1px; }
-  .char-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 1.5rem; }
-  .char-btn { border: 2px solid #444; padding: 10px 6px; background: #1a1a1a; cursor: pointer; text-align: center; transition: all 0.1s; }
-  .char-btn:hover { border-color: #f5c518; background: #222; }
-  .char-btn.selected { border: 3px solid #f5c518; background: #2a2000; }
-  .char-emoji { font-size: 24px; display: block; margin-bottom: 5px; }
-  .char-name { font-size: 6px; color: #aaa; }
-  .char-btn.selected .char-name { color: #f5c518; }
   .player-select { display: flex; gap: 6px; margin-bottom: 1.5rem; }
-  .player-btn { flex: 1; border: 2px solid #444; padding: 8px 4px; background: #1a1a1a; cursor: pointer; font-size: 6px; font-family: 'Press Start 2P', monospace; color: #aaa; transition: all 0.1s; }
+  .player-btn { flex: 1; border: 2px solid #444; padding: 8px 4px; background: #1a1a1a; cursor: pointer; font-size: 7px; font-family: 'Press Start 2P', monospace; color: #aaa; transition: all 0.1s; }
   .player-btn:hover { border-color: #f5c518; color: #fff; }
   .player-btn.selected { border: 3px solid #f5c518; background: #2a2000; color: #f5c518; }
+  .char-player-block { margin-bottom: 14px; }
+  .char-player-block:last-child { margin-bottom: 1.5rem; }
+  .char-player-label { font-size: 7px; color: #f5c518; margin-bottom: 8px; letter-spacing: 1px; }
+  .char-confirmed-row { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border: 2px solid #333; background: #111; margin-bottom: 8px; cursor: pointer; transition: all 0.1s; }
+  .char-confirmed-row:hover { border-color: #f5c518; }
+  .char-confirmed-emoji { font-size: 16px; }
+  .char-confirmed-label { font-size: 7px; color: #aaa; }
+  .char-confirmed-label b { color: #f5c518; }
+  .char-compact-row { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+  .char-compact-btn { width: 34px; height: 34px; border: 2px solid #444; background: #1a1a1a; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: all 0.1s; }
+  .char-compact-btn:hover:not(:disabled) { border-color: #f5c518; background: #222; }
+  .char-compact-btn.selected { border: 3px solid #f5c518; background: #2a2000; }
+  .char-compact-btn:disabled { opacity: 0.2; cursor: not-allowed; }
   .mode-select { display: flex; gap: 6px; margin-bottom: 1.5rem; }
-  .mode-btn { flex: 1; border: 2px solid #444; padding: 10px 6px; background: #1a1a1a; cursor: pointer; font-size: 6px; font-family: 'Press Start 2P', monospace; color: #aaa; text-align: center; transition: all 0.1s; line-height: 2; }
+  .mode-btn { flex: 1; border: 2px solid #444; padding: 10px 6px; background: #1a1a1a; cursor: pointer; font-size: 7px; font-family: 'Press Start 2P', monospace; color: #aaa; text-align: center; transition: all 0.1s; line-height: 2; }
   .mode-btn:hover { border-color: #f5c518; color: #fff; }
   .mode-btn.selected { border: 3px solid #f5c518; background: #2a2000; color: #f5c518; }
   .mode-btn .mode-name { display: block; font-size: 8px; margin-bottom: 4px; }
-  .mode-btn .mode-desc { display: block; font-size: 5px; color: #777; line-height: 1.8; }
+  .mode-btn .mode-desc { display: block; font-size: 7px; color: #777; line-height: 1.8; }
   .mode-btn.selected .mode-desc { color: #a07800; }
   .start-btn { width: 100%; padding: 12px; border: 3px solid #fff; background: #000; color: #fff; font-size: 10px; font-family: 'Press Start 2P', monospace; cursor: pointer; letter-spacing: 1px; transition: all 0.1s; }
   .start-btn:disabled { opacity: 0.3; cursor: not-allowed; }
@@ -36,11 +42,11 @@
   .finish-zone, .start-zone { text-align: center; padding: 7px; font-size: 7px; letter-spacing: 1px; margin-bottom: 4px; border: 2px solid #fff; }
   .finish-zone { background: #003300; color: #00ff44; border-color: #00ff44; }
   .start-zone { background: #000033; color: #4488ff; border-color: #4488ff; margin-top: 4px; margin-bottom: 0; }
-  .mode-badge { display: inline-block; font-size: 5px; padding: 2px 6px; border: 1px solid #f5c518; color: #f5c518; margin-left: 8px; vertical-align: middle; }
+  .mode-badge { display: inline-block; font-size: 7px; padding: 2px 6px; border: 1px solid #f5c518; color: #f5c518; margin-left: 8px; vertical-align: middle; }
   .mode-badge.hard { border-color: #ff4444; color: #ff4444; }
 
   .lane-row { display: grid; grid-template-columns: 20px repeat(6, 1fr) 20px; gap: 2px; align-items: center; margin-bottom: 2px; }
-  .lane-num { font-size: 6px; color: #555; text-align: center; }
+  .lane-num { font-size: 7px; color: #555; text-align: center; }
 
   .road-card {
     height: 40px; background: #000; border: none; display: flex; align-items: center; justify-content: center;
@@ -49,6 +55,8 @@
                 inset 16px 0 0 #000, inset -16px 0 0 #000, inset 0 16px 0 #000, inset 0 -16px 0 #000;
   }
   .road-card.face-down::after { content: '?'; color: #555; font-size: 12px; font-family: 'Press Start 2P', monospace; }
+  .road-card.hard-card { width: 60px; margin: 0 auto; }
+  .hard-token-slot { height: 40px; display: flex; align-items: center; justify-content: center; position: relative; }
   .road-card.revealed-safe { background: #111; }
   .road-card.revealed-car { background: #000033; box-shadow: inset 8px 0 0 #1a6bb5, inset -8px 0 0 #1a6bb5, inset 0 8px 0 #1a6bb5, inset 0 -8px 0 #1a6bb5, inset 16px 0 0 #000033, inset -16px 0 0 #000033, inset 0 16px 0 #000033, inset 0 -16px 0 #000033; }
   .road-card.revealed-pothole { background: #1a1a1a; box-shadow: inset 8px 0 0 #555, inset -8px 0 0 #555, inset 0 8px 0 #555, inset 0 -8px 0 #555, inset 16px 0 0 #1a1a1a, inset -16px 0 0 #1a1a1a, inset 0 16px 0 #1a1a1a, inset 0 -16px 0 #1a1a1a; }
@@ -57,27 +65,30 @@
 
   .side-panel { display: flex; flex-direction: column; gap: 8px; }
   .panel-card { background: #000; border: 2px solid #333; padding: 10px; }
-  .panel-title { font-size: 6px; color: #f5c518; margin-bottom: 8px; letter-spacing: 1px; }
-  .player-row { display: flex; align-items: center; gap: 6px; padding: 5px 0; border-bottom: 1px solid #222; font-size: 6px; color: #ccc; }
+  .panel-title { font-size: 7px; color: #f5c518; margin-bottom: 8px; letter-spacing: 1px; }
+  .player-row { display: flex; align-items: center; gap: 6px; padding: 5px 0; border-bottom: 1px solid #222; font-size: 7px; color: #ccc; }
   .player-row:last-child { border-bottom: none; }
-  .player-lane-badge { font-size: 5px; padding: 2px 5px; background: #1a3a1a; color: #00ff44; margin-left: auto; white-space: nowrap; border: 1px solid #00ff44; }
+  .player-lane-badge { font-size: 7px; padding: 2px 5px; background: #1a3a1a; color: #00ff44; margin-left: auto; white-space: nowrap; border: 1px solid #00ff44; }
   .player-lane-badge.at-start { background: #1a1a1a; color: #555; border-color: #333; }
 
-  .move-label { font-size: 6px; color: #aaa; margin-bottom: 7px; line-height: 1.8; }
+  .move-label { font-size: 7px; color: #aaa; margin-bottom: 7px; line-height: 1.8; }
+  .move-box { margin-bottom: 10px; }
+  .move-box-header { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+  .move-box-header .move-box-emoji { font-size: 14px; background: #000; border: 2px solid #f5c518; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; }
   .move-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 3px; margin-bottom: 8px; }
   .move-btn { border: 2px solid #444; padding: 7px 0; background: #111; cursor: pointer; font-size: 8px; font-family: 'Press Start 2P', monospace; color: #aaa; text-align: center; transition: all 0.1s; }
   .move-btn:hover:not(:disabled) { border-color: #f5c518; color: #fff; }
   .move-btn.selected { border: 2px solid #f5c518; background: #2a2000; color: #f5c518; }
   .move-btn:disabled { opacity: 0.25; cursor: not-allowed; }
-  .action-btn { width: 100%; padding: 8px; border: 2px solid #fff; background: #000; color: #fff; font-size: 6px; font-family: 'Press Start 2P', monospace; cursor: pointer; margin-bottom: 4px; letter-spacing: 1px; transition: all 0.1s; }
+  .action-btn { width: 100%; padding: 8px; border: 2px solid #fff; background: #000; color: #fff; font-size: 7px; font-family: 'Press Start 2P', monospace; cursor: pointer; margin-bottom: 4px; letter-spacing: 1px; transition: all 0.1s; }
   .action-btn:disabled { opacity: 0.3; cursor: not-allowed; }
   .action-btn:hover:not(:disabled) { background: #fff; color: #000; }
   .action-btn.secondary { border-color: #555; color: #aaa; display: none; }
   .action-btn.secondary:hover { background: #333; color: #fff; }
 
-  .log-area { background: #0a0a0a; border: 1px solid #222; padding: 6px 8px; font-size: 5px; color: #666; max-height: 72px; overflow-y: auto; line-height: 2; }
+  .log-area { background: #0a0a0a; border: 1px solid #222; padding: 6px 8px; font-size: 7px; color: #666; max-height: 72px; overflow-y: auto; line-height: 2; }
   .round-badge { font-size: 7px; color: #555; text-align: right; margin-bottom: 5px; }
-  .menu-btn { font-size: 6px; padding: 5px 9px; border: 2px solid #444; background: #000; cursor: pointer; color: #888; font-family: 'Press Start 2P', monospace; transition: all 0.1s; }
+  .menu-btn { font-size: 7px; padding: 5px 9px; border: 2px solid #444; background: #000; cursor: pointer; color: #888; font-family: 'Press Start 2P', monospace; transition: all 0.1s; }
   .menu-btn:hover { border-color: #f5c518; color: #f5c518; }
 
   .winner-card { text-align: center; background: #000; border: 3px solid #f5c518; padding: 2rem; max-width: 360px; margin: 2rem auto; }
@@ -94,21 +105,23 @@
     <div class="setup-card">
       <div class="setup-title">JAYWALKING</div>
       <div class="setup-sub">Cross all 16 lanes before the cars get you.</div>
-      <div class="section-label">&gt; CHOOSE YOUR CHARACTER</div>
-      <div class="char-grid" id="char-grid"></div>
       <div class="section-label">&gt; NUMBER OF PLAYERS</div>
       <div class="player-select" id="player-select"></div>
+      <div class="section-label">&gt; NUMBER OF HUMAN PLAYERS</div>
+      <div class="player-select" id="human-select"></div>
+      <div id="char-section"></div>
       <div class="section-label">&gt; GAME MODE</div>
       <div class="mode-select">
         <button class="mode-btn selected" id="mode-easy" onclick="selectMode('easy')">
           <span class="mode-name">EASY</span>
-          <span class="mode-desc">Revealed cards stay visible. Learn the pattern.</span>
+          <span class="mode-desc">Revealed cards stay visible.</span>
         </button>
         <button class="mode-btn" id="mode-hard" onclick="selectMode('hard')">
           <span class="mode-name">HARD</span>
-          <span class="mode-desc">Cards hide each round. Memory required.</span>
+          <span class="mode-desc">Cards hide each round.</span>
         </button>
       </div>
+      <div id="cpu-diff-wrap"></div>
       <button class="start-btn" id="start-btn" disabled onclick="startGame()">[ START GAME ]</button>
     </div>
   </div>
@@ -132,7 +145,7 @@
         </div>
         <div class="panel-card">
           <div class="move-label" id="move-prompt">CHOOSE YOUR MOVE</div>
-          <div class="move-grid" id="move-grid"></div>
+          <div id="move-panels"></div>
           <button class="action-btn" id="confirm-btn" disabled onclick="confirmMove()">CONFIRM</button>
           <button class="action-btn secondary" id="reveal-btn" onclick="revealCards()">REVEAL ROAD</button>
         </div>
@@ -168,7 +181,13 @@ const DECK_TEMPLATE = [
   ...Array(32).fill('car')
 ];
 
-let selChar = null, numPlayers = 2, gameMode = 'easy', S = {};
+const CPU_DIFFICULTIES = [
+  {key:'easy', name:'EASY', desc:'Little road sense.', desc2:'Win often.'},
+  {key:'normal', name:'NORMAL', desc:'Some road sense.', desc2:'Win occasionally.'},
+  {key:'hard', name:'HARD', desc:'Perfect play wins.', desc2:'Good luck, kid!'}
+];
+
+let numPlayers = 2, numHumans = 1, humanChars = [null], gameMode = 'easy', cpuDifficulty = 'normal', S = {};
 
 function selectMode(mode) {
   gameMode = mode;
@@ -177,29 +196,143 @@ function selectMode(mode) {
 }
 
 function buildSetup() {
-  const cg = document.getElementById('char-grid');
-  cg.innerHTML = '';
-  CHARS.forEach((c, i) => {
-    const b = document.createElement('button');
-    b.className = 'char-btn';
-    b.innerHTML = `<span class="char-emoji">${c.emoji}</span><span class="char-name">${c.name}</span>`;
-    b.onclick = () => { selChar = i; document.querySelectorAll('.char-btn').forEach(x => x.classList.remove('selected')); b.classList.add('selected'); checkReady(); };
-    cg.appendChild(b);
-  });
   const ps = document.getElementById('player-select');
   ps.innerHTML = '';
   [1,2,3,4].forEach(n => {
     const b = document.createElement('button');
-    b.className = 'player-btn' + (n === 2 ? ' selected' : '');
+    b.className = 'player-btn' + (n === numPlayers ? ' selected' : '');
     b.textContent = n === 1 ? '1P SOLO' : `${n}P`;
-    b.onclick = () => { numPlayers = n; document.querySelectorAll('.player-btn').forEach(x => x.classList.remove('selected')); b.classList.add('selected'); checkReady(); };
+    b.onclick = () => {
+      numPlayers = n;
+      if (numHumans > numPlayers) numHumans = numPlayers;
+      document.querySelectorAll('#player-select .player-btn').forEach(x => x.classList.remove('selected'));
+      b.classList.add('selected');
+      buildHumanSelect();
+      resetHumanChars();
+      buildCharacterSection();
+      buildCpuDifficultySection();
+      checkReady();
+    };
     ps.appendChild(b);
   });
+  buildHumanSelect();
+  resetHumanChars();
+  buildCharacterSection();
+  buildCpuDifficultySection();
   // reset mode UI
   selectMode('easy');
+  checkReady();
 }
 
-function checkReady() { document.getElementById('start-btn').disabled = selChar === null; }
+function buildHumanSelect() {
+  const hs = document.getElementById('human-select');
+  hs.innerHTML = '';
+  for (let n = 1; n <= numPlayers; n++) {
+    const b = document.createElement('button');
+    b.className = 'player-btn' + (n === numHumans ? ' selected' : '');
+    b.textContent = n === 1 ? '1 HUMAN' : `${n} HUMANS`;
+    b.onclick = () => {
+      numHumans = n;
+      document.querySelectorAll('#human-select .player-btn').forEach(x => x.classList.remove('selected'));
+      b.classList.add('selected');
+      resetHumanChars();
+      buildCharacterSection();
+      buildCpuDifficultySection();
+      checkReady();
+    };
+    hs.appendChild(b);
+  }
+}
+
+function resetHumanChars() { humanChars = Array(numHumans).fill(null); }
+
+function buildCpuDifficultySection() {
+  const wrap = document.getElementById('cpu-diff-wrap');
+  wrap.innerHTML = '';
+  if (numPlayers <= numHumans) return; // no CPU players, nothing to configure
+  const label = document.createElement('div');
+  label.className = 'section-label'; label.textContent = '> COMPUTER DIFFICULTY';
+  wrap.appendChild(label);
+  const row = document.createElement('div');
+  row.className = 'mode-select';
+  CPU_DIFFICULTIES.forEach(d => {
+    const b = document.createElement('button');
+    b.className = 'mode-btn' + (cpuDifficulty === d.key ? ' selected' : '');
+    b.innerHTML = `<span class="mode-name">${d.name}</span><span class="mode-desc">${d.desc}</span><span class="mode-desc">${d.desc2}</span>`;
+    b.onclick = () => {
+      cpuDifficulty = d.key;
+      row.querySelectorAll('.mode-btn').forEach(x => x.classList.remove('selected'));
+      b.classList.add('selected');
+    };
+    row.appendChild(b);
+  });
+  wrap.appendChild(row);
+}
+
+function buildCharacterSection() {
+  const section = document.getElementById('char-section');
+  section.innerHTML = '';
+
+  if (numHumans === 1) {
+    const label = document.createElement('div');
+    label.className = 'section-label'; label.textContent = '> CHOOSE YOUR CHARACTER';
+    section.appendChild(label);
+    section.appendChild(buildCharCompactRow(0, []));
+    return;
+  }
+
+  // Progressive reveal: show confirmed players plus the next player to pick.
+  for (let p = 0; p < numHumans; p++) {
+    const taken = humanChars.filter((c, i) => i !== p && c !== null);
+    if (humanChars[p] !== null) {
+      section.appendChild(buildCharConfirmedRow(p));
+      continue;
+    }
+    const block = document.createElement('div');
+    block.className = 'char-player-block';
+    const label = document.createElement('div');
+    label.className = 'char-player-label'; label.textContent = `> PLAYER ${p + 1}: CHOOSE CHARACTER`;
+    block.appendChild(label);
+    block.appendChild(buildCharCompactRow(p, taken));
+    section.appendChild(block);
+    // Stop after the first unpicked player, unless a later player already has a
+    // pick (mid-edit of an earlier choice) — then keep showing the rest too.
+    const laterHasValue = humanChars.slice(p + 1).some(c => c !== null);
+    if (!laterHasValue) break;
+  }
+}
+
+function buildCharConfirmedRow(playerIdx) {
+  const c = CHARS[humanChars[playerIdx]];
+  const row = document.createElement('div');
+  row.className = 'char-confirmed-row';
+  row.innerHTML = `<span class="char-confirmed-emoji">${c.emoji}</span><span class="char-confirmed-label">PLAYER ${playerIdx + 1}: <b>${c.name}</b></span>`;
+  row.onclick = () => {
+    humanChars[playerIdx] = null;
+    buildCharacterSection();
+    checkReady();
+  };
+  return row;
+}
+
+function buildCharCompactRow(playerIdx, takenIndices) {
+  const cg = document.createElement('div');
+  cg.className = 'char-compact-row';
+  CHARS.forEach((c, i) => {
+    const b = document.createElement('button');
+    b.className = 'char-compact-btn' + (humanChars[playerIdx] === i ? ' selected' : '');
+    b.disabled = takenIndices.includes(i);
+    b.title = c.name;
+    b.textContent = c.emoji;
+    b.onclick = () => { humanChars[playerIdx] = i; buildCharacterSection(); checkReady(); };
+    cg.appendChild(b);
+  });
+  return cg;
+}
+
+function checkReady() {
+  document.getElementById('start-btn').disabled = humanChars.some(c => c === null);
+}
 
 function shuffle(arr) {
   const a = [...arr];
@@ -208,19 +341,26 @@ function shuffle(arr) {
 }
 
 function startGame() {
-  const cpuChars = shuffle(CHARS.filter((_, i) => i !== selChar)).slice(0, numPlayers - 1);
+  const takenIndices = humanChars.slice();
+  const cpuChars = shuffle(CHARS.filter((_, i) => !takenIndices.includes(i))).slice(0, numPlayers - numHumans);
   const deck = shuffle(DECK_TEMPLATE);
   const laneDecks = Array.from({length: LANES}, (_, l) => deck.slice(l * CPL, l * CPL + CPL));
+  const humanPlayers = humanChars.map((ci, i) => ({
+    name: numHumans === 1 ? 'YOU' : `P${i + 1}`,
+    emoji: CHARS[ci].emoji, char: CHARS[ci].name, lane: 0, cpu: false
+  }));
   S = {
     players: [
-      {name:'YOU', emoji:CHARS[selChar].emoji, char:CHARS[selChar].name, lane:0, cpu:false},
-      ...cpuChars.map((c, i) => ({name:`CPU${i+1}`, emoji:c.emoji, char:c.name, lane:0, cpu:true}))
+      ...humanPlayers,
+      ...cpuChars.map((c, i) => ({name:`CPU${i+1}`, emoji:c.emoji, char:c.name, lane:0, cpu:true, hardDelay:0}))
     ],
     laneDecks,
     lanePointers: Array(LANES).fill(0),
     laneRevealedCount: Array(LANES).fill(0),
-    round: 1, phase: 'move', playerMove: null, log: [],
-    mode: gameMode
+    laneRevealed: Array.from({length: LANES}, () => []),
+    round: 1, phase: 'move', playerMoves: Array(numHumans).fill(null), log: [],
+    mode: gameMode,
+    cpuDifficulty
   };
   showScreen('game');
   // Update round badge with mode indicator
@@ -236,17 +376,53 @@ function showScreen(id) {
   document.getElementById('screen-' + id).classList.add('active');
 }
 
+// Player token columns, 1-based player number: odd -> left side (higher number = further out),
+// even -> right side (higher number = further out). Left-to-right visual order for 4 players: P3, P1, [card], P2, P4.
+function hardPlayerLayout(n) {
+  const left = [], right = [];
+  for (let i = 1; i <= n; i++) {
+    if (i % 2 === 1) left.unshift(i); else right.push(i);
+  }
+  return { left, right };
+}
+
 function renderBoard() {
   const c = document.getElementById('lanes-container');
   c.innerHTML = '';
+  const hard = S.mode === 'hard';
+  const slots = hard ? 1 : CPL;
+  const layout = hard ? hardPlayerLayout(S.players.length) : null;
   for (let l = 0; l < LANES; l++) {
     const row = document.createElement('div');
     row.className = 'lane-row'; row.id = 'lane-row-' + l;
+    if (hard) {
+      // Fixed-width card + token slots hug the middle; flexible spacers absorb the leftover
+      // space at the outer edges, so tokens sit close to the lane cards instead of the walls.
+      row.style.gridTemplateColumns = `20px 1fr ${'32px '.repeat(layout.left.length)}60px ${'32px '.repeat(layout.right.length)}1fr 20px`;
+    } else {
+      row.style.gridTemplateColumns = '20px repeat(6, 1fr) 20px';
+    }
     const nl = document.createElement('div'); nl.className = 'lane-num'; nl.textContent = LANES - l; row.appendChild(nl);
-    for (let ci = 0; ci < CPL; ci++) {
+    if (hard) {
+      row.appendChild(document.createElement('div'));
+      layout.left.forEach(pn => {
+        const slot = document.createElement('div');
+        slot.id = `slot-${l}-p${pn - 1}`; slot.className = 'hard-token-slot';
+        row.appendChild(slot);
+      });
+    }
+    for (let ci = 0; ci < slots; ci++) {
       const card = document.createElement('div');
-      card.id = `card-${l}-${ci}`; card.className = 'road-card face-down';
+      card.id = `card-${l}-${ci}`; card.className = 'road-card face-down' + (hard ? ' hard-card' : '');
       row.appendChild(card);
+    }
+    if (hard) {
+      layout.right.forEach(pn => {
+        const slot = document.createElement('div');
+        slot.id = `slot-${l}-p${pn - 1}`; slot.className = 'hard-token-slot';
+        row.appendChild(slot);
+      });
+      row.appendChild(document.createElement('div'));
     }
     const nr = document.createElement('div'); nr.className = 'lane-num'; nr.textContent = LANES - l; row.appendChild(nr);
     c.appendChild(row);
@@ -256,15 +432,21 @@ function renderBoard() {
 
 function updateTokens() {
   document.querySelectorAll('.player-token').forEach(t => t.remove());
+  const hard = S.mode === 'hard';
   S.players.forEach((p, pi) => {
     if (p.lane <= 0 || p.lane > LANES) return;
     const li = LANES - p.lane;
+    const tok = document.createElement('div');
+    tok.className = 'player-token'; tok.textContent = p.emoji; tok.title = p.name;
+    if (hard) {
+      const slot = document.getElementById(`slot-${li}-p${pi}`);
+      if (slot) slot.appendChild(tok);
+      return;
+    }
     const row = document.getElementById('lane-row-' + li);
     if (!row) return;
     const cards = row.querySelectorAll('.road-card');
     const ci = Math.min(pi, cards.length - 1);
-    const tok = document.createElement('div');
-    tok.className = 'player-token'; tok.textContent = p.emoji; tok.title = p.name;
     cards[ci].appendChild(tok);
   });
 }
@@ -283,38 +465,130 @@ function renderPlayers() {
 }
 
 function renderMovePanel() {
-  const grid = document.getElementById('move-grid');
+  const panels = document.getElementById('move-panels');
   const prompt = document.getElementById('move-prompt');
   const confirmBtn = document.getElementById('confirm-btn');
   const revealBtn = document.getElementById('reveal-btn');
-  grid.innerHTML = '';
+  panels.innerHTML = '';
+  const humans = S.players.filter(p => !p.cpu);
   if (S.phase === 'move') {
-    prompt.textContent = 'CHOOSE YOUR MOVE';
-    confirmBtn.style.display = 'block'; confirmBtn.disabled = S.playerMove === null;
+    prompt.textContent = humans.length > 1 ? 'CHOOSE YOUR MOVES' : 'CHOOSE YOUR MOVE';
+    confirmBtn.style.display = 'block';
     revealBtn.style.display = 'none';
-    MOVES.forEach(m => {
-      const b = document.createElement('button');
-      b.className = 'move-btn' + (S.playerMove === m ? ' selected' : '');
-      b.textContent = m > 0 ? `+${m}` : `${m}`;
-      b.onclick = () => { S.playerMove = m; document.querySelectorAll('.move-btn').forEach(x => x.classList.remove('selected')); b.classList.add('selected'); confirmBtn.disabled = false; };
-      grid.appendChild(b);
-    });
+    humans.forEach((p, i) => panels.appendChild(buildMoveBox(p, i, humans.length > 1, true)));
+    updateConfirmState();
   } else if (S.phase === 'reveal') {
     prompt.textContent = 'MOVES SET!';
     confirmBtn.style.display = 'none'; revealBtn.style.display = 'block';
-    MOVES.forEach(m => { const b = document.createElement('button'); b.className = 'move-btn'; b.textContent = m > 0 ? `+${m}` : `${m}`; b.disabled = true; grid.appendChild(b); });
+    humans.forEach((p, i) => panels.appendChild(buildMoveBox(p, i, humans.length > 1, false)));
   } else {
     prompt.textContent = ''; confirmBtn.style.display = 'none'; revealBtn.style.display = 'none';
   }
 }
 
+function buildMoveBox(p, i, showHeader, interactive) {
+  const box = document.createElement('div');
+  box.className = 'move-box';
+  if (showHeader) {
+    const header = document.createElement('div');
+    header.className = 'move-box-header';
+    header.innerHTML = `<span class="move-box-emoji">${p.emoji}</span><span class="move-label" style="margin-bottom:0">${p.name}</span>`;
+    box.appendChild(header);
+  }
+  const grid = document.createElement('div');
+  grid.className = 'move-grid';
+  MOVES.forEach(m => {
+    const b = document.createElement('button');
+    b.className = 'move-btn' + (S.playerMoves[i] === m ? ' selected' : '');
+    b.textContent = m > 0 ? `+${m}` : `${m}`;
+    if (interactive) {
+      b.onclick = () => {
+        S.playerMoves[i] = m;
+        grid.querySelectorAll('.move-btn').forEach(x => x.classList.remove('selected'));
+        b.classList.add('selected');
+        updateConfirmState();
+      };
+    } else {
+      b.disabled = true;
+    }
+    grid.appendChild(b);
+  });
+  box.appendChild(grid);
+  return box;
+}
+
+function updateConfirmState() {
+  document.getElementById('confirm-btn').disabled = S.playerMoves.some(m => m === null);
+}
+
+// True if a player standing on `lane` (1..LANES) after this round's move will be
+// safe from the car that is about to be revealed there. Lanes 0 (start) and
+// LANES+1 (finished) have no cards, so they're always safe.
+function isLaneSafeThisRound(lane) {
+  if (lane <= 0 || lane > LANES) return true;
+  const l = LANES - lane;
+  return S.laneDecks[l][S.lanePointers[l]] !== 'car';
+}
+
+function validMoves(p) {
+  return MOVES.filter(m => { const n = p.lane + m; return n >= 0 && n <= LANES + 1; });
+}
+
+// EASY: little to no road knowledge — picks a valid move at random.
+function easyCpuMove(p) {
+  const opts = validMoves(p);
+  return opts[Math.floor(Math.random() * opts.length)];
+}
+
+// NORMAL: knows the upcoming card most of the time and plays it safe, but
+// occasionally (knowledge lapse) ignores that knowledge and moves blind —
+// which is what lets it get caught out a couple times over a full game.
+function normalCpuMove(p) {
+  const opts = validMoves(p);
+  const IGNORE_KNOWLEDGE_CHANCE = 0.35;
+  if (Math.random() < IGNORE_KNOWLEDGE_CHANCE) {
+    return opts[Math.floor(Math.random() * opts.length)];
+  }
+  const safeOpts = opts.filter(m => isLaneSafeThisRound(p.lane + m));
+  const pool = safeOpts.length ? safeOpts : opts;
+  const maxLane = Math.max(...pool.map(m => p.lane + m));
+  const bestMoves = pool.filter(m => p.lane + m === maxLane);
+  return bestMoves[Math.floor(Math.random() * bestMoves.length)];
+}
+
+// HARD: full knowledge of every lane's deck, including cards not yet
+// revealed to human players — always avoids a car this round. Near the
+// finish it deliberately holds back for two of its own turns before taking
+// the winning move, so a perfect human still has a chance to win or tie.
+function hardCpuMove(p) {
+  const opts = validMoves(p);
+  const safeOpts = opts.filter(m => isLaneSafeThisRound(p.lane + m));
+  const pool = safeOpts.length ? safeOpts : opts;
+  const finishing = pool.filter(m => p.lane + m > LANES);
+  const nonFinishing = pool.filter(m => p.lane + m <= LANES);
+
+  if (finishing.length && p.hardDelay < 2 && nonFinishing.length) {
+    p.hardDelay++;
+    const maxLane = Math.max(...nonFinishing.map(m => p.lane + m));
+    const bestMoves = nonFinishing.filter(m => p.lane + m === maxLane);
+    return bestMoves[Math.floor(Math.random() * bestMoves.length)];
+  }
+  const maxLane = Math.max(...pool.map(m => p.lane + m));
+  const bestMoves = pool.filter(m => p.lane + m === maxLane);
+  return bestMoves[Math.floor(Math.random() * bestMoves.length)];
+}
+
+function cpuChooseMove(p) {
+  if (S.cpuDifficulty === 'hard') return hardCpuMove(p);
+  if (S.cpuDifficulty === 'normal') return normalCpuMove(p);
+  return easyCpuMove(p);
+}
+
 function confirmMove() {
-  if (S.playerMove === null) return;
-  S.players.forEach((p, i) => {
-    const move = i === 0 ? S.playerMove : (() => {
-      const opts = MOVES.filter(m => { const n = p.lane + m; return n >= 0 && n <= LANES + 1; });
-      return opts[Math.floor(Math.random() * opts.length)] ?? 0;
-    })();
+  if (S.playerMoves.some(m => m === null)) return;
+  let humanIdx = 0;
+  S.players.forEach(p => {
+    const move = !p.cpu ? S.playerMoves[humanIdx++] : cpuChooseMove(p);
     p.lane = Math.max(0, Math.min(LANES + 1, p.lane + move));
     addLog(`${p.emoji} ${p.name}: ${move === 0 ? 'STAY' : 'MOVE ' + (move > 0 ? '+' : '') + move} → LN${p.lane}`);
   });
@@ -322,36 +596,35 @@ function confirmMove() {
   updateTokens(); renderPlayers(); renderMovePanel();
 }
 
-function revealCards() {
-  // Hard mode: reset all cards to face-down before revealing this round's cards
-  if (S.mode === 'hard') {
-    for (let l = 0; l < LANES; l++) {
-      for (let ci = 0; ci < CPL; ci++) {
-        const el = document.getElementById(`card-${l}-${ci}`);
-        if (el) { el.className = 'road-card face-down'; el.innerHTML = ''; }
-      }
-    }
-  }
+function paintCard(el, cardType, hard) {
+  if (!el) return;
+  el.className = 'road-card' + (hard ? ' hard-card' : '');
+  const icon = document.createElement('span'); icon.className = 'card-icon';
+  if (cardType === 'car') { el.classList.add('revealed-car'); icon.textContent = '🚙'; }
+  else if (cardType === 'pothole') { el.classList.add('revealed-pothole'); icon.textContent = '🕳️'; }
+  else { el.classList.add('revealed-safe'); icon.textContent = ''; }
+  el.innerHTML = ''; el.appendChild(icon);
+}
 
+function revealCards() {
+  const hard = S.mode === 'hard';
   // Reveal one card per lane (the current card in that lane's deck)
   for (let l = 0; l < LANES; l++) {
     const ptr = S.lanePointers[l];
     const cardType = S.laneDecks[l][ptr];
-    // In hard mode, always use slot 0 (only one card shown per lane at a time)
-    // In easy mode, use the rolling revealed index
-    const revIdx = S.mode === 'hard' ? 0 : S.laneRevealedCount[l] % CPL;
     S.lanePointers[l] = (ptr + 1) % CPL;
     S.laneRevealedCount[l]++;
     if (S.lanePointers[l] === 0) addLog(`LN${LANES - l}: DECK RESET`);
 
-    const el = document.getElementById(`card-${l}-${revIdx}`);
-    if (el) {
-      el.className = 'road-card';
-      const icon = document.createElement('span'); icon.className = 'card-icon';
-      if (cardType === 'car') { el.classList.add('revealed-car'); icon.textContent = '🚙'; }
-      else if (cardType === 'pothole') { el.classList.add('revealed-pothole'); icon.textContent = '🕳️'; }
-      else { el.classList.add('revealed-safe'); icon.textContent = ''; }
-      el.innerHTML = ''; el.appendChild(icon);
+    if (hard) {
+      // Only one card shown per lane at a time
+      paintCard(document.getElementById(`card-${l}-0`), cardType, true);
+    } else {
+      // Shift the row right: newest card always lands in the leftmost column,
+      // older revealed cards slide over to make room.
+      S.laneRevealed[l].unshift(cardType);
+      if (S.laneRevealed[l].length > CPL) S.laneRevealed[l].length = CPL;
+      S.laneRevealed[l].forEach((ct, ci) => paintCard(document.getElementById(`card-${l}-${ci}`), ct, false));
     }
 
     const lane = LANES - l;
@@ -366,7 +639,7 @@ function revealCards() {
   S.round++;
   const modeBadge = `<span class="mode-badge${S.mode === 'hard' ? ' hard' : ''}">${S.mode.toUpperCase()}</span>`;
   document.getElementById('round-badge').innerHTML = `ROUND ${S.round} ${modeBadge}`;
-  S.phase = 'move'; S.playerMove = null;
+  S.phase = 'move'; S.playerMoves = S.playerMoves.map(() => null);
   updateTokens(); renderPlayers(); renderMovePanel();
 }
 
@@ -385,7 +658,7 @@ function addLog(msg) {
   if (el) el.innerHTML = S.log.slice(0, 20).join('<br>');
 }
 
-function resetGame() { selChar = null; numPlayers = 2; S = {}; buildSetup(); showScreen('setup'); }
+function resetGame() { numPlayers = 2; numHumans = 1; humanChars = [null]; cpuDifficulty = 'normal'; S = {}; buildSetup(); showScreen('setup'); }
 
 buildSetup();
 </script>
