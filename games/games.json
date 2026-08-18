@@ -57,5 +57,18 @@
     ],
     "file": "jaywalking.html",
     "gameCrafterUrl": "https://www.thegamecrafter.com/games/jaywalking"
+  },
+  {
+    "slug": "flippin-sweet-skills",
+    "title": "Flippin' Sweet Skills",
+    "category": "Arcade/Skill",
+    "status": "new",
+    "version": "1.0",
+    "description": "Try a new version of the bottle flipping craze. Give it a flip and you won't wanna quit!",
+    "instructions": "Click or press space to start/reset. Each attempt, use click/space to set your flip's angle. Then, click/space to set your flips power level. Use a strategic combination of angle and power to land the skill upright. How many easter egg messages will you find?",
+    "knownIssues": [
+      "When landing on the skill's head, the rare correction to landing it is not smooth."
+    ],
+    "file": "flippin-sweet-skills/index.html"
   }
 ]

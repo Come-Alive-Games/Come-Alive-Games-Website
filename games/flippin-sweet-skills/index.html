@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no" />
+<title>Flippin' Sweet Skills</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="stage">
+    <header id="titlebar">
+      <h1>Flippin&rsquo; <span>Sweet</span> Skills</h1>
+      <p class="tagline">Give it a flip and you won&rsquo;t wanna quit!</p>
+    </header>
+
+    <div id="hud">
+      <div class="stat">
+        <span class="label">Streak</span>
+        <span class="value" id="streakValue">0</span>
+      </div>
+      <div class="stat">
+        <span class="label">Best</span>
+        <span class="value" id="bestValue">0</span>
+      </div>
+      <div class="stat">
+        <span class="label">Flips</span>
+        <span class="value" id="flipsValue">0</span>
+      </div>
+    </div>
+
+    <canvas id="gameCanvas" width="900" height="560"></canvas>
+
+    <div id="instructions">
+      <span id="instructionText">Click / tap to set your angle</span>
+    </div>
+
+    <footer id="footer">
+      <p>#flippinsweetskills</p>
+    </footer>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

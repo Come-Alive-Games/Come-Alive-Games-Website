@@ -1,0 +1,125 @@
+:root {
+  --yellow: #f5a623;
+  --yellow-deep: #e8940f;
+  --yellow-light: #ffc94d;
+  --ink: #171512;
+  --white: #fdfaf3;
+  --success: #2e8b57;
+  --fail: #c0392b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 50% 20%, var(--yellow-light), var(--yellow) 55%, var(--yellow-deep) 100%);
+  font-family: "Arial Black", "Arial Rounded MT Bold", Impact, sans-serif;
+  color: var(--ink);
+  overflow: hidden;
+  padding: 12px;
+}
+
+#stage {
+  width: 100%;
+  max-width: 920px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+#titlebar {
+  text-align: center;
+  margin: 0;
+}
+
+#titlebar h1 {
+  margin: 0;
+  font-size: clamp(1.6rem, 5vw, 2.6rem);
+  letter-spacing: 0.5px;
+  text-shadow: 2px 2px 0 var(--white), 4px 4px 0 rgba(0,0,0,0.15);
+}
+
+.tagline {
+  margin: 2px 0 6px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: normal;
+  font-style: italic;
+  font-size: clamp(0.75rem, 2vw, 1rem);
+}
+
+#hud {
+  width: 100%;
+  max-width: 700px;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.stat {
+  flex: 1;
+  background: var(--ink);
+  color: var(--yellow-light);
+  border-radius: 10px;
+  padding: 6px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 3px solid var(--white);
+}
+
+.stat .label {
+  font-size: 0.6rem;
+  letter-spacing: 1px;
+  opacity: 0.8;
+}
+
+.stat .value {
+  font-size: 1.3rem;
+  line-height: 1.1;
+}
+
+#gameCanvas {
+  width: 100%;
+  max-width: 900px;
+  height: auto;
+  aspect-ratio: 900 / 560;
+  background: #222;
+  border-radius: 16px;
+  border: 4px solid var(--ink);
+  box-shadow: 0 10px 0 rgba(0,0,0,0.25), 0 14px 24px rgba(0,0,0,0.3);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+#instructions {
+  min-height: 1.6em;
+  text-align: center;
+  font-family: Georgia, serif;
+  font-style: italic;
+  font-size: clamp(0.8rem, 2.2vw, 1.05rem);
+  margin-top: 6px;
+}
+
+#footer {
+  margin-top: 2px;
+  opacity: 0.7;
+}
+
+#footer p {
+  margin: 0;
+  font-size: 0.7rem;
+  font-family: Georgia, serif;
+  font-style: italic;
+}
