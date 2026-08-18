@@ -6,7 +6,7 @@
     "status": "in-testing",
     "version": "1.4.0",
     "description": "Reconquesta is a medieval, tactical collectable card game where you, as a Majesty, Recruit Conquerors to siege rival realms and reduce their Glory Points to zero.",
-    "instructions": "On your turn, draw a card, Pillage Resources, then Recruit, move, and battle with your Conquerors on the Battlefield, using Actions, Artillery, and Defenses to push into enemy zones and strike the opposing Majesty’s Glory Points. An interactive tutorial and full 'how to play' guide are available in-game to walk you step-by-step through your first Reconquesta battles.",
+    "instructions": "On your turn, draw a card, Pillage Resources, then Recruit, move, and battle with your Conquerors on the Battlefield, using Actions, Artillery, and Defenses to push into enemy zones and strike the opposing Majesty’s Glory Points.\n\nAn interactive tutorial and full 'how to play' guide are available in-game to walk you step-by-step through your first Reconquesta battles.",
     "knownIssues": [
       "Action cards are not playable in response to your opponent's actions.",
       "Some parts of the Interactive Tutorial are buggy.",
@@ -21,7 +21,7 @@
     "status": "in-testing",
     "version": "1.73",
     "description": "Rankers is a strategic card game where players race to complete a communal pyramid — from Rank 8 up to King Ranker — by matching arrow-support rules, with Power-up cards adding tactical twists.",
-    "instructions": "Players start with 5 cards and build a shared pyramid upward from Rank 8, playing cards only when arrows from the row below 'support' the space above, with single arrows dictating left/right placement. Each turn, draw back up to 5 cards, then take 3 actions — playing Rank cards, using Power-ups (Draw 2, Peek & Take, Pyramid Grab), or discarding — and reshuffle the discard pile if the draw pile ever runs out. Power-ups are removed from the game after the 5th Rank is completed. The first player to place the King Ranker at the top wins.",
+    "instructions": "Players start with 5 cards and build a shared pyramid upward from Rank 8, playing cards only when arrows from the row below 'support' the space above, with single arrows dictating left/right placement. Each turn, draw back up to 5 cards, then take 3 actions — playing Rank cards, using Power-ups (Draw 2, Peek & Take, Pyramid Grab), or discarding — and reshuffle the discard pile if the draw pile ever runs out. Power-ups are removed from the game after the 5th Rank is completed.The first player to place the King Ranker at the top wins.",
     "knownIssues": [
       "AI difficulties are inconsistent.",
       "The size of cards in hand may cause some UI issues and inconveniences."
@@ -33,7 +33,7 @@
     "slug": "junban",
     "title": "Junban 順番",
     "category": "Puzzle/Sliding Puzzle",
-    "status": "new",
+    "status": "in-testing",
     "version": "1.3",
     "description": "Create numerical order from chaos in this peaceful, meditative, and mindful slide puzzle inspired dice game.",
     "instructions": "Slide the dice to arrange them in ascending numerical order from top-left to bottom-right, with matching values placed next to each other in the sequence and the empty space ending in the bottom-right corner. Tap or click any die adjacent to the blank space to slide it into the gap. Complete the puzzle by getting every die in the correct order and position — the fewer moves and the less time it takes, the better.",
@@ -46,14 +46,13 @@
     "slug": "jaywalking",
     "title": "Jaywalking",
     "category": "Strategy/Memory",
-    "status": "new",
+    "status": "in-testing",
     "version": "2.0",
     "description": "Jaywalking is a Frogger inspired strategy and memory game where 1–6 players dodge pixel-art traffic across 16 lanes of road, betting on safe paths while avoiding cars that send them back to start.",
     "instructions": "Each round, all players simultaneously choose to move -2, -1, 0, +1, or +2 lanes toward the finish line, then one road card is revealed per lane showing either a safe road, a pothole, or a car. Any player whose lane reveals a car is sent all the way back to the start. The first player to cross all 16 lanes and reach the finish line wins!",
     "knownIssues": [
-      "Lots of UI and UX issues.",
-      "Difficult to track which lane set is relevant each round.",
-      "Character images may not load properly."
+      "Unclear that the left lane is the relevant lane each round on the easy difficulty.",
+      "Character images may render incorrectly."
     ],
     "file": "jaywalking.html",
     "gameCrafterUrl": "https://www.thegamecrafter.com/games/jaywalking"
@@ -64,8 +63,8 @@
     "category": "Arcade/Skill",
     "status": "new",
     "version": "1.0",
-    "description": "Try a new version of the bottle flipping craze. Give it a flip and you won't wanna quit!",
-    "instructions": "Click or press space to start/reset. Each attempt, use click/space to set your flip's angle. Then, click/space to set your flips power level. Use a strategic combination of angle and power to land the skill upright. How many easter egg messages will you find?",
+    "description": "Are you ready to show off your flipping finesse? Inspired by the viral water bottle flipping craze, Flippin’ Sweet Skills brings the thrill of the flip right to your computer!",
+    "instructions": "Click or press space to start/reset. Each attempt, use click/space to set your flip's angle. Then, click/space to set your flips power level. Use a strategic combination of angle and power to land the skill upright. How many easter egg messages will you find?\n\nThe name “Flippin' Sweet Skills” was inspired by my mom, who used to crack up every time I landed a tricky water bottle flip and would say, “You and your flippin’ sweet skills!” Now, you can show off your own skills and make your Mom proud!",
     "knownIssues": [
       "When landing on the skill's head, the rare correction to landing it is not smooth."
     ],

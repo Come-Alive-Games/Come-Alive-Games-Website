@@ -534,6 +534,7 @@ h1, h2, h3 {
   padding: 18px;
 }
 .known-issues li { margin-bottom: 6px; }
+#gameDescription, #gameInstructions { white-space: pre-line; }
 
 .rating-summary {
   background: var(--paper);
