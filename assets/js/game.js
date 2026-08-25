@@ -30,8 +30,8 @@ async function init() {
   document.getElementById("gameTitle").textContent = currentGame.title;
   document.getElementById("gameStatus").textContent = STATUS_LABEL[currentGame.status] || "In Testing";
   document.getElementById("gameVersion").textContent = `v${currentGame.version}`;
-  document.getElementById("gameDescription").textContent = currentGame.description;
-  document.getElementById("gameInstructions").textContent = currentGame.instructions;
+  document.getElementById("gameDescription").innerHTML = currentGame.description;
+  document.getElementById("gameInstructions").innerHTML = currentGame.instructions;
 
   const issuesList = document.getElementById("gameIssues");
   issuesList.innerHTML = (currentGame.knownIssues || []).map(i => `<li>${i}</li>`).join("") || "<li>No known issues reported yet.</li>";

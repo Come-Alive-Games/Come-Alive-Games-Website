@@ -70,5 +70,17 @@
     ],
     "file": "flippin-sweet-skills/index.html",
     "gameCrafterUrl": "https://www.thegamecrafter.com/games/flippin-sweet-skills"
+  },
+  {
+    "slug": "correlation-not-causation",
+    "title": "Correlation not Causation",
+    "category": "Party/Debate",
+    "status": "new",
+    "version": "1.4",
+    "description": "<strong>Correlation not Causation</strong> is a fast-paced debate party game. Two players face off over a random pair of concepts: one argues they're truly cause-and-effect, the other argues it's pure coincidence, while a judge picks the more convincing case.",
+    "instructions": "Each round, a Cause card and an Effect card are drawn to set up the debate. Two players face off: one argues <strong>Causation</strong>, that the cause genuinely produces the effect, and the other argues <strong>Correlation</strong>, that the link is pure coincidence. The <strong>Causation</strong> player goes first, then <strong>Correlation</strong> responds. Once both sides have made their case within the timer, the judge (or the rest of the group) picks the more persuasive argument and awards the point.\n\nPlay continues across rounds, with roles and judges rotating each time. The game ends when a player reaches the winning score, or, in <strong>Power Match</strong> mode, when only one player remains in a double-elimination tournament.",
+    "knownIssues": [],
+    "file": "correlation-not-causation.html",
+    "gameCrafterUrl": "https://www.thegamecrafter.com/games/correlation-not-causation"
   }
 ]

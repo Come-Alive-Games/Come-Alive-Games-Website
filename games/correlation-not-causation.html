@@ -1,0 +1,1553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Correlation not Causation</title>
+<style>
+  :root{
+    --bg:#0a0a0b;
+    --bg-panel:#141416;
+    --bg-panel-2:#1c1c1f;
+    --bg-raised:#232327;
+    --grey-1:#2a2a2e;
+    --grey-2:#3a3a40;
+    --grey-3:#57575f;
+    --grey-4:#8a8a92;
+    --white:#f4f4f6;
+    --white-dim:#c8c8cf;
+    --cause-color:#ff8a3d;
+    --cause-glow:#ff8a3d55;
+    --effect-color:#3dc9ff;
+    --effect-glow:#3dc9ff55;
+    --accent-a:#ff4d6d;
+    --accent-b:#ffd23d;
+    --accent-c:#3dffb8;
+    --accent-d:#b06dff;
+    --accent-e:#3dc9ff;
+    --accent-f:#ff8a3d;
+    --danger:#ff4d4d;
+    --good:#3dffb8;
+    --shadow-lg: 0 20px 60px rgba(0,0,0,0.55);
+    --shadow-md: 0 8px 24px rgba(0,0,0,0.4);
+    --radius-sm: 8px;
+    --radius-md: 14px;
+    --radius-lg: 22px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(1200px 800px at 15% -10%, #1a1a1f 0%, transparent 60%),
+      radial-gradient(1000px 700px at 110% 10%, #17161c 0%, transparent 55%),
+      var(--bg);
+    color:var(--white);
+    font-family:'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  .app{
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:24px 16px 60px;
+  }
+  .screen{
+    width:100%;
+    max-width:920px;
+  }
+  .screen.screen-enter{
+    animation:screenIn .45s cubic-bezier(.16,1,.3,1);
+  }
+  @keyframes screenIn{
+    from{opacity:0; transform:translateY(14px);}
+    to{opacity:1; transform:translateY(0);}
+  }
+  .brand{
+    text-align:center;
+    margin:8px 0 30px;
+  }
+  .brand .kicker{
+    text-transform:uppercase;
+    letter-spacing:.28em;
+    font-size:11px;
+    color:var(--grey-4);
+    font-weight:600;
+  }
+  .brand h1{
+    font-size:clamp(28px, 5.5vw, 46px);
+    margin:6px 0 0;
+    font-weight:800;
+    letter-spacing:-0.02em;
+    line-height:1.05;
+  }
+  .brand h1 .not{
+    color:var(--grey-4);
+    font-weight:500;
+    font-style:italic;
+    margin:0 .18em;
+  }
+  .brand h1 .causation{color:var(--cause-color);}
+  .brand h1 .correlation{color:var(--effect-color);}
+
+  .panel{
+    background:linear-gradient(180deg, var(--bg-panel-2), var(--bg-panel));
+    border:1px solid var(--grey-1);
+    border-radius:var(--radius-lg);
+    padding:26px;
+    box-shadow:var(--shadow-md);
+    margin-bottom:20px;
+  }
+  .panel h2{
+    margin:0 0 4px;
+    font-size:13px;
+    text-transform:uppercase;
+    letter-spacing:.16em;
+    color:var(--grey-4);
+    font-weight:700;
+  }
+  .panel .sub{
+    color:var(--grey-4);
+    font-size:13px;
+    margin:0 0 18px;
+  }
+
+  /* Player rows */
+  .player-rows{display:flex; flex-direction:column; gap:10px; margin-bottom:14px;}
+  .player-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    background:var(--bg-raised);
+    border:1px solid var(--grey-1);
+    border-radius:var(--radius-md);
+    padding:10px 12px;
+    transition:border-color .2s;
+  }
+  .player-row:focus-within{border-color:var(--grey-3);}
+  .player-dot{
+    width:12px; height:12px; border-radius:50%;
+    flex-shrink:0;
+    box-shadow:0 0 10px currentColor;
+  }
+  .player-row input[type=text]{
+    flex:1;
+    background:transparent;
+    border:none;
+    outline:none;
+    color:var(--white);
+    font-size:16px;
+    font-weight:600;
+    font-family:inherit;
+    padding:6px 2px;
+  }
+  .player-row input::placeholder{color:var(--grey-3); font-weight:500;}
+  .icon-btn{
+    background:var(--grey-1);
+    border:1px solid var(--grey-2);
+    color:var(--grey-4);
+    width:32px; height:32px;
+    border-radius:8px;
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    font-size:16px;
+    transition:all .15s;
+    flex-shrink:0;
+  }
+  .icon-btn:hover{background:var(--grey-2); color:var(--white);}
+  .icon-btn.danger:hover{background:#3a1a1a; color:var(--danger); border-color:#5a2a2a;}
+
+  .btn-row{display:flex; gap:10px; flex-wrap:wrap;}
+  .btn{
+    appearance:none;
+    border:1px solid var(--grey-2);
+    background:var(--grey-1);
+    color:var(--white);
+    padding:12px 20px;
+    border-radius:var(--radius-md);
+    font-size:14px;
+    font-weight:700;
+    letter-spacing:.02em;
+    cursor:pointer;
+    transition:transform .12s, background .15s, border-color .15s, box-shadow .15s;
+    font-family:inherit;
+  }
+  .btn:hover{background:var(--grey-2); border-color:var(--grey-3);}
+  .btn:active{transform:scale(.97);}
+  .btn.small{padding:8px 14px; font-size:13px; border-radius:9px;}
+  .btn.ghost{background:transparent;}
+  .btn.primary{
+    background:var(--white);
+    color:#0a0a0b;
+    border-color:var(--white);
+  }
+  .btn.primary:hover{background:var(--white-dim); box-shadow:0 0 0 4px rgba(244,244,246,0.08);}
+  .btn.wide{width:100%; text-align:center; padding:16px 20px; font-size:16px;}
+  .btn:disabled{opacity:.35; cursor:not-allowed; transform:none !important;}
+
+  .field-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
+    margin-bottom:6px;
+  }
+  @media (max-width:560px){ .field-grid{grid-template-columns:1fr;} }
+  .field{min-width:0;}
+  .field label{
+    display:block;
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:.12em;
+    color:var(--grey-4);
+    font-weight:700;
+    margin-bottom:8px;
+  }
+  .number-stepper{
+    display:flex;
+    align-items:center;
+    background:var(--bg-raised);
+    border:1px solid var(--grey-1);
+    border-radius:var(--radius-md);
+    overflow:hidden;
+  }
+  .number-stepper button{
+    background:none; border:none; color:var(--grey-4);
+    width:44px; height:44px; font-size:20px; cursor:pointer;
+    transition:background .15s, color .15s;
+  }
+  .number-stepper button:hover{background:var(--grey-1); color:var(--white);}
+  .number-stepper input{
+    flex:1; min-width:0; text-align:center; background:none; border:none; outline:none;
+    color:var(--white); font-size:18px; font-weight:800; font-family:inherit;
+  }
+  .toggle-group{
+    display:flex; background:var(--bg-raised); border:1px solid var(--grey-1);
+    border-radius:var(--radius-md); padding:4px; gap:4px;
+  }
+  .toggle-group button{
+    flex:1; background:none; border:none; color:var(--grey-4);
+    padding:12px 10px; border-radius:9px; font-size:14px; font-weight:700;
+    cursor:pointer; transition:all .15s; font-family:inherit;
+  }
+  .toggle-group button.active{
+    background:var(--white); color:#0a0a0b;
+  }
+
+  .center{display:flex; justify-content:center;}
+  .footer-actions{margin-top:22px;}
+
+  /* ===== GAME SCREEN ===== */
+  .topbar{
+    display:flex; justify-content:space-between; align-items:center;
+    margin-bottom:18px; gap:12px; flex-wrap:wrap;
+  }
+  .scoreboard{
+    display:flex; gap:8px; flex-wrap:wrap;
+  }
+  .score-chip{
+    display:flex; align-items:center; gap:8px;
+    background:var(--bg-raised); border:1px solid var(--grey-1);
+    border-radius:999px; padding:6px 14px 6px 8px;
+  }
+  .score-chip .dot{width:10px; height:10px; border-radius:50%; box-shadow:0 0 8px currentColor;}
+  .score-chip .name{font-size:13px; font-weight:700; color:var(--white-dim);}
+  .score-chip .pts{font-size:14px; font-weight:800; color:var(--white);}
+  .score-chip.eliminated{opacity:.45; filter:grayscale(.6);}
+  .score-chip.eliminated .name{text-decoration:line-through;}
+  .round-badge{
+    font-size:12px; text-transform:uppercase; letter-spacing:.14em;
+    color:var(--grey-4); font-weight:700;
+    background:var(--bg-raised); border:1px solid var(--grey-1);
+    padding:8px 14px; border-radius:999px;
+  }
+  .topbar-right{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+  .btn-return-setup{
+    background:transparent; border:1px solid var(--grey-2); color:var(--grey-4);
+    padding:8px 14px; border-radius:999px; font-size:12px; font-weight:700;
+    letter-spacing:.02em; cursor:pointer; font-family:inherit;
+    transition:all .15s;
+  }
+  .btn-return-setup:hover{ border-color:var(--danger); color:var(--danger); background:#ff4d4d14; }
+
+  .modal-overlay{
+    position:fixed; inset:0; z-index:100;
+    background:rgba(0,0,0,0.65);
+    display:flex; align-items:center; justify-content:center; padding:20px;
+    animation:overlayIn .18s ease;
+  }
+  @keyframes overlayIn{ from{opacity:0;} to{opacity:1;} }
+  .modal-panel{
+    width:100%; max-width:400px;
+    background:linear-gradient(180deg, var(--bg-panel-2), var(--bg-panel));
+    border:1px solid var(--grey-2); border-radius:var(--radius-lg);
+    padding:28px; text-align:center;
+    box-shadow:var(--shadow-lg);
+    animation:modalIn .22s cubic-bezier(.16,1,.3,1);
+  }
+  @keyframes modalIn{ from{opacity:0; transform:translateY(10px) scale(.96);} to{opacity:1; transform:translateY(0) scale(1);} }
+  .modal-panel .modal-icon{font-size:32px; margin-bottom:10px;}
+  .modal-panel h3{margin:0 0 10px; font-size:19px; font-weight:800;}
+  .modal-panel p{margin:0 0 24px; color:var(--grey-4); font-size:14px; line-height:1.5;}
+  .modal-actions{display:flex; gap:10px; justify-content:center; flex-wrap:wrap;}
+  .btn.danger{background:var(--danger); border-color:var(--danger); color:#1a0505;}
+  .btn.danger:hover{background:#ff6b6b; border-color:#ff6b6b; box-shadow:0 0 0 4px rgba(255,77,77,0.15);}
+
+  .matchup{
+    display:flex; align-items:center; justify-content:center; gap:18px;
+    padding:22px; margin-bottom:18px;
+    background:linear-gradient(180deg, var(--bg-panel-2), var(--bg-panel));
+    border:1px solid var(--grey-1); border-radius:var(--radius-lg);
+  }
+  .contender{
+    display:flex; flex-direction:column; align-items:center; gap:8px;
+    min-width:120px;
+  }
+  .contender .avatar{
+    width:64px; height:64px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:24px; font-weight:800; color:#0a0a0b;
+    box-shadow:0 0 0 4px var(--bg-panel), 0 0 24px currentColor;
+  }
+  .contender .pname{font-weight:800; font-size:16px;}
+  .contender .role-tag{
+    font-size:11px; text-transform:uppercase; letter-spacing:.1em;
+    font-weight:700; padding:4px 10px; border-radius:999px;
+    border:1px solid var(--grey-2); color:var(--grey-4);
+  }
+  .role-tag.causation{color:var(--cause-color); border-color:var(--cause-glow); background:#ff8a3d14;}
+  .role-tag.correlation{color:var(--effect-color); border-color:var(--effect-glow); background:#3dc9ff14;}
+  .vs-mark{
+    font-size:13px; font-weight:800; color:var(--grey-3);
+    letter-spacing:.1em;
+  }
+
+  .role-pick{
+    display:flex; gap:10px; justify-content:center; margin-bottom:18px; flex-wrap:wrap;
+  }
+  .role-pick .role-btn{
+    flex:1; min-width:220px; max-width:320px;
+    padding:16px; border-radius:var(--radius-md);
+    border:1px solid var(--grey-1); background:var(--bg-raised);
+    cursor:pointer; text-align:left; transition:all .15s; font-family:inherit;
+  }
+  .role-pick .role-btn:hover{border-color:var(--grey-3); transform:translateY(-2px);}
+  .role-pick .role-btn .rplayer{font-size:18px; font-weight:800; color:var(--white);}
+  .role-pick .role-btn .role-tag{
+    display:inline-block; margin-top:8px;
+    font-size:11px; text-transform:uppercase; letter-spacing:.1em;
+    font-weight:700; padding:4px 10px; border-radius:999px;
+    border:1px solid var(--grey-2); color:var(--grey-4);
+  }
+  .role-pick .role-btn.selected{background:var(--bg-raised); box-shadow:0 0 0 2px var(--sel-color, var(--white)) inset;}
+
+  .player-select-grid{display:flex; flex-wrap:wrap; gap:10px;}
+  .player-select-chip{
+    flex:1; min-width:140px; text-align:left;
+    padding:14px 16px; border-radius:var(--radius-md);
+    border:1px solid var(--grey-1); background:var(--bg-raised);
+    cursor:pointer; font-family:inherit; transition:all .15s;
+  }
+  .player-select-chip:hover{border-color:var(--grey-3); transform:translateY(-2px);}
+  .player-select-chip.selected{box-shadow:0 0 0 2px var(--sel-color, var(--white)) inset;}
+  .player-select-chip .psc-name{font-size:16px; font-weight:800; color:var(--white);}
+  .player-select-chip .psc-meta{font-size:12px; color:var(--grey-4); margin-top:4px;}
+
+  /* Decks */
+  .decks{
+    display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:18px;
+  }
+  @media (max-width:640px){ .decks{grid-template-columns:1fr;} }
+  .deck-col{
+    background:linear-gradient(180deg, var(--bg-panel-2), var(--bg-panel));
+    border:1px solid var(--grey-1); border-radius:var(--radius-lg);
+    padding:18px; display:flex; flex-direction:column; gap:12px;
+  }
+  .deck-col.cause{ --deck-color: var(--cause-color); --deck-glow: var(--cause-glow); }
+  .deck-col.effect{ --deck-color: var(--effect-color); --deck-glow: var(--effect-glow); }
+  .deck-head{display:flex; justify-content:space-between; align-items:center;}
+  .deck-head .label{
+    font-size:12px; text-transform:uppercase; letter-spacing:.16em; font-weight:800;
+    color:var(--deck-color);
+  }
+  .deck-head .count{font-size:11px; color:var(--grey-4); font-weight:600;}
+  .card-face{
+    position:relative;
+    border-radius:var(--radius-md);
+    min-height:150px;
+    display:flex; align-items:center; justify-content:center;
+    text-align:center;
+    padding:18px;
+    font-size:20px; font-weight:800; line-height:1.25;
+    border:1.5px solid var(--deck-color);
+    background:
+      radial-gradient(120% 140% at 20% 0%, color-mix(in srgb, var(--deck-color) 16%, transparent), transparent 60%),
+      var(--bg-raised);
+    box-shadow:0 0 0 1px rgba(255,255,255,0.02), 0 10px 30px -8px var(--deck-glow);
+    color:var(--white);
+    overflow:hidden;
+  }
+  .card-face .corner{
+    position:absolute; top:10px; left:12px; font-size:10px; font-weight:800;
+    letter-spacing:.14em; color:var(--deck-color); text-transform:uppercase;
+  }
+  .card-face .corner.br{top:auto; left:auto; bottom:10px; right:12px;}
+  .card-face.empty{color:var(--grey-3); font-size:14px; font-weight:600; border-style:dashed; border-color:var(--grey-2);}
+  .deck-controls{display:flex; gap:10px;}
+  .deck-controls .btn{flex:1;}
+  .reshuffle-note{
+    font-size:11px; color:var(--grey-4); text-align:center;
+    background:var(--grey-1); border-radius:8px; padding:6px 8px;
+    animation:fadeInOut 2.6s ease forwards;
+  }
+  @keyframes fadeInOut{
+    0%{opacity:0;} 12%{opacity:1;} 80%{opacity:1;} 100%{opacity:0;}
+  }
+
+  .lock-row{display:flex; justify-content:center; margin-bottom:8px;}
+
+  /* Timer */
+  .timer-panel{
+    background:linear-gradient(180deg, var(--bg-panel-2), var(--bg-panel));
+    border:1px solid var(--grey-1); border-radius:var(--radius-lg);
+    padding:28px; display:flex; flex-direction:column; align-items:center; gap:16px;
+    margin-bottom:18px;
+  }
+  .timer-turn{
+    font-size:13px; text-transform:uppercase; letter-spacing:.16em; font-weight:800;
+  }
+  .timer-turn.causation{color:var(--cause-color);}
+  .timer-turn.correlation{color:var(--effect-color);}
+  .ring-wrap{position:relative; width:220px; height:220px;}
+  .ring-wrap svg{transform:rotate(-90deg); width:100%; height:100%;}
+  .ring-bg{fill:none; stroke:var(--grey-1); stroke-width:10;}
+  .ring-fg{fill:none; stroke-width:10; stroke-linecap:round; transition:stroke-dashoffset 1s linear, stroke .3s;}
+  .ring-center{
+    position:absolute; inset:0; display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+  }
+  .ring-center .time{font-size:48px; font-weight:800; font-variant-numeric:tabular-nums; letter-spacing:-0.02em;}
+  .ring-center .flash{animation:flashText .6s ease infinite;}
+  @keyframes flashText{0%,100%{opacity:1;} 50%{opacity:.25;}}
+  .timer-controls{display:flex; gap:10px; flex-wrap:wrap; justify-content:center;}
+
+  .winner-panel{
+    text-align:center; margin-bottom:18px;
+  }
+  .winner-panel h3{margin:0 0 14px; font-size:14px; text-transform:uppercase; letter-spacing:.14em; color:var(--grey-4);}
+  .winner-btns{display:flex; gap:14px; justify-content:center; flex-wrap:wrap;}
+  .winner-btn{
+    flex:1; min-width:220px; max-width:320px; padding:22px;
+    border-radius:var(--radius-lg); cursor:pointer; font-family:inherit;
+    border:1.5px solid var(--grey-2); background:var(--bg-raised);
+    transition:transform .15s, box-shadow .15s;
+  }
+  .winner-btn:hover{transform:translateY(-3px);}
+  .winner-btn.cause-side{border-color:var(--cause-color);}
+  .winner-btn.cause-side:hover{box-shadow:0 12px 30px -10px var(--cause-glow);}
+  .winner-btn.effect-side{border-color:var(--effect-color);}
+  .winner-btn.effect-side:hover{box-shadow:0 12px 30px -10px var(--effect-glow);}
+  .winner-btn .wname{font-size:20px; font-weight:800; margin-bottom:4px; color:var(--white);}
+  .winner-btn .wrole{font-size:11px; text-transform:uppercase; letter-spacing:.12em; font-weight:700; color:var(--grey-4);}
+
+  /* History */
+  .history-list{display:flex; flex-direction:column; gap:8px; max-height:260px; overflow-y:auto;}
+  .history-row{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    background:var(--bg-raised); border:1px solid var(--grey-1); border-radius:10px;
+    padding:10px 12px; font-size:13px;
+  }
+  .history-row .hcards{color:var(--grey-4); flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .history-row .hwinner{font-weight:800; flex-shrink:0;}
+  .history-empty{color:var(--grey-3); font-size:13px; text-align:center; padding:14px;}
+
+  /* Win screen */
+  .win-screen{
+    text-align:center; padding:40px 20px;
+  }
+  .win-screen .trophy{font-size:64px; margin-bottom:10px; animation:trophyPulse 1.6s ease infinite;}
+  @keyframes trophyPulse{0%,100%{transform:scale(1);} 50%{transform:scale(1.08);}}
+  .win-screen h2{
+    font-size:clamp(26px,6vw,42px); margin:6px 0 4px; font-weight:800;
+    background:linear-gradient(90deg, var(--accent-a), var(--accent-b), var(--accent-c), var(--accent-d));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    background-size:300% 100%;
+    animation:shimmer 3s linear infinite;
+  }
+  @keyframes shimmer{ to{background-position:300% 0;} }
+  .win-screen .final-scores{
+    display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin:22px 0 28px;
+  }
+  .final-score-card{
+    background:var(--bg-raised); border:1px solid var(--grey-1); border-radius:var(--radius-md);
+    padding:16px 20px; min-width:140px;
+  }
+  .final-score-card .fname{font-weight:700; font-size:14px; color:var(--white-dim); margin-bottom:6px;}
+  .final-score-card .fpts{font-size:30px; font-weight:800;}
+  .final-score-card.champ{box-shadow:0 0 0 2px var(--pcolor, var(--good)) inset, 0 0 30px -6px var(--pcolor, var(--good));}
+
+  .confetti-layer{position:fixed; inset:0; pointer-events:none; overflow:hidden; z-index:5;}
+  .confetti-piece{
+    position:absolute; top:-20px; border-radius:2px; opacity:.9;
+    animation:confettiFall linear forwards;
+  }
+  @keyframes confettiFall{
+    to{ transform:translateY(110vh) rotate(720deg); opacity:0; }
+  }
+
+  .toast{
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+    background:var(--bg-raised); border:1px solid var(--grey-2); color:var(--white);
+    padding:12px 20px; border-radius:999px; font-size:13px; font-weight:600;
+    box-shadow:var(--shadow-lg); z-index:50; animation:toastIn .35s ease, toastOut .35s ease 2.4s forwards;
+  }
+  @keyframes toastIn{ from{opacity:0; transform:translate(-50%,10px);} to{opacity:1; transform:translate(-50%,0);} }
+  @keyframes toastOut{ to{opacity:0; transform:translate(-50%,10px);} }
+
+  .rules-hint{color:var(--grey-4); font-size:12px; text-align:center; margin-top:4px;}
+
+  ::-webkit-scrollbar{width:8px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:var(--grey-2); border-radius:8px;}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* =========================================================
+   CARD DATA — Cause / Effect decks. Edit these arrays to
+   add, remove, or swap cards. Keep entries UPPERCASE.
+   ========================================================= */
+const CAUSE_CARDS = [
+  "MILITARY SIZE","ARMS EXPORTS","GLOBAL WARMING","FOOD SUPPLY","DEBT",
+  "GROSS DOMESTIC PRODUCT (GDP)","CYBER TERRORISM","MULTICULTURALISM","OIL PRICES",
+  "TERRORISM","ECONOMIC STABILITY","ELECTRICITY ACCESS","POLLUTION","COMPETITION",
+  "SOCIALISM","ECONOMIC GROWTH","CRYPTOCURRENCY","EDUCATION","DRUGS",
+  "COLLEGE GRADUATION RATES","ACCESSIBLE HEALTHCARE","SOCIAL ACTIVISM (PROTESTS)",
+  "NUCLEAR HEGEMONY","TECHNOLOGICAL ADVANCEMENT","MORAL RELATIVISM","FREE MARKET",
+  "GOVERNMENT TRANSPARENCY","NATIONAL SAVINGS","ASSIMILATION","COOPERATION","WISDOM",
+  "RELIGIOUS BELIEFS","ARTIFICIAL INTELLIGENCE","COMMUNISM","WATER QUALITY","INCOME"
+];
+
+const EFFECT_CARDS = [
+  "PRIVACY","PRODUCTIVITY","LIBERTY","WAR","CIVIL LIBERTIES","HAPPINESS",
+  "CREDIBILITY","SAFETY","DEATH","JUSTICE","DESTRUCTION","PROSPERITY",
+  "QUALITY OF LIFE","NATIONAL IDENTITY","NATIONAL SECURITY","CANCER","GENEROSITY",
+  "DIPLOMACY","JOY","STANDARD OF LIVING","HEALTH","WORLD PEACE","EQUALITY",
+  "SICKNESS/DISEASE","DEPRESSION","ECONOMIC WELL-BEING","POVERTY","SANCTITY OF LIFE",
+  "POWER/INFLUENCE","FREEDOM","PROPERTY","HUMAN RIGHTS","CAREER SUCCESS"
+];
+
+/* Player accent colors, cycled */
+const PLAYER_COLORS = ["#ff4d6d","#ffd23d","#3dffb8","#3dc9ff","#b06dff","#ff8a3d","#ff6bcb","#7dff3d"];
+
+/* =========================================================
+   STATE
+   ========================================================= */
+const STORAGE_KEY = "cnc_game_state_v1";
+
+function defaultState(){
+  return {
+    screen: "home", // home | game | win
+    players: [ {id:1,name:""}, {id:2,name:""} ],
+    pointsToWin: 5,
+    timerLength: 120, // seconds
+    matchupStyle: "random", // random | selfselect | powermatch
+    // in-game
+    causeDeck: [], causeDiscard: [], causeHistory: [], // history = stack of drawn (for go-back)
+    effectDeck: [], effectDiscard: [], effectHistory: [],
+    currentCause: null, currentEffect: null,
+    scores: {}, // playerId -> points (wins, in Power Match)
+    losses: {}, // playerId -> losses (Power Match only; 2 losses = eliminated)
+    roundsPlayed: {}, // playerId -> count
+    lastPair: null, // [idA, idB]
+    round: 1,
+    currentPair: null, // [idA, idB]
+    pendingSelectPair: [], // Self-Select: player ids the host has tapped so far (max 2)
+    roles: {}, // playerId -> 'causation'|'correlation'
+    cardsLocked: false,
+    timerPhase: "idle", // idle | running1 | done1 | running2 | done2 | finished
+    timerSide: null, // 'causation' | 'correlation'
+    timeRemaining: 0,
+    timerRunning: false,
+    history: [], // completed rounds log
+    winnerId: null,
+    _toast: null,
+    _reshuffleNote: null
+  };
+}
+
+let state = loadState();
+let timerInterval = null;
+let showReturnConfirm = false; // transient UI state — not persisted
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return defaultState();
+    const parsed = JSON.parse(raw);
+    parsed.timerRunning = false; // never auto-resume a running timer after refresh
+    if(parsed.timerPhase === "running1") parsed.timerPhase = "done1";
+    if(parsed.timerPhase === "running2") parsed.timerPhase = "done2";
+    return Object.assign(defaultState(), parsed);
+  }catch(e){
+    return defaultState();
+  }
+}
+
+function saveState(){
+  try{
+    const toSave = Object.assign({}, state);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+  }catch(e){ /* storage unavailable (private browsing, sandboxed context) */ }
+}
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+/* =========================================================
+   RENDER ROOT
+   ========================================================= */
+const root = document.getElementById("app");
+let lastRenderedScreen = null;
+
+function render(){
+  const scrollY = window.scrollY;
+  root.innerHTML = "";
+  let screenEl = null;
+  if(state.screen === "home") screenEl = renderHome();
+  else if(state.screen === "game") screenEl = renderGame();
+  else if(state.screen === "win") screenEl = renderWin();
+  if(screenEl){
+    // Only play the entrance animation when actually switching screens
+    // (home/game/win) — otherwise it replayed on every single button press
+    // (draw a card, pick a role, add a player...) making the whole app
+    // look like it was reloading each time.
+    if(state.screen !== lastRenderedScreen) screenEl.classList.add("screen-enter");
+    root.appendChild(screenEl);
+  }
+  lastRenderedScreen = state.screen;
+  window.scrollTo(0, scrollY);
+  saveState();
+}
+
+function h(tag, attrs, children){
+  const el = document.createElement(tag);
+  if(attrs){
+    for(const k in attrs){
+      if(k === "class") el.className = attrs[k];
+      else if(k === "html") el.innerHTML = attrs[k];
+      else if(k.startsWith("on") && typeof attrs[k] === "function") el.addEventListener(k.slice(2), attrs[k]);
+      else if(k === "style") el.setAttribute("style", attrs[k]);
+      else el.setAttribute(k, attrs[k]);
+    }
+  }
+  (children||[]).forEach(c=>{
+    if(c === null || c === undefined) return;
+    if(typeof c === "string") el.appendChild(document.createTextNode(c));
+    else el.appendChild(c);
+  });
+  return el;
+}
+
+function playerColor(idx){ return PLAYER_COLORS[idx % PLAYER_COLORS.length]; }
+function getPlayer(id){ return state.players.find(p=>p.id===id); }
+function playerIndex(id){ return state.players.findIndex(p=>p.id===id); }
+function initials(name){
+  const parts = name.trim().split(/\s+/);
+  if(parts.length===1) return parts[0].slice(0,2).toUpperCase();
+  return (parts[0][0]+parts[1][0]).toUpperCase();
+}
+
+/* =========================================================
+   HOME SCREEN
+   ========================================================= */
+function renderHome(){
+  const wrap = h("div", {class:"screen"});
+  wrap.appendChild(h("div",{class:"brand"},[
+    h("div",{class:"kicker"},["A Debate Game"]),
+    h("h1",{},[
+      document.createTextNode("Correlation"),
+      h("span",{class:"not"},["not"]),
+      document.createTextNode("Causation")
+    ])
+  ]));
+
+  function refreshStartState(){
+    const ok = state.players.every(p=>p.name && p.name.trim().length>0) && state.players.length>=2;
+    startBtn.disabled = !ok;
+    hint.style.display = ok ? "none" : "block";
+  }
+
+  // Players panel
+  const playersPanel = h("div",{class:"panel"});
+  playersPanel.appendChild(h("h2",{},["Players"]));
+  playersPanel.appendChild(h("p",{class:"sub"},["Add everyone playing. Each round pairs two of them up to debate."]));
+  const rows = h("div",{class:"player-rows"});
+  state.players.forEach((p, idx)=>{
+    const dot = h("div",{class:"player-dot", style:`background:${playerColor(idx)}; color:${playerColor(idx)}`});
+    const input = h("input",{type:"text", placeholder:`Player ${idx+1} name`, value:p.name || ""});
+    input.value = p.name || "";
+    input.addEventListener("input", e=>{ p.name = e.target.value; saveState(); refreshStartState(); });
+    const removeBtn = h("button",{class:"icon-btn danger", title:"Remove player", onclick:()=>{
+      if(state.players.length <= 2) return showToast("You need at least 2 players");
+      state.players = state.players.filter(pl=>pl.id!==p.id);
+      render();
+    }},["✕"]);
+    const row = h("div",{class:"player-row"},[dot, input, removeBtn]);
+    rows.appendChild(row);
+  });
+  playersPanel.appendChild(rows);
+  playersPanel.appendChild(h("div",{class:"btn-row"},[
+    h("button",{class:"btn", onclick:()=>{
+      const nextId = Math.max(0,...state.players.map(p=>p.id))+1;
+      state.players.push({id:nextId, name:""});
+      render();
+    }},["+ Add Player"])
+  ]));
+  wrap.appendChild(playersPanel);
+
+  // Settings panel
+  const settingsPanel = h("div",{class:"panel"});
+  settingsPanel.appendChild(h("h2",{},["Game Settings"]));
+  settingsPanel.appendChild(h("p",{class:"sub"},["Configure how a game is won and how long each side gets to argue."]));
+  const grid = h("div",{class:"field-grid"});
+
+  // points to win stepper (not used in Power Match — elimination decides the winner)
+  const ptsField = h("div",{class:"field"});
+  ptsField.appendChild(h("label",{},["Points to Win"]));
+  if(state.matchupStyle === "powermatch"){
+    ptsField.appendChild(h("p",{class:"rules-hint", style:"margin:0; text-align:left;"},["Not used: Power Match ends when only one player avoids 2 losses."]));
+  } else {
+    const ptsStepper = h("div",{class:"number-stepper"});
+    const ptsInput = h("input",{type:"text", inputmode:"numeric", value:state.pointsToWin});
+    ptsInput.addEventListener("change", e=>{
+      let v = parseInt(e.target.value,10);
+      if(isNaN(v) || v<1) v = 5;
+      state.pointsToWin = v; saveState(); ptsInput.value = v;
+    });
+    ptsStepper.appendChild(h("button",{onclick:()=>{ state.pointsToWin=Math.max(1,state.pointsToWin-1); ptsInput.value=state.pointsToWin; saveState(); }},["−"]));
+    ptsStepper.appendChild(ptsInput);
+    ptsStepper.appendChild(h("button",{onclick:()=>{ state.pointsToWin=state.pointsToWin+1; ptsInput.value=state.pointsToWin; saveState(); }},["+"]));
+    ptsField.appendChild(ptsStepper);
+  }
+  grid.appendChild(ptsField);
+
+  // timer toggle
+  const timerField = h("div",{class:"field"});
+  timerField.appendChild(h("label",{},["Argument Timer"]));
+  const toggleGroup = h("div",{class:"toggle-group"});
+  const btn2 = h("button",{class: state.timerLength===120 ? "active":"", onclick:()=>{ state.timerLength=120; render(); }},["2 min"]);
+  const btn3 = h("button",{class: state.timerLength===180 ? "active":"", onclick:()=>{ state.timerLength=180; render(); }},["3 min"]);
+  toggleGroup.appendChild(btn2); toggleGroup.appendChild(btn3);
+  timerField.appendChild(toggleGroup);
+  grid.appendChild(timerField);
+
+  settingsPanel.appendChild(grid);
+
+  // match-up style
+  const styleField = h("div",{class:"field", style:"margin-top:16px;"});
+  styleField.appendChild(h("label",{},["Match-Up Style"]));
+  const styleToggle = h("div",{class:"toggle-group"});
+  const styleOptions = [
+    ["random","Random"],
+    ["selfselect","Self-Select"],
+    ["powermatch","Power Match"]
+  ];
+  styleOptions.forEach(([val,label])=>{
+    styleToggle.appendChild(h("button",{class: state.matchupStyle===val ? "active":"", onclick:()=>{ state.matchupStyle=val; render(); }},[label]));
+  });
+  styleField.appendChild(styleToggle);
+  const styleHints = {
+    random: "Randomly rotates pairs each round, keeping participation even.",
+    selfselect: "You choose who debates each round.",
+    powermatch: "Tracks wins and losses and pairs similar records; two losses and you're out."
+  };
+  styleField.appendChild(h("p",{class:"rules-hint", style:"margin-top:8px;"},[styleHints[state.matchupStyle]]));
+  settingsPanel.appendChild(styleField);
+
+  wrap.appendChild(settingsPanel);
+
+  // Start button
+  const namesOk = state.players.every(p=>p.name && p.name.trim().length>0) && state.players.length>=2;
+  const footer = h("div",{class:"footer-actions"});
+  const startBtn = h("button",{class:"btn primary wide", onclick:()=>startGame()}, ["Start Game →"]);
+  const hint = h("div",{class:"rules-hint"},["Give every player a name to begin."]);
+  startBtn.disabled = !namesOk;
+  hint.style.display = namesOk ? "none" : "block";
+  footer.appendChild(startBtn);
+  footer.appendChild(hint);
+  wrap.appendChild(footer);
+
+  return wrap;
+}
+
+function startGame(){
+  state.causeDeck = shuffle(CAUSE_CARDS);
+  state.causeDiscard = [];
+  state.causeHistory = [];
+  state.effectDeck = shuffle(EFFECT_CARDS);
+  state.effectDiscard = [];
+  state.effectHistory = [];
+  state.currentCause = null;
+  state.currentEffect = null;
+  state.scores = {}; state.roundsPlayed = {}; state.losses = {};
+  state.players.forEach(p=>{ state.scores[p.id]=0; state.roundsPlayed[p.id]=0; state.losses[p.id]=0; });
+  state.lastPair = null;
+  state.round = 1;
+  state.pendingSelectPair = [];
+  state.roles = {};
+  state.cardsLocked = false;
+  state.timerPhase = "idle";
+  state.timerSide = null;
+  state.timeRemaining = state.timerLength;
+  state.timerRunning = false;
+  state.history = [];
+  state.winnerId = null;
+  state.currentPair = pickNextPair();
+  state.screen = "game";
+  render();
+}
+
+/* =========================================================
+   PAIRING ALGORITHMS
+   ========================================================= */
+function pickNextPair(){
+  if(state.matchupStyle === "powermatch") return pickNextPairPowerMatch();
+  if(state.matchupStyle === "selfselect") return null; // host confirms the pair manually
+  return pickNextPairRandom();
+}
+
+function isRepeatOfLastPair(a, b){
+  if(!state.lastPair) return false;
+  const [la,lb] = state.lastPair;
+  return (a.id===la && b.id===lb) || (a.id===lb && b.id===la);
+}
+
+function pickNextPairRandom(){
+  const players = state.players;
+  if(players.length < 2) return null;
+  // sort by rounds played ascending, tie-break random
+  const sorted = players.slice().sort((a,b)=>{
+    const diff = (state.roundsPlayed[a.id]||0) - (state.roundsPlayed[b.id]||0);
+    if(diff !== 0) return diff;
+    return Math.random()-0.5;
+  });
+  // try to build a pair from the least-played players, avoiding exact repeat of lastPair if alternatives exist
+  const minCount = state.roundsPlayed[sorted[0].id]||0;
+  const leastPlayed = sorted.filter(p=>(state.roundsPlayed[p.id]||0)===minCount);
+  let candidates = leastPlayed.length>=2 ? leastPlayed : sorted;
+
+  // gather all valid pairs from candidates+sorted pool prioritizing lowest combined rounds
+  const pool = candidates.length>=2 ? candidates : sorted;
+  let bestPair = null, bestScore = Infinity;
+  for(let i=0;i<pool.length;i++){
+    for(let j=i+1;j<pool.length;j++){
+      const a = pool[i], b = pool[j];
+      const score = (state.roundsPlayed[a.id]||0) + (state.roundsPlayed[b.id]||0) + (isRepeatOfLastPair(a,b) && players.length>2 ? 1000 : 0);
+      if(score < bestScore){ bestScore = score; bestPair = [a.id,b.id]; }
+    }
+  }
+  if(!bestPair && sorted.length>=2) bestPair = [sorted[0].id, sorted[1].id];
+  return bestPair;
+}
+
+// Power Match: pair surviving players (fewer than 2 losses) by closest
+// win-loss record, so similar records face off — narrowing toward a final
+// match between the last two players standing.
+function pickNextPairPowerMatch(){
+  const active = state.players.filter(p => (state.losses[p.id]||0) < 2);
+  if(active.length < 2) return null; // tournament already has a champion
+
+  const sorted = active.slice().sort((a,b)=>{
+    const la = state.losses[a.id]||0, lb = state.losses[b.id]||0;
+    if(la !== lb) return la - lb; // fewer losses = better record, sorts first
+    const wa = state.scores[a.id]||0, wb = state.scores[b.id]||0;
+    if(wa !== wb) return wb - wa; // more wins = better record within the same loss tier
+    const ra = state.roundsPlayed[a.id]||0, rb = state.roundsPlayed[b.id]||0;
+    if(ra !== rb) return ra - rb;
+    return Math.random()-0.5;
+  });
+
+  // narrow to players tied with the best remaining record, so pairing prioritizes closeness
+  const top = sorted[0];
+  const topLosses = state.losses[top.id]||0, topWins = state.scores[top.id]||0;
+  const tier = sorted.filter(p => (state.losses[p.id]||0)===topLosses && (state.scores[p.id]||0)===topWins);
+  const pool = tier.length>=2 ? tier : sorted;
+
+  let bestPair = null, bestScore = Infinity;
+  for(let i=0;i<pool.length;i++){
+    for(let j=i+1;j<pool.length;j++){
+      const a = pool[i], b = pool[j];
+      const recordGap = Math.abs((state.losses[a.id]||0)-(state.losses[b.id]||0)) + Math.abs((state.scores[a.id]||0)-(state.scores[b.id]||0));
+      const score = recordGap + (isRepeatOfLastPair(a,b) && active.length>2 ? 1000 : 0);
+      if(score < bestScore){ bestScore = score; bestPair = [a.id,b.id]; }
+    }
+  }
+  if(!bestPair) bestPair = [sorted[0].id, sorted[1].id];
+  return bestPair;
+}
+
+// Self-Select: host taps player chips to build the next pair by hand.
+function toggleSelectPick(playerId){
+  const idx = state.pendingSelectPair.indexOf(playerId);
+  if(idx !== -1){
+    state.pendingSelectPair.splice(idx, 1);
+  } else {
+    state.pendingSelectPair.push(playerId);
+    if(state.pendingSelectPair.length > 2) state.pendingSelectPair.shift(); // drop the oldest pick
+  }
+  render();
+}
+
+function confirmSelfSelectPair(){
+  if(state.pendingSelectPair.length !== 2) return;
+  state.currentPair = state.pendingSelectPair.slice();
+  state.pendingSelectPair = [];
+  render();
+}
+
+function renderSelfSelectPicker(){
+  const panel = h("div",{class:"panel"});
+  panel.appendChild(h("h2",{},["Choose Who's Debating"]));
+  panel.appendChild(h("p",{class:"sub"},["Tap two players for this round's matchup."]));
+  const grid = h("div",{class:"player-select-grid"});
+  state.players.forEach((p, idx)=>{
+    const color = playerColor(idx);
+    const picked = state.pendingSelectPair.includes(p.id);
+    const rounds = state.roundsPlayed[p.id]||0;
+    const btn = h("button",{
+      class:"player-select-chip"+(picked?" selected":""),
+      style: picked ? `--sel-color:${color}` : "",
+      onclick:()=>toggleSelectPick(p.id)
+    },[
+      h("div",{class:"psc-name"},[p.name]),
+      h("div",{class:"psc-meta"},[`${rounds} round${rounds===1?"":"s"} played`])
+    ]);
+    grid.appendChild(btn);
+  });
+  panel.appendChild(grid);
+  const confirmBtn = h("button",{class:"btn primary wide", style:"margin-top:16px;", onclick:()=>confirmSelfSelectPair()},["Confirm Matchup"]);
+  if(state.pendingSelectPair.length !== 2) confirmBtn.disabled = true;
+  panel.appendChild(confirmBtn);
+  return panel;
+}
+
+/* =========================================================
+   GAME SCREEN
+   ========================================================= */
+function renderGame(){
+  const wrap = h("div",{class:"screen"});
+
+  // topbar: scoreboard + round badge
+  const isPowerMatch = state.matchupStyle === "powermatch";
+  const topbar = h("div",{class:"topbar"});
+  const scoreboard = h("div",{class:"scoreboard"});
+  state.players.forEach((p,idx)=>{
+    const color = playerColor(idx);
+    const eliminated = isPowerMatch && (state.losses[p.id]||0) >= 2;
+    const displayVal = isPowerMatch ? `${state.scores[p.id]||0}-${state.losses[p.id]||0}` : String(state.scores[p.id]||0);
+    scoreboard.appendChild(h("div",{class:"score-chip"+(eliminated?" eliminated":"")},[
+      h("div",{class:"dot", style:`background:${color}; color:${color}`}),
+      h("span",{class:"name"},[p.name]),
+      h("span",{class:"pts"},[displayVal])
+    ]));
+  });
+  topbar.appendChild(scoreboard);
+  const topbarRight = h("div",{class:"topbar-right"});
+  topbarRight.appendChild(h("button",{class:"btn-return-setup", onclick:()=>{ showReturnConfirm=true; render(); }},["Return to Setup"]));
+  const roundLabel = isPowerMatch ? `Round ${state.round} · 2 Losses = Out` : `Round ${state.round} · First to ${state.pointsToWin}`;
+  topbarRight.appendChild(h("div",{class:"round-badge"},[roundLabel]));
+  topbar.appendChild(topbarRight);
+  wrap.appendChild(topbar);
+
+  const pair = state.currentPair;
+  if(!pair){
+    if(state.matchupStyle === "selfselect"){
+      wrap.appendChild(renderSelfSelectPicker());
+      return wrap;
+    }
+    wrap.appendChild(h("div",{class:"panel"},[h("p",{},["Not enough players to continue."])]));
+    return wrap;
+  }
+  const pA = getPlayer(pair[0]), pB = getPlayer(pair[1]);
+  const idxA = playerIndex(pair[0]), idxB = playerIndex(pair[1]);
+  const colorA = playerColor(idxA), colorB = playerColor(idxB);
+
+  // Matchup display
+  const matchup = h("div",{class:"matchup"});
+  const roleA = state.roles[pA.id];
+  const roleB = state.roles[pB.id];
+  function contender(p, color, role){
+    const children = [
+      h("div",{class:"avatar", style:`background:${color}; color:#0a0a0b;`},[initials(p.name||"?")]),
+      h("div",{class:"pname"},[p.name])
+    ];
+    if(role) children.push(h("div",{class:`role-tag ${role}`},[role]));
+    return h("div",{class:"contender"}, children);
+  }
+  matchup.appendChild(contender(pA, colorA, roleA));
+  matchup.appendChild(h("div",{class:"vs-mark"},["VS"]));
+  matchup.appendChild(contender(pB, colorB, roleB));
+  wrap.appendChild(matchup);
+
+  // Role pick (only before locked)
+  if(!state.cardsLocked){
+    const rolesAssigned = roleA && roleB;
+    const rolePanel = h("div",{class:"panel"});
+    rolePanel.appendChild(h("h2",{},["Pick Sides"]));
+    rolePanel.appendChild(h("p",{class:"sub"},["Who argues Causation, and who argues Correlation?"]));
+    const pick = h("div",{class:"role-pick"});
+    pick.appendChild(causationPickButton(pA, pB.id, colorA));
+    pick.appendChild(causationPickButton(pB, pA.id, colorB));
+    rolePanel.appendChild(pick);
+    rolePanel.appendChild(h("p",{class:"rules-hint"},["Tap the player who will argue Causation; the other will argue Correlation."]));
+    wrap.appendChild(rolePanel);
+  }
+
+  // Decks
+  wrap.appendChild(renderDecks());
+
+  // Lock in / Start Round
+  if(!state.cardsLocked){
+    const canLock = state.currentCause && state.currentEffect && roleA && roleB;
+    const lockRow = h("div",{class:"lock-row"});
+    const lockBtn = h("button",{class:"btn primary wide", onclick:()=>lockInRound()},["Start Round — Lock In Cards"]);
+    if(!canLock) lockBtn.disabled = true;
+    lockRow.appendChild(lockBtn);
+    wrap.appendChild(lockRow);
+    if(!canLock){
+      let msg = [];
+      if(!roleA || !roleB) msg.push("assign both roles");
+      if(!state.currentCause) msg.push("draw a Cause card");
+      if(!state.currentEffect) msg.push("draw an Effect card");
+      wrap.appendChild(h("p",{class:"rules-hint"},["Need to: " + msg.join(", ") + "."]));
+    }
+  } else {
+    // Timer / winner flow
+    wrap.appendChild(renderTimerPanel(pA, pB, colorA, colorB));
+  }
+
+  // History
+  const histPanel = h("div",{class:"panel"});
+  histPanel.appendChild(h("h2",{},["Round History"]));
+  const histList = h("div",{class:"history-list"});
+  if(state.history.length===0){
+    histList.appendChild(h("div",{class:"history-empty"},["No rounds completed yet."]));
+  } else {
+    state.history.slice().reverse().forEach(r=>{
+      histList.appendChild(h("div",{class:"history-row"},[
+        h("span",{class:"hcards"},[`${r.cause} × ${r.effect}`]),
+        h("span",{class:"hwinner"},[`🏆 ${r.winnerName}`])
+      ]));
+    });
+  }
+  histPanel.appendChild(histList);
+  wrap.appendChild(histPanel);
+
+  // toast
+  if(state._toast){
+    const t = state._toast;
+    state._toast = null;
+    setTimeout(()=>{
+      const toastEl = h("div",{class:"toast"},[t]);
+      document.body.appendChild(toastEl);
+      setTimeout(()=>toastEl.remove(), 2800);
+    }, 10);
+  }
+
+  if(showReturnConfirm){
+    const overlay = h("div",{class:"modal-overlay", onclick:(e)=>{ if(e.target===overlay){ showReturnConfirm=false; render(); } }});
+    const panel = h("div",{class:"modal-panel"},[
+      h("div",{class:"modal-icon"},["⚠️"]),
+      h("h3",{},["Return to Setup?"]),
+      h("p",{},["All scores and round progress for this game will be lost. This can't be undone."]),
+      h("div",{class:"modal-actions"},[
+        h("button",{class:"btn ghost", onclick:()=>{ showReturnConfirm=false; render(); }},["Cancel"]),
+        h("button",{class:"btn danger", onclick:()=>returnToSetup()},["Return to Setup"])
+      ])
+    ]);
+    overlay.appendChild(panel);
+    wrap.appendChild(overlay);
+  }
+
+  return wrap;
+}
+
+function causationPickButton(player, otherId, color){
+  // With only two players, picking who argues Causation fully determines
+  // both roles — so one tap assigns this player Causation and the other
+  // Correlation, instead of requiring two separate role choices.
+  const currentRole = state.roles[player.id];
+  const roleClass = currentRole === "causation" ? "cause-side" : currentRole === "correlation" ? "effect-side" : "";
+  const selected = !!currentRole;
+  const btn = h("button",{
+    class:`role-btn ${roleClass}${selected?" selected":""}`,
+    style: selected ? `--sel-color:${color}` : "",
+    onclick:()=>{
+      state.roles[player.id] = "causation";
+      state.roles[otherId] = "correlation";
+      render();
+    }
+  },[
+    h("div",{class:"rplayer"},[player.name]),
+    currentRole ? h("div",{class:`role-tag ${currentRole}`},[currentRole]) : null
+  ]);
+  return btn;
+}
+
+function renderDecks(){
+  const decks = h("div",{class:"decks"});
+  decks.appendChild(renderDeckCol("cause", "Cause", state.currentCause, state.causeDeck, state.causeHistory));
+  decks.appendChild(renderDeckCol("effect", "Effect", state.currentEffect, state.effectDeck, state.effectHistory));
+  return decks;
+}
+
+function renderDeckCol(kind, label, currentCard, deck, history){
+  const col = h("div",{class:`deck-col ${kind}`});
+  const head = h("div",{class:"deck-head"},[
+    h("span",{class:"label"},[label]),
+    h("span",{class:"count"},[`${deck.length} left`])
+  ]);
+  col.appendChild(head);
+
+  let face;
+  if(currentCard){
+    face = h("div",{class:"card-face"},[
+      h("span",{class:"corner"},[label]),
+      document.createTextNode(currentCard),
+      h("span",{class:"corner br"},[label])
+    ]);
+  } else {
+    face = h("div",{class:"card-face empty"},[`No ${label.toLowerCase()} card drawn yet`]);
+  }
+  col.appendChild(face);
+
+  if(state._reshuffleNote === kind){
+    col.appendChild(h("div",{class:"reshuffle-note"},[`↻ ${label} pile reshuffled from discard`]));
+  }
+
+  if(!state.cardsLocked){
+    const controls = h("div",{class:"deck-controls"});
+    const drawBtn = h("button",{class:"btn", onclick:()=>drawCard(kind)},["Draw"]);
+    const backBtn = h("button",{class:"btn ghost", onclick:()=>goBack(kind)},["Go Back"]);
+    if(history.length===0) backBtn.disabled = true;
+    controls.appendChild(drawBtn);
+    controls.appendChild(backBtn);
+    col.appendChild(controls);
+  }
+
+  return col;
+}
+
+function drawCard(kind){
+  const deckKey = kind==="cause" ? "causeDeck" : "effectDeck";
+  const discardKey = kind==="cause" ? "causeDiscard" : "effectDiscard";
+  const historyKey = kind==="cause" ? "causeHistory" : "effectHistory";
+  const currentKey = kind==="cause" ? "currentCause" : "currentEffect";
+
+  // put current card (if any) into discard before drawing a new one
+  if(state[currentKey]){
+    state[discardKey].push(state[currentKey]);
+  }
+  if(state[deckKey].length === 0){
+    if(state[discardKey].length === 0){
+      showToast(`No more ${kind} cards available`);
+      return;
+    }
+    state[deckKey] = shuffle(state[discardKey]);
+    state[discardKey] = [];
+    state._reshuffleNote = kind;
+    setTimeout(()=>{ state._reshuffleNote=null; render(); }, 2600);
+  }
+  const card = state[deckKey].shift();
+  state[historyKey].push(card);
+  state[currentKey] = card;
+  render();
+}
+
+function goBack(kind){
+  const deckKey = kind==="cause" ? "causeDeck" : "effectDeck";
+  const discardKey = kind==="cause" ? "causeDiscard" : "effectDiscard";
+  const historyKey = kind==="cause" ? "causeHistory" : "effectHistory";
+  const currentKey = kind==="cause" ? "currentCause" : "currentEffect";
+
+  if(state[historyKey].length===0) return;
+  const last = state[historyKey].pop();
+  // put it back on top of the deck
+  state[deckKey].unshift(last);
+  // restore previous current card from discard, if any
+  if(state[discardKey].length>0){
+    state[currentKey] = state[discardKey].pop();
+  } else {
+    state[currentKey] = null;
+  }
+  render();
+}
+
+function lockInRound(){
+  state.cardsLocked = true;
+  state.timerPhase = "running1";
+  state.timerSide = "causation";
+  state.timeRemaining = state.timerLength;
+  state.timerRunning = true;
+  render();
+  startTicking();
+}
+
+/* =========================================================
+   TIMER
+   ========================================================= */
+function renderTimerPanel(pA, pB, colorA, colorB){
+  const wrap = document.createDocumentFragment();
+
+  if(state.timerPhase !== "finished"){
+    const panel = h("div",{class:"timer-panel"});
+    const sideIsCausation = state.timerSide === "causation";
+    const sidePlayer = getPlayer(state.currentPair.find(id=>state.roles[id]===state.timerSide));
+    const sideColor = sideIsCausation ? "var(--cause-color)" : "var(--effect-color)";
+
+    panel.appendChild(h("div",{class:`timer-turn ${state.timerSide}`},[
+      `${sidePlayer ? sidePlayer.name : ""} — ${state.timerSide==="causation" ? "Causation" : "Correlation"}'s turn to argue`
+    ]));
+
+    const pct = state.timeRemaining / state.timerLength;
+    const radius = 100, circumference = 2*Math.PI*radius;
+    const offset = circumference * (1-pct);
+    const ringColor = state.timeRemaining<=10 ? "var(--danger)" : sideColor;
+
+    const ringWrap = h("div",{class:"ring-wrap"});
+    const svgNS = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(svgNS,"svg");
+    svg.setAttribute("viewBox","0 0 220 220");
+    const bg = document.createElementNS(svgNS,"circle");
+    bg.setAttribute("class","ring-bg"); bg.setAttribute("cx","110"); bg.setAttribute("cy","110"); bg.setAttribute("r",radius);
+    const fg = document.createElementNS(svgNS,"circle");
+    fg.setAttribute("id","timerRingFg");
+    fg.setAttribute("class","ring-fg"); fg.setAttribute("cx","110"); fg.setAttribute("cy","110"); fg.setAttribute("r",radius);
+    fg.setAttribute("stroke", ringColor);
+    fg.setAttribute("stroke-dasharray", circumference);
+    fg.setAttribute("stroke-dashoffset", offset);
+    svg.appendChild(bg); svg.appendChild(fg);
+    ringWrap.appendChild(svg);
+
+    const mins = Math.floor(state.timeRemaining/60);
+    const secs = state.timeRemaining%60;
+    const timeStr = `${mins}:${secs<10?"0":""}${secs}`;
+    const timeEl = h("div",{id:"timerTimeText", class:"time"+(state.timeRemaining===0?" flash":"")},[timeStr]);
+    const center = h("div",{class:"ring-center"},[timeEl]);
+    ringWrap.appendChild(center);
+    panel.appendChild(ringWrap);
+
+    const controls = h("div",{class:"timer-controls"});
+    const isDoneWaiting = state.timerPhase==="done1" || state.timerPhase==="done2";
+    if(!isDoneWaiting){
+      const pauseBtn = h("button",{class:"btn", onclick:()=>toggleTimer()},[state.timerRunning ? "Pause" : "Resume"]);
+      const endBtn = h("button",{class:"btn ghost", onclick:()=>endTimerEarly()},["End Timer Early"]);
+      controls.appendChild(pauseBtn);
+      controls.appendChild(endBtn);
+    } else if(state.timerPhase==="done1"){
+      controls.appendChild(h("button",{class:"btn primary", onclick:()=>startSecondTimer()},["Start Rebuttal Timer →"]));
+    } else if(state.timerPhase==="done2"){
+      controls.appendChild(h("button",{class:"btn primary", onclick:()=>{ state.timerPhase="finished"; render(); }},["Continue to Vote →"]));
+    }
+    panel.appendChild(controls);
+    wrap.appendChild(panel);
+  }
+
+  if(state.timerPhase === "finished"){
+    const winnerPanel = h("div",{class:"winner-panel"});
+    winnerPanel.appendChild(h("h3",{},["Who Won the Round?"]));
+    const btns = h("div",{class:"winner-btns"});
+    const causePlayerId = state.currentPair.find(id=>state.roles[id]==="causation");
+    const corrPlayerId = state.currentPair.find(id=>state.roles[id]==="correlation");
+    const causePlayer = getPlayer(causePlayerId);
+    const corrPlayer = getPlayer(corrPlayerId);
+    btns.appendChild(h("button",{class:"winner-btn cause-side", onclick:()=>awardWinner(causePlayerId)},[
+      h("div",{class:"wname"},[causePlayer.name]),
+      h("div",{class:"wrole"},["Argued Causation"])
+    ]));
+    btns.appendChild(h("button",{class:"winner-btn effect-side", onclick:()=>awardWinner(corrPlayerId)},[
+      h("div",{class:"wname"},[corrPlayer.name]),
+      h("div",{class:"wrole"},["Argued Correlation"])
+    ]));
+    winnerPanel.appendChild(btns);
+    wrap.appendChild(winnerPanel);
+  }
+
+  return wrap;
+}
+
+function startTicking(){
+  clearInterval(timerInterval);
+  timerInterval = setInterval(()=>{
+    if(!state.timerRunning) return;
+    if(state.timeRemaining <= 0){
+      clearInterval(timerInterval);
+      onTimerComplete();
+      return;
+    }
+    state.timeRemaining -= 1;
+    if(state.timeRemaining <= 0){
+      state.timeRemaining = 0;
+      updateTimerDom();
+      clearInterval(timerInterval);
+      onTimerComplete();
+      return;
+    }
+    updateTimerDom();
+  }, 1000);
+}
+
+function updateTimerDom(){
+  // Mutate just the ring + time text in place each tick instead of a full
+  // render() — a full rebuild every second was rebuilding the whole screen
+  // (flicker, lost scroll position, and it defeated the ring's CSS transition
+  // since a brand-new <circle> was created every tick instead of animating).
+  const ringFg = document.getElementById("timerRingFg");
+  const timeEl = document.getElementById("timerTimeText");
+  if(!ringFg || !timeEl){ render(); return; } // fell out of sync somehow — fall back safely
+
+  const sideIsCausation = state.timerSide === "causation";
+  const sideColor = sideIsCausation ? "var(--cause-color)" : "var(--effect-color)";
+  const pct = state.timeRemaining / state.timerLength;
+  const radius = 100, circumference = 2*Math.PI*radius;
+  const offset = circumference * (1-pct);
+  const ringColor = state.timeRemaining<=10 ? "var(--danger)" : sideColor;
+
+  ringFg.setAttribute("stroke-dashoffset", offset);
+  ringFg.setAttribute("stroke", ringColor);
+
+  const mins = Math.floor(state.timeRemaining/60);
+  const secs = state.timeRemaining%60;
+  timeEl.textContent = `${mins}:${secs<10?"0":""}${secs}`;
+  timeEl.classList.toggle("flash", state.timeRemaining===0);
+}
+
+function onTimerComplete(){
+  playBeep();
+  if(state.timerPhase === "running1"){
+    state.timerPhase = "done1";
+    state.timerRunning = false;
+  } else if(state.timerPhase === "running2"){
+    state.timerPhase = "done2";
+    state.timerRunning = false;
+  }
+  render();
+}
+
+function toggleTimer(){
+  state.timerRunning = !state.timerRunning;
+  if(state.timerRunning) startTicking();
+  render();
+}
+
+function endTimerEarly(){
+  clearInterval(timerInterval);
+  state.timerRunning = false;
+  state.timeRemaining = 0;
+  onTimerComplete();
+}
+
+function startSecondTimer(){
+  state.timerPhase = "running2";
+  state.timerSide = "correlation";
+  state.timeRemaining = state.timerLength;
+  state.timerRunning = true;
+  render();
+  startTicking();
+}
+
+function playBeep(){
+  try{
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = "sine";
+    o.frequency.value = 880;
+    g.gain.setValueAtTime(0.0001, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.3, ctx.currentTime+0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime+0.5);
+    o.connect(g); g.connect(ctx.destination);
+    o.start();
+    o.stop(ctx.currentTime+0.55);
+  }catch(e){ /* audio not available, ignore */ }
+}
+
+/* =========================================================
+   AWARD WINNER / ROUND ADVANCE
+   ========================================================= */
+function awardWinner(winnerId){
+  const winner = getPlayer(winnerId);
+  const isPowerMatch = state.matchupStyle === "powermatch";
+  const loserId = state.currentPair.find(id=>id!==winnerId);
+  state.scores[winnerId] = (state.scores[winnerId]||0) + 1;
+  if(isPowerMatch){
+    state.losses[loserId] = (state.losses[loserId]||0) + 1;
+  }
+
+  state.history.push({
+    round: state.round,
+    cause: state.currentCause,
+    effect: state.currentEffect,
+    playerA: getPlayer(state.currentPair[0]).name,
+    playerB: getPlayer(state.currentPair[1]).name,
+    winnerName: winner.name
+  });
+
+  state.currentPair.forEach(id=>{
+    state.roundsPlayed[id] = (state.roundsPlayed[id]||0) + 1;
+  });
+  state.lastPair = state.currentPair.slice();
+
+  if(isPowerMatch){
+    // Two losses eliminates a player; the tournament ends once only one
+    // player has fewer than 2 losses left — the last match naturally plays
+    // out as the championship round.
+    const stillIn = state.players.filter(p => (state.losses[p.id]||0) < 2);
+    if(stillIn.length <= 1){
+      state.winnerId = stillIn.length===1 ? stillIn[0].id : winnerId;
+      state.screen = "win";
+      render();
+      return;
+    }
+  } else if(state.scores[winnerId] >= state.pointsToWin){
+    state.winnerId = winnerId;
+    state.screen = "win";
+    render();
+    return;
+  }
+
+  // advance to next round
+  state.round += 1;
+  state.roles = {};
+  state.cardsLocked = false;
+  state.timerPhase = "idle";
+  state.timerSide = null;
+  state.timeRemaining = state.timerLength;
+  state.timerRunning = false;
+  state.currentCause = null;
+  state.currentEffect = null;
+  // move any leftover displayed cards to discard (already handled by drawCard on next draw)
+  state.currentPair = pickNextPair();
+  render();
+}
+
+function showToast(msg){
+  state._toast = msg;
+  render();
+}
+
+function returnToSetup(){
+  clearInterval(timerInterval); // stop an in-progress round timer from ticking against a screen that's gone
+  const keptPlayers = state.players.map(p=>({id:p.id, name:p.name}));
+  state = defaultState();
+  state.players = keptPlayers;
+  state.screen = "home";
+  showReturnConfirm = false;
+  render();
+}
+
+/* =========================================================
+   WIN SCREEN
+   ========================================================= */
+function renderWin(){
+  const wrap = h("div",{class:"screen win-screen"});
+  const winner = getPlayer(state.winnerId);
+  const winnerIdx = playerIndex(state.winnerId);
+  const winnerColor = playerColor(winnerIdx);
+  const isPowerMatch = state.matchupStyle === "powermatch";
+
+  wrap.appendChild(h("div",{class:"trophy"},["🏆"]));
+  wrap.appendChild(h("h2",{},[isPowerMatch ? `${winner.name} is Champion!` : `${winner.name} Wins!`]));
+  wrap.appendChild(h("p",{class:"sub"},[
+    isPowerMatch
+      ? `Last player standing after ${state.round} round${state.round===1?"":"s"}.`
+      : `First to ${state.pointsToWin} points after ${state.round} round${state.round===1?"":"s"}.`
+  ]));
+
+  const scoresWrap = h("div",{class:"final-scores"});
+  const standings = state.players.slice().sort((a,b)=>{
+    if(isPowerMatch){
+      const la = state.losses[a.id]||0, lb = state.losses[b.id]||0;
+      if(la !== lb) return la - lb;
+    }
+    return (state.scores[b.id]||0)-(state.scores[a.id]||0);
+  });
+  standings.forEach(p=>{
+    const idx = playerIndex(p.id);
+    const isChamp = p.id === state.winnerId;
+    const displayVal = isPowerMatch ? `${state.scores[p.id]||0}-${state.losses[p.id]||0}` : String(state.scores[p.id]||0);
+    const card = h("div",{class:"final-score-card"+(isChamp?" champ":""), style: isChamp?`--pcolor:${winnerColor}`:""},[
+      h("div",{class:"fname"},[p.name]),
+      h("div",{class:"fpts", style:`color:${playerColor(idx)}`},[displayVal])
+    ]);
+    scoresWrap.appendChild(card);
+  });
+  wrap.appendChild(scoresWrap);
+
+  const btnRow = h("div",{class:"btn-row center"});
+  btnRow.appendChild(h("button",{class:"btn primary", onclick:()=>playAgain()},["Play Again"]));
+  btnRow.appendChild(h("button",{class:"btn ghost", onclick:()=>newGame()},["New Game (Reset Players)"]));
+  wrap.appendChild(btnRow);
+
+  launchConfetti();
+  return wrap;
+}
+
+function playAgain(){
+  const keptPlayers = state.players.map(p=>({id:p.id, name:p.name}));
+  state = defaultState();
+  state.players = keptPlayers;
+  state.screen = "home";
+  render();
+}
+
+function newGame(){
+  state = defaultState();
+  render();
+}
+
+function launchConfetti(){
+  const layer = document.createElement("div");
+  layer.className = "confetti-layer";
+  document.body.appendChild(layer);
+  const colors = PLAYER_COLORS;
+  const count = 90;
+  for(let i=0;i<count;i++){
+    const piece = document.createElement("div");
+    piece.className = "confetti-piece";
+    const size = 6 + Math.random()*8;
+    piece.style.width = size+"px";
+    piece.style.height = (size*0.4)+"px";
+    piece.style.left = (Math.random()*100)+"vw";
+    piece.style.background = colors[Math.floor(Math.random()*colors.length)];
+    const duration = 2.6 + Math.random()*2.2;
+    piece.style.animationDuration = duration+"s";
+    piece.style.animationDelay = (Math.random()*0.6)+"s";
+    layer.appendChild(piece);
+  }
+  setTimeout(()=>layer.remove(), 5200);
+}
+
+/* =========================================================
+   BOOT
+   ========================================================= */
+// if a game was mid-flight and timer was running before refresh, keep it paused (timerRunning=false already set in loadState)
+render();
+
+})();
+</script>
+</body>
+</html>
