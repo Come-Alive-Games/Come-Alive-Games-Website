@@ -85,11 +85,11 @@
   },
   {
     "slug": "parenting-the-card-game",
-    "title": "Parenting: the Card Game",
+    "title": "Parenting the Card Game",
     "category": "Party/Family",
     "status": "new",
     "version": "1.0",
-    "description": "Parenting: the Card Game is a dice-rolling toddler-care party game where 2 to 6 players juggle six frantic needs, Hunger, Health, Bladder, Sleep, Learning, and Happiness, using support cards to stay ahead of chaos before three strikes send them home.",
+    "description": "Parenting the Card Game is a dice-rolling toddler-care party game where 2 to 6 players juggle six frantic needs, Hunger, Health, Bladder, Sleep, Learning, and Happiness, using support cards to stay ahead of chaos before three strikes send them home.",
     "instructions": "On your turn, roll three dice: each number lowers one of your toddler's six care levels by 1, and rolling triples drops that level straight to 1. Any level at 1 triggers a crisis. If you're holding the matching Rescue Card for every level in crisis, they're played automatically and those levels jump up 3; otherwise you take a strike and the levels recover by 2 instead. Play a +2 card from your hand to boost a care level, then draw back up to 5 cards and pass the turn. Take three strikes and you're out; the last parent standing wins.",
     "knownIssues": [],
     "file": "parenting-the-card-game/index.html",
