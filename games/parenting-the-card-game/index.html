@@ -1,0 +1,211 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Parenting: the Card Game</title>
+<style>
+[hidden]{display:none!important}
+body{margin:0;height:100vh;overflow:hidden;font:bold 2.4vmin system-ui;color:#3b2a1a;background:linear-gradient(#f6e7cf 40%,#c79a6b 40%)}
+#room{position:fixed;inset:0;perspective:80vmin}
+#table{--s:1;position:absolute;left:50%;top:50%;width:calc(100vmin*var(--s));height:calc(100vmin*var(--s));margin:calc(-50vmin*var(--s));border-radius:50%;background:radial-gradient(#d39b62,#9a6436);box-shadow:inset 0 0 0 2vmin #7a4b28;transform:translateY(-6vmin) rotateX(60deg)}
+#table,#table div{transform-style:preserve-3d}
+#ring,.seat,#piles{position:absolute;left:50%;top:50%}
+#ring,.seat,.kid,.hand{transition:transform 1s}
+.kid{position:absolute;width:17vmin;left:-8.5vmin;top:calc(-15vmin*var(--s) - 13vmin)}
+.kid b{position:absolute;width:19%;height:12.7%;transform:translate(-50%,-50%);background:#faf6ee center/contain no-repeat;border:.4vmin solid #faf6ee;border-radius:1vmin}
+.kid span{position:absolute;top:50%;width:3.4vmin;line-height:3.4vmin;margin:-1.7vmin 1.4vmin;text-align:center;background:#fff;border-radius:.6vmin}
+#msg img{width:auto;height:4.5vmin;margin:0 .8vmin 0 .2vmin;vertical-align:middle}
+.kid i{position:absolute;top:100%;left:0;width:100%;text-align:center}
+.hand{position:absolute;bottom:-5vmin;left:-20vmin;width:40vmin;text-align:center;transform-origin:bottom}
+.hand img{width:10vmin;margin:0 -3vmin}
+.hand{transition:transform 1s,opacity .3s}
+body:not(.spin) .cur .hand{opacity:0}
+#mine{transition:opacity .3s,transform .3s}
+.spin #mine,.ai #mine{opacity:0;transform:translateY(8vmin)}
+img{width:100%;border-radius:1vmin;vertical-align:top}
+#piles{display:flex;gap:2vmin;transform:translate(-50%,-50%)}
+#piles img{width:calc(9vmin*var(--s))}
+#msg{position:fixed;top:2vmin;left:0;right:0;padding:0 36vmin;text-align:center;font-size:3.2vmin}
+#corner{position:fixed;top:2vmin;right:2vmin;display:flex;gap:1vmin}
+#menu:not([hidden])~#corner #quit{display:none}
+#rules>div{max-width:110vmin;max-height:85vh;overflow:auto;padding:1vmin 4vmin;border-radius:2vmin;background:#fffaf0;color:#3b2a1a;font:2.4vmin/1.5 system-ui;text-align:left}
+#rules img{width:auto;height:1.5em;vertical-align:middle}
+#board{position:fixed;top:2vmin;left:2vmin;padding:1vmin 2vmin;border-radius:1.5vmin;background:#fffaf0cc}
+#board p{margin:.8vmin 0}
+#board b{margin-left:.6vmin;font-size:3vmin;color:#ccc}
+#board .hit{color:red}
+#board .out,#board .out b{color:#aaa}
+#dice{position:fixed;right:2vmin;bottom:1vmin;display:flex;gap:1vmin;font:12vmin/1 'Segoe UI Symbol',system-ui;color:#fffaf0;text-shadow:0 .4vmin .8vmin #0006}
+#dice span{display:inline-block}
+#mine{position:fixed;bottom:1vmin;width:100%;display:flex;justify-content:center;gap:1vmin}
+#mine img{width:15vmin}
+.ok{cursor:pointer;box-shadow:0 0 0 .6vmin gold}
+.ov{position:fixed;inset:0;border:0;background:#000b;color:#fff;font:inherit;font-size:3.5vmin;display:grid;place-content:center;text-align:center}
+select,button{font:inherit}
+.ov h1{margin:0}
+.ov p{margin:1.2vmin}
+</style>
+
+<div id="room"><div id="table"><div id="piles"><img src="card designs/Parenting Card Back Design V3 - PNG.png"><img id="discard" hidden></div><div id="ring"></div></div></div>
+<div id="msg"></div>
+<div id="mine"></div>
+<div id="board"></div>
+<div id="dice"></div>
+<button id="pass" class="ov" onclick="roll()" hidden></button><div id="menu" class="ov">
+  <h1>Parenting: the Card Game</h1>
+  <p id="win"></p>
+  <p>Players <select id="count" onchange="rows()"><option>2<option>3<option selected>4<option>5<option>6</select></p>
+  <div id="seats"></div>
+  <p><label><input type="checkbox" id="passOn"> Pass screen between human turns</label></p>
+  <p><label><input type="checkbox" id="diceOn"> Show Dice Rolling</label></p>
+  <p><button onclick="start()">Start Game</button></p>
+</div>
+<div id="rules" class="ov" onclick="this.hidden = true" hidden><div>
+  <h2>How to Play</h2>
+  <p><b>Goal:</b> Keep your toddler's needs met. Three strikes and you're out. The last parent standing wins!</p>
+  <h3>Care Levels</h3>
+  <p>Every toddler has six care levels. Each starts at 4 and stays between 1 and 6. The number beside each symbol on a toddler card is that level, and it turns red at 2 or below.</p>
+  <p>{0} Hunger &nbsp; {1} Health &nbsp; {2} Bladder &nbsp; {3} Sleep &nbsp; {4} Learning &nbsp; {5} Happiness</p>
+  <h3>Your Turn</h3>
+  <ol>
+    <li><b>Roll:</b> Three dice roll for you. Each number lowers its care level by 1:<br>1 = {0} &nbsp; 2 = {1} &nbsp; 3 = {2} &nbsp; 4 = {3} &nbsp; 5 = {4} &nbsp; 6 = {5}</li>
+    <li><b>Triples:</b> If all three dice match, that care level drops straight to 1.</li>
+    <li><b>Crisis:</b> Any care level at 1 is in crisis (see below).</li>
+    <li><b>Play a Card:</b> Click one of your glowing +2 cards to add 2 to that care level (up to 6).</li>
+    <li><b>Draw:</b> Your hand refills to 5 cards, and the table turns to the next player.</li>
+  </ol>
+  <h3>Parenting Support Cards</h3>
+  <ul>
+    <li><b>+2 Cards</b> show +2 and a care symbol, like +2 {0}. Play one each turn.</li>
+    <li><b>Rescue Cards</b> show a life preserver and a care symbol, like {6}{0}. They are only used during a crisis.</li>
+  </ul>
+  <h3>Toddler in Crisis</h3>
+  <ul>
+    <li>If you hold the matching Rescue Card {6} for every care level in crisis, they are played for you and each of those levels goes up 3.</li>
+    <li>If not, you take a strike, each level in crisis goes up 2, and you keep your Rescue Cards for later.</li>
+    <li>You can only get one strike per turn.</li>
+  </ul>
+  <p><i>Click anywhere to close.</i></p>
+</div></div>
+<div id="corner"><button id="quit" onclick="quit()">Quit Game</button><button onclick="rules.hidden = !rules.hidden">How to Play</button></div>
+
+<script>
+const STATS = ['Hunger', 'Health', 'Bladder', 'Sleep', 'Learning', 'Happiness'];
+// Cards 0-5 are +2 cards, 6-11 are Rescue cards; card % 6 is the care level it helps.
+const NAMES = ['Snack Time', 'Fruits and Veggies', 'Potty Training', 'Nap Time', 'Bedtime Story', 'Playtime',
+  'Banana Split', "Doctor's Visit", 'Diaper Change', 'Peaceful Sleep', 'School Day', 'Park Day'];
+const KIDS = '1 Acer,1B Maria,2 Leonardo,2B Teresa,3 Cece,3B Austin,4 Charlotte,4B Charley,5 Bentley,5B Sally,6 Anna,6B Adam'.split(',');
+const BACK = 'Parenting Card Back Design V3';
+const img = n => `card designs/${n} - PNG.png`;
+const icon = i => `attribute designs/Parenting Symbol ${['Apple', 'Heart', 'Toilet', 'Bed', 'Books', 'Sun', 'Lifebouy'][i]} - PNG.png`;
+const ic = i => `<img src="${icon(i)}">`;
+rules.innerHTML = rules.innerHTML.replace(/\{(\d)\}/g, (_, i) => ic(i)); // {0}-{5} in the rules become care symbols
+let P, deck, pile, cur, rot, phase;
+// Delayed steps only run if the same game is still going (quitting or restarting cancels them).
+const later = (f, ms) => { const game = P; setTimeout(() => game == P && f(), ms) };
+function quit() { if (confirm('Quit this game? Your game progress will be lost.')) { P = null; clearInterval(tumble); pass.hidden = true; menu.hidden = false } }
+// Dice faces 0-5; tilt 1 gives each die a random wobble while tumbling, tilt 0 lays them flat.
+let tumble;
+const showDice = (d, tilt) => dice.innerHTML = d.map(i => `<span style="rotate:${tilt * (Math.random() * 50 - 25)}deg">${'⚀⚁⚂⚃⚄⚅'[i]}</span>`).join('');
+
+seats.innerHTML = KIDS.slice(0, 6).map((_, i) => `<p>Player ${i + 1}
+  <select><option>Human<option ${i ? 'selected' : ''}>Computer</select>
+  <select>${KIDS.map((k, j) => `<option value=${j} ${j == i * 2 ? 'selected' : ''}>${k.split(' ')[1]}`).join('')}</select>`).join('');
+function rows() { [...seats.children].forEach((r, i) => r.hidden = i >= count.value) }
+rows();
+
+function shuffle(a) { for (let i = a.length; i > 1;) { const j = Math.random() * i-- | 0; [a[i], a[j]] = [a[j], a[i]] } return a }
+function draw(p) { while (p.hand.length < 5) { if (!deck.length) deck = shuffle(pile.splice(0)); p.hand.push(deck.pop()) } }
+function play(p, c) { p.hand.splice(p.hand.indexOf(c), 1); pile.push(c); p.lv[c % 6] = Math.min(6, p.lv[c % 6] + (c > 5 ? 3 : 2)) }
+
+function start() {
+  deck = shuffle([...Array(48)].map((_, i) => i < 30 ? i % 6 : 6 + i % 6)); // 5 of each +2, 3 of each Rescue
+  pile = []; rot = 0; phase = 0;
+  P = [...seats.children].filter(r => !r.hidden).map(r => {
+    const [type, kid] = r.querySelectorAll('select');
+    return { ai: type.value == 'Computer', kid: KIDS[kid.value], name: KIDS[kid.value].split(' ')[1], lv: [4, 4, 4, 4, 4, 4], hand: [], strikes: 0 };
+  });
+  P.forEach(draw);
+  cur = Math.random() * P.length | 0; // random first player
+  table.style.setProperty('--s', .7 + Math.min(P.length, 5) / 12); // bigger table for more players: 2 = 0.87x ... 5 and 6 = 1.12x
+  ring.innerHTML = P.map(() => '<div class="seat"><div class="kid"></div><div class="hand"></div></div>').join('');
+  win.textContent = msg.textContent = '';
+  menu.hidden = true;
+  dice.hidden = !diceOn.checked;
+  dice.innerHTML = '';
+  turn();
+}
+
+function turn() {
+  const alive = P.filter(p => !p.out);
+  // Spin the table counterclockwise until the current player's seat is at the bottom.
+  rot -= ((rot + alive.indexOf(P[cur]) * 360 / alive.length) % 360 + 360) % 360;
+  if (!P[cur].ai && passOn.checked && P.filter(q => !q.ai && !q.out).length > 1) { pass.textContent = `Pass to ${P[cur].name}'s parent, then click here`; pass.hidden = false }
+  else later(roll, 1450); // spin ends at 1s, then a pause so the dice changes are easy to see
+  // Dice tumble while the table spins, until roll() lands them on the real numbers.
+  clearInterval(tumble);
+  if (!dice.hidden) tumble = setInterval(() => showDice([0, 0, 0].map(() => Math.random() * 6 | 0), 1), 90);
+  // While the table spins, every seat keeps its hand; the turn player picks up their cards once it stops.
+  document.body.classList.add('spin');
+  later(() => { document.body.classList.remove('spin'); render() }, 1000);
+  render();
+}
+
+function roll() {
+  pass.hidden = true;
+  const p = P[cur], d = [0, 0, 0].map(() => Math.random() * 6 | 0);
+  d.forEach(i => p.lv[i] = Math.max(1, p.lv[i] - 1));
+  if (d[0] == d[1] && d[1] == d[2]) p.lv[d[0]] = 1;
+  clearInterval(tumble);
+  showDice(d, 0);
+  let t = `${p.name} rolled ${d.map(i => i + 1 + ic(i)).join(' ')}. `;
+  const crisis = [0, 1, 2, 3, 4, 5].filter(i => p.lv[i] == 1);
+  if (crisis.length) {
+    t += `Crisis: ${crisis.map(i => ic(i) + STATS[i]).join(', ')}! `;
+    // Rescue only if every crisis can be rescued; otherwise take the one strike and save the Rescue cards.
+    if (crisis.every(i => p.hand.includes(i + 6))) { crisis.forEach(i => play(p, i + 6)); t += `Rescued with ${crisis.map(i => ic(6) + ic(i)).join(' ')}! ` }
+    else { crisis.forEach(i => p.lv[i] += 2); t += `Strike ${++p.strikes}! ` }
+  }
+  if (p.strikes > 2) { p.out = 1; pile.push(...p.hand.splice(0)); msg.innerHTML = t + `${p.name} is out.`; render(); return later(pick, 2500) }
+  const ok = p.hand.filter(c => c < 6);
+  phase = !p.ai && ok.length;
+  msg.innerHTML = t + (phase ? 'Play a +2 card.' : '');
+  render();
+  if (!phase) later(() => pick(ok.sort((a, b) => p.lv[a] - p.lv[b])[0]), 2000);
+}
+
+function pick(c) {
+  if (c != null) { play(P[cur], c); msg.innerHTML = `${P[cur].name} played ${NAMES[c]} (+2 ${ic(c)}).` }
+  phase = 0;
+  if (!P[cur].out) draw(P[cur]);
+  const alive = P.filter(p => !p.out);
+  if (alive.length < 2) { win.textContent = `${alive[0].name}'s parent wins!`; render(); return menu.hidden = false }
+  render();
+  // After a +2 card, pause so the raised number is easy to spot before the table spins.
+  later(() => { do cur = (cur + 1) % P.length; while (P[cur].out); turn() }, c == null ? 0 : 800);
+}
+
+function render() {
+  const alive = P.filter(p => !p.out), p = P[cur];
+  ring.style.transform = `rotate(${rot}deg)`;
+  P.forEach((q, i) => {
+    const seat = ring.children[i], [kid, hand] = seat.children, a = alive.indexOf(q) * 360 / alive.length;
+    const upright = `rotate(${-a - rot}deg)`; // cancels the table spin so cards stay upright on screen
+    seat.hidden = q.out;
+    seat.className = q == p ? 'seat cur' : 'seat';
+    seat.style.transform = `rotate(${a}deg) translateY(calc(40vmin*var(--s)))`;
+    kid.style.transform = upright;
+    kid.innerHTML = `<img src="${img('Parenting Character Card ' + q.kid.replace(' ', ' - '))}">` +
+      // Crisp icon over each printed box, with its number just outside the card edge (left column left, right column right).
+      q.lv.map((v, j) => `<b style="left:${j % 2 ? 81.5 : 18.7}%;top:${[33.6, 58.3, 83][j >> 1]}%;background-image:url('${icon(j)}')">` +
+        `<span style="${j % 2 ? 'left' : 'right'}:100%;color:${v < 3 ? 'red' : ''}">${v}</span></b>`).join('') +
+      `<i>${q.name}</i>`;
+    hand.style.transform = upright + ' rotateX(-50deg)';
+    hand.innerHTML = q.hand.map(() => `<img src="${img(BACK)}">`).join('');
+  });
+  // Strike tracker: three grey X's per player turn red as strikes land; eliminated players are greyed out.
+  board.innerHTML = P.map(q => `<p class="${q.out ? 'out' : ''}">${q.name}${[0, 1, 2].map(k => `<b class="${k < q.strikes ? 'hit' : ''}">✖</b>`).join('')}</p>`).join('');
+  document.body.classList.toggle('ai', p.ai); // computer turns show no hand at the bottom
+  mine.innerHTML = p.hand.map(c => `<img src="${img(p.ai || !pass.hidden || document.body.classList.contains('spin') ? BACK : NAMES[c])}" ${phase && c < 6 ? `class="ok" onclick="pick(${c})"` : ''}>`).join('');
+  discard.hidden = !pile.length;
+  if (pile.length) discard.src = img(NAMES[pile.at(-1)]);
+}
+</script>
