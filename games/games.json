@@ -94,5 +94,16 @@
     "knownIssues": [],
     "file": "parenting-the-card-game/index.html",
     "gameCrafterUrl": "https://www.thegamecrafter.com/games/parenting-the-card-game"
+  },
+  {
+    "slug": "bust",
+    "title": "Bust!",
+    "category": "Strategy/Push Your Luck",
+    "status": "new",
+    "version": "1.1",
+    "description": "Bust! is a fast, cutthroat card game played with a standard deck plus two Jokers. Players take turns pushing a shared count up and down, trying to empty their hand without sending the count below 0 or above 20.",
+    "instructions": "Each player is dealt 7 cards, and a flipped number card sets the starting count. On your turn, play one card from your hand or gamble on the top card of the draw pile. Red number cards add to the count and black number cards subtract from it. Aces are worth 1 and reverse the direction of play. A red Queen sets the count to 20 and a black Queen sets it to 0. A Jack skips the next player and makes them draw a card, a Joker forces the next player to play blind from the draw pile, and a King forces the next player to play a card of the King's color. Push the count below 0 or above 20 and you bust out of the game. Play your last card, or be the last player standing, to win!",
+    "knownIssues": [],
+    "file": "bust.html"
   }
 ]

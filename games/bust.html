@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bust! — Card Game</title>
+<style>
+  :root{
+    --felt:#136f3f; --felt-dark:#0a4527; --gold:#f2c14e; --gold-dark:#a67c17;
+    --ink:#1c1c1c; --red:#c8102e; --panel:rgba(0,0,0,.26); --text:#f5f1e6;
+    --bad:#ff5a6e; --good:#58d68d;
+  }
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  html,body{margin:0;min-height:100%}
+  body{
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--text);
+    background:radial-gradient(ellipse at 50% 35%,#1b8c52 0%,var(--felt) 45%,var(--felt-dark) 100%) fixed;
+    overflow-x:hidden;
+  }
+  button{font:inherit;cursor:pointer}
+  .btn{background:var(--gold);color:#2a1d00;border:none;border-radius:10px;padding:.6em 1.15em;font-weight:700;box-shadow:0 3px 0 var(--gold-dark);transition:filter .15s}
+  .btn:hover{filter:brightness(1.08)}
+  .btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--gold-dark)}
+  .btn.ghost{background:rgba(255,255,255,.1);color:var(--text);box-shadow:none;border:1px solid rgba(255,255,255,.25)}
+  .btn.small{padding:.35em .8em;font-size:.9rem}
+  .btn:disabled{opacity:.4;cursor:not-allowed;transform:none;filter:none}
+
+  /* ---------- Cards ---------- */
+  .card{--cw:80px;width:var(--cw);height:calc(var(--cw)*1.4);background:#fffdf6;border-radius:calc(var(--cw)*.1);position:relative;color:var(--ink);
+    box-shadow:0 2px 6px rgba(0,0,0,.35);border:1px solid #d9d2bd;user-select:none;flex:none;font-family:Georgia,"Times New Roman",serif}
+  .card.red{color:var(--red)}
+  .card .corner{position:absolute;line-height:.95;font-weight:700;font-size:calc(var(--cw)*.19);text-align:center}
+  .card .tl{top:5%;left:7%}
+  .card .br{bottom:5%;right:7%;transform:rotate(180deg)}
+  .card .mid{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
+  .card .mid b{font-size:calc(var(--cw)*.44)}
+  .card .mid span{font-size:calc(var(--cw)*.3)}
+  .card .frame{width:58%;height:62%;border:2px solid currentColor;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,.035)}
+  .card .frame b{font-size:calc(var(--cw)*.36)}
+  .card .frame span{font-size:calc(var(--cw)*.24)}
+  .card.back{background:repeating-linear-gradient(45deg,#8b1e2d 0 6px,#a8283a 6px 12px);border:4px solid #fffdf6}
+  .card.joker{color:#6b2fa0}
+  .card .frame .jk{font-size:calc(var(--cw)*.12);font-weight:700;letter-spacing:.04em;margin-bottom:2px}
+
+  /* ---------- Menu ---------- */
+  #menu{min-height:100vh;display:grid;place-items:center;padding:1.5rem}
+  .menu-card{background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.12);border-radius:24px;padding:1.8rem 2rem 2rem;width:100%;max-width:540px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+  .fan{display:flex;justify-content:center;height:92px;margin-bottom:.2rem}
+  .fan .card{--cw:58px;margin:0 -10px;transform-origin:50% 120%}
+  .fan .card:nth-child(1){transform:rotate(-16deg)}
+  .fan .card:nth-child(3){transform:rotate(16deg)}
+  .logo{font-size:clamp(3rem,10vw,4.2rem);margin:0;text-align:center;letter-spacing:.06em;color:var(--gold);text-shadow:0 5px 0 #6e510c;font-weight:900}
+  .tag{text-align:center;margin:.3rem 0 1.4rem;opacity:.85}
+  .field{margin:1rem 0}
+  .field>label,.field-label{display:block;font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;opacity:.75;margin-bottom:.4rem;font-weight:700}
+  .seg{display:inline-flex;background:rgba(0,0,0,.3);border-radius:10px;padding:3px;gap:2px}
+  .seg button{background:none;border:none;color:var(--text);padding:.38rem .8rem;border-radius:8px;font-weight:600}
+  .seg button.on{background:var(--gold);color:#2a1d00}
+  .seat-row{display:flex;gap:.5rem;align-items:center;margin:.4rem 0}
+  .seat-num{width:2rem;font-weight:800;opacity:.7}
+  .seat-row input{flex:1;min-width:0;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22);color:var(--text);border-radius:8px;padding:.45rem .6rem;font:inherit}
+  .seat-row input:focus{outline:2px solid var(--gold);outline-offset:1px}
+  .opt{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.55rem 0;border-top:1px solid rgba(255,255,255,.08)}
+  .opt small{display:block;opacity:.7}
+  .switch{position:relative;width:46px;height:26px;flex:none}
+  .switch input{opacity:0;width:0;height:0}
+  .switch span{position:absolute;inset:0;background:rgba(0,0,0,.4);border-radius:99px;transition:.2s;cursor:pointer}
+  .switch span::after{content:"";position:absolute;width:20px;height:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}
+  .switch input:checked+span{background:var(--gold)}
+  .switch input:checked+span::after{transform:translateX(20px)}
+  .switch input:focus-visible+span{outline:2px solid #fff}
+  .err{color:#ffd0d6;min-height:1.3em;margin:.8rem 0 0;font-weight:600;text-align:center}
+  .menu-actions{display:flex;gap:.6rem;justify-content:center;margin-top:.8rem}
+  .menu-actions .btn{min-width:130px}
+
+  /* ---------- Game ---------- */
+  #game{min-height:100vh;display:flex;flex-direction:column}
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.55rem 1rem;background:rgba(0,0,0,.28);border-bottom:1px solid rgba(255,255,255,.08);flex-wrap:wrap}
+  .brand{font-weight:900;letter-spacing:.08em;color:var(--gold);font-size:1.2rem}
+  #turnInfo{font-size:1.05rem}
+  .top-actions{display:flex;gap:.4rem}
+  .main{flex:1;display:flex;gap:1rem;padding:1rem;align-items:flex-start}
+  .board{flex:1;display:flex;flex-direction:column;gap:.9rem;min-width:0}
+  .log{width:290px;background:var(--panel);border-radius:14px;padding:.8rem 1rem;overflow:auto;max-height:calc(100vh - 90px);position:sticky;top:1rem;flex:none}
+  .log h3{margin:0 0 .5rem;font-size:.85rem;text-transform:uppercase;letter-spacing:.08em;opacity:.8}
+  .log ol{list-style:none;margin:0;padding:0;font-size:.85rem}
+  .log li{padding:.3rem 0;border-bottom:1px solid rgba(255,255,255,.07);line-height:1.35}
+  .log li.out{color:#ffb3bd}.log li.skip{color:#ffe29a}.log li.sys{opacity:.7;font-style:italic}.log li.win{color:var(--gold);font-weight:700}
+  @media (max-width:980px){.main{flex-direction:column;align-items:stretch}.log{width:auto;max-height:220px;position:static}}
+
+  .seats{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:.35rem}
+  .seat{background:var(--panel);border:2px solid transparent;border-radius:12px;padding:.45rem .7rem;min-width:118px;transition:transform .2s,box-shadow .2s,border-color .2s}
+  .seat.current{border-color:var(--gold);box-shadow:0 0 0 4px rgba(242,193,78,.2),0 0 22px rgba(242,193,78,.35);transform:translateY(-2px)}
+  .seat.out{opacity:.45}
+  .seat.out .seat-name{text-decoration:line-through}
+  .seat.winner{border-color:var(--gold);background:rgba(242,193,78,.2)}
+  .seat-name{font-weight:700;white-space:nowrap}
+  .seat-tag{font-size:.65rem;font-weight:800;background:rgba(255,255,255,.15);border-radius:4px;padding:1px 4px;margin-left:4px;vertical-align:2px}
+  .seat-minis{display:flex;height:20px;margin:.3rem 0 .15rem;padding-left:2px}
+  .seat-minis i{width:14px;height:20px;border-radius:2px;background:repeating-linear-gradient(45deg,#8b1e2d 0 3px,#a8283a 3px 6px);border:1px solid #fff;margin-right:-7px;box-shadow:0 1px 2px rgba(0,0,0,.4)}
+  .seat-count{font-size:.8rem;opacity:.85}
+  .seat-count .last{color:var(--gold);font-weight:800}
+  .seat-arrow{font-size:1.4rem;opacity:.55;font-weight:900}
+
+  .table{display:flex;justify-content:center;align-items:center;gap:clamp(1rem,4vw,3.2rem);flex-wrap:wrap;padding:1rem;background:rgba(0,0,0,.14);border-radius:24px;border:1px solid rgba(255,255,255,.07)}
+  .pile-wrap{display:flex;flex-direction:column;align-items:center;gap:.4rem}
+  .pile{--pw:clamp(74px,9vw,104px);width:calc(var(--pw) + 24px);height:calc(var(--pw)*1.4 + 24px);position:relative;border-radius:12px}
+  .pile>.slot{position:absolute;left:12px;top:12px;width:var(--pw);height:calc(var(--pw)*1.4);border:2px dashed rgba(255,255,255,.25);border-radius:10px}
+  .pile>.card{--cw:var(--pw);position:absolute;left:12px;top:12px}
+  .pile.clickable{cursor:pointer}
+  .pile.clickable>.card:last-child{box-shadow:0 0 0 3px var(--gold),0 6px 16px rgba(0,0,0,.4)}
+  .pile.clickable:hover>.card:last-child{transform:translate(-4px,-8px)}
+  .pile-label{font-size:.8rem;opacity:.8;text-align:center}
+  .enter{animation:enter .35s ease-out}
+  @keyframes enter{from{opacity:0;transform:translateY(-36px) scale(1.12) rotate(var(--r,0deg))}to{opacity:1;transform:rotate(var(--r,0deg))}}
+
+  .counter{text-align:center;min-width:230px}
+  .counter-label{font-size:.75rem;text-transform:uppercase;letter-spacing:.12em;opacity:.75;font-weight:700}
+  .total{font-size:clamp(3.6rem,9vw,6rem);font-weight:900;line-height:1;text-shadow:0 4px 0 rgba(0,0,0,.3);font-variant-numeric:tabular-nums}
+  .total.danger{color:#ffd166}
+  .total.bust{color:var(--bad)}
+  .pulse{animation:pulse .4s ease-out}
+  .shake{animation:shake .5s}
+  @keyframes pulse{0%{transform:scale(1.25)}100%{transform:scale(1)}}
+  @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+  .gauge{position:relative;height:14px;border-radius:99px;margin:.7rem 6px .25rem;
+    background:linear-gradient(90deg,#e04b5a 0,#e0b04b 14%,#4bd08a 32%,#4bd08a 68%,#e0b04b 86%,#e04b5a 100%)}
+  .gauge-marker{position:absolute;top:-6px;width:8px;height:26px;background:#fff;border-radius:4px;transform:translateX(-50%);box-shadow:0 0 0 2px rgba(0,0,0,.45);transition:left .4s}
+  .gauge-scale{display:flex;justify-content:space-between;font-size:.72rem;opacity:.7;margin:0 2px}
+  .req{margin:.2rem auto .5rem;display:inline-block;padding:.3rem .8rem;border-radius:99px;font-weight:800;font-size:.9rem;background:#fffdf6;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+  .req.red{color:var(--red)} .req.black{color:var(--ink)}
+  .dir{margin-top:.5rem;font-size:.85rem;opacity:.85}
+
+  .status{text-align:center;min-height:1.5em;font-size:1rem;padding:0 .5rem}
+  .hand-area{background:rgba(0,0,0,.22);border-radius:18px;padding:.8rem 1rem 1rem}
+  .hand-head{display:flex;justify-content:space-between;align-items:center;gap:.8rem;flex-wrap:wrap;margin-bottom:.6rem}
+  #handTitle{font-weight:700}
+  #handTitle span{opacity:.7;font-weight:500}
+  #handTitle em{font-style:normal;background:var(--gold);color:#2a1d00;border-radius:6px;padding:1px 7px;margin-left:8px;font-size:.8rem;font-weight:800}
+  .hand{display:flex;flex-wrap:wrap;justify-content:center;gap:.45rem;min-height:140px;align-items:flex-start}
+  .hand-card{background:none;border:none;padding:0 0 22px;position:relative;transition:transform .15s;color:inherit}
+  .hand-card .card{--cw:clamp(58px,7vw,84px)}
+  .hand-card.playable:hover,.hand-card.playable:focus-visible{transform:translateY(-10px);outline:none}
+  .hand-card.playable .card{box-shadow:0 0 0 3px var(--gold),0 6px 14px rgba(0,0,0,.4)}
+  .hand-card.illegal{opacity:.38;cursor:not-allowed}
+  .hand-card.idle{cursor:default}
+  .preview{position:absolute;bottom:0;left:50%;transform:translateX(-50%);font-size:.72rem;font-weight:800;white-space:nowrap;background:rgba(0,0,0,.5);padding:1px 7px;border-radius:99px}
+  .preview.warn{color:#ffd166}
+  .preview.bad{color:#fff;background:var(--red)}
+  .hand-empty{opacity:.8;padding:2.5rem 1rem;text-align:center}
+
+  /* ---------- Overlays ---------- */
+  .overlay{position:fixed;inset:0;background:rgba(4,22,12,.78);display:grid;place-items:center;z-index:50;padding:1rem;backdrop-filter:blur(3px)}
+  .modal{background:#fbf8ef;color:#1f2a24;border-radius:18px;padding:1.4rem 1.6rem;max-width:600px;width:100%;max-height:90vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+  .modal h2{margin:.1rem 0 .8rem}
+  .modal h3{margin:1.1rem 0 .4rem;font-size:1rem}
+  .modal p,.modal li{line-height:1.5}
+  .modal ul{padding-left:1.2rem;margin:.3rem 0}
+  .modal table{border-collapse:collapse;width:100%;font-size:.92rem}
+  .modal td{padding:.35rem .4rem;border-bottom:1px solid #e4dcc6;vertical-align:top}
+  .modal td:first-child{font-weight:700;white-space:nowrap}
+  .modal .btn.ghost{color:#1f2a24;border-color:#c9bfa5;background:#f1ecdf}
+  .modal-actions{display:flex;gap:.6rem;justify-content:flex-end;margin-top:1.2rem;flex-wrap:wrap}
+  .r{color:var(--red)}
+  #cover{background:radial-gradient(ellipse at center,#16804a,var(--felt-dark));backdrop-filter:none}
+  .cover-box{text-align:center}
+  .cover-box h2{font-size:clamp(2rem,6vw,3rem);margin:.4rem 0 1.4rem}
+  .cover-box p{opacity:.8;margin:0}
+  .winner-big{text-align:center}
+  .winner-big .trophy{font-size:3.5rem}
+  .winner-big h2{margin:.2rem 0}
+  .standings{margin-top:1rem}
+  .standings li{display:flex;justify-content:space-between;border-bottom:1px solid #e4dcc6;padding:.35rem 0;list-style:none}
+  .standings{padding:0}
+
+  #toasts{position:fixed;top:64px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;gap:.4rem;z-index:40;pointer-events:none;align-items:center;width:max-content;max-width:92vw}
+  .toast{background:rgba(12,12,12,.9);padding:.5rem 1.1rem;border-radius:12px;text-align:center;animation:toastIn .25s ease-out;border-left:4px solid var(--gold);transition:opacity .35s}
+  .toast.bad{border-color:var(--bad)}
+  .toast b{display:block;font-size:1.1rem}
+  .toast small{opacity:.8}
+  .toast.bad b{color:var(--bad)}
+  .toast.leave{opacity:0}
+  @keyframes toastIn{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+
+<!-- ================= MENU ================= -->
+<section id="menu">
+  <div class="menu-card">
+    <div class="fan" id="menuFan"></div>
+    <h1 class="logo">BUST!</h1>
+    <p class="tag">Keep the count between 0 and 20.<br>Empty your hand — or be the last one standing.</p>
+
+    <div class="field">
+      <label>Number of players</label>
+      <div class="seg" id="countBtns"></div>
+    </div>
+
+    <div class="field">
+      <span class="field-label">Seats</span>
+      <div id="seatRows"></div>
+    </div>
+
+    <div class="field">
+      <span class="field-label">Options</span>
+      <div class="opt">
+        <div>Cover screen between turns<small>Hides hands and asks to pass the device (for 2+ human players)</small></div>
+        <label class="switch"><input type="checkbox" id="optCover"><span></span></label>
+      </div>
+      <div class="opt">
+        <div>Show play previews<small>Shows what each card would do to the count</small></div>
+        <label class="switch"><input type="checkbox" id="optPreview"><span></span></label>
+      </div>
+      <div class="opt">
+        <div>Computer speed</div>
+        <div class="seg" id="speedBtns"></div>
+      </div>
+    </div>
+
+    <p class="err" id="menuErr"></p>
+    <div class="menu-actions">
+      <button class="btn ghost" id="menuRules">Rules</button>
+      <button class="btn" id="startBtn">Deal Cards</button>
+    </div>
+  </div>
+</section>
+
+<!-- ================= GAME ================= -->
+<section id="game" hidden>
+  <header class="topbar">
+    <div class="brand">BUST!</div>
+    <div id="turnInfo"></div>
+    <div class="top-actions">
+      <button class="btn ghost small" id="logToggle">Log</button>
+      <button class="btn ghost small" id="gameRules">Rules</button>
+      <button class="btn ghost small" id="quitBtn">Menu</button>
+    </div>
+  </header>
+  <div class="main">
+    <div class="board">
+      <div class="seats" id="seats"></div>
+
+      <div class="table">
+        <div class="pile-wrap">
+          <div class="pile" id="drawPile" title="Draw pile"></div>
+          <div class="pile-label">Draw pile · <span id="deckCount">0</span></div>
+        </div>
+
+        <div class="counter">
+          <div id="reqBanner"></div>
+          <div class="counter-label">Count</div>
+          <div class="total" id="total">0</div>
+          <div class="gauge"><div class="gauge-marker" id="gaugeMarker"></div></div>
+          <div class="gauge-scale"><span>0</span><span>10</span><span>20</span></div>
+          <div class="dir" id="dirInfo"></div>
+        </div>
+
+        <div class="pile-wrap">
+          <div class="pile" id="playPile"></div>
+          <div class="pile-label">Play pile · <span id="pileCount">0</span></div>
+        </div>
+      </div>
+
+      <div class="status" id="status"></div>
+
+      <div class="hand-area">
+        <div class="hand-head">
+          <div id="handTitle"></div>
+          <button class="btn" id="blindBtn">Play top card of draw pile</button>
+        </div>
+        <div class="hand" id="hand"></div>
+      </div>
+    </div>
+
+    <aside class="log" id="logPanel">
+      <h3>Game log</h3>
+      <ol id="logList"></ol>
+    </aside>
+  </div>
+</section>
+
+<div id="toasts"></div>
+
+<!-- Cover screen -->
+<div class="overlay" id="cover" hidden>
+  <div class="cover-box">
+    <p>Pass the device to</p>
+    <h2 id="coverName"></h2>
+    <button class="btn" id="coverBtn">I'm ready — show my hand</button>
+  </div>
+</div>
+
+<!-- Game over -->
+<div class="overlay" id="overModal" hidden>
+  <div class="modal">
+    <div class="winner-big">
+      <div class="trophy">🏆</div>
+      <h2 id="overTitle"></h2>
+      <p id="overReason"></p>
+    </div>
+    <ol class="standings" id="standings"></ol>
+    <div class="modal-actions">
+      <button class="btn ghost" id="overMenu">Main menu</button>
+      <button class="btn" id="overAgain">Play again</button>
+    </div>
+  </div>
+</div>
+
+<!-- Rules -->
+<div class="overlay" id="rulesModal" hidden>
+  <div class="modal">
+    <h2>How to play Bust!</h2>
+    <h3>Goal</h3>
+    <p>Win by <b>playing every card in your hand</b>, or by being the <b>last player remaining</b>.</p>
+    <h3>Setup</h3>
+    <ul>
+      <li>A standard 52-card deck plus two Jokers (54 cards). 2–6 players; each is dealt 7 cards. The rest form the draw pile.</li>
+      <li>The top card of the draw pile starts the play pile and sets the count. It must be a number card (A–10). Face cards and Jokers are shuffled back and another is flipped. It always counts as positive.</li>
+      <li>Play starts clockwise.</li>
+    </ul>
+    <h3>Your turn</h3>
+    <ul>
+      <li>Play one card from your hand, <b>or</b> play the top card of the draw pile blind — its effect applies no matter what it is.</li>
+      <li>If the count goes <b>below 0 or above 20</b>, you <b>bust</b> and are eliminated. 0 and 20 are safe.</li>
+      <li>Playing your last card wins instantly — unless that card busts you.</li>
+    </ul>
+    <h3>Cards</h3>
+    <table>
+      <tr><td class="r">Red 2–10</td><td>Add the value to the count.</td></tr>
+      <tr><td>Black 2–10</td><td>Subtract the value from the count.</td></tr>
+      <tr><td>Aces</td><td>Worth 1 (red +1, black −1) and <b>reverse the direction</b> of play.</td></tr>
+      <tr><td class="r">Red Queen</td><td>Count becomes 20.</td></tr>
+      <tr><td>Black Queen</td><td>Count becomes 0.</td></tr>
+      <tr><td>Jacks</td><td>The next player's turn is skipped, and they draw 1 card.</td></tr>
+      <tr><td>Jokers</td><td>The next player must play the top card of the draw pile, blind. Jokers have no color.</td></tr>
+      <tr><td class="r">Red King</td><td>The next player must play a red card from their hand.</td></tr>
+      <tr><td>Black King</td><td>The next player must play a black card from their hand.</td></tr>
+    </table>
+    <h3>Kings in detail</h3>
+    <ul>
+      <li>A player without the required color has their turn skipped, and the requirement passes on until someone plays that color.</li>
+      <li>While a color is required, you can't play from the draw pile, and you can't play a Joker (Jokers have no color).</li>
+      <li>If the requirement travels all the way back to the King's player, <b>that player is eliminated</b>.</li>
+    </ul>
+    <h3>Busts &amp; eliminations</h3>
+    <ul>
+      <li>An eliminated player's hand goes to the bottom of the play pile.</li>
+      <li>After a bust, a new card is flipped from the draw pile (like the start of the game) to set a new count.</li>
+      <li>When the draw pile runs out, the play pile (except its top card) is shuffled into a new draw pile.</li>
+    </ul>
+    <div class="modal-actions"><button class="btn" id="rulesClose">Got it</button></div>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   Constants & helpers
+   ===================================================================== */
+const $ = s => document.querySelector(s);
+const SUITS = [
+  {sym:'♥', color:'red'}, {sym:'♦', color:'red'},
+  {sym:'♠', color:'black'}, {sym:'♣', color:'black'}
+];
+const RANKS = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+const SPEED = {slow:1.7, normal:1, fast:.45};
+const esc = s => String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+
+function buildDeck(){
+  const d = []; let id = 0;
+  for (const s of SUITS) for (const r of RANKS) d.push({id:id++, rank:r, suit:s.sym, color:s.color});
+  for (let k = 0; k < 2; k++) d.push({id:id++, rank:'JK', suit:'★', color:'joker'}); // Jokers have no color
+  return d;
+}
+function shuffle(a){
+  for (let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+const isNum   = c => !['J','Q','K','JK'].includes(c.rank);
+const numVal  = c => c.rank === 'A' ? 1 : +c.rank;
+const signed  = c => c.color === 'red' ? numVal(c) : -numVal(c);
+const cName   = c => c.rank === 'JK' ? 'Joker' : `${c.rank}${c.suit}`;
+const inRange = n => n >= 0 && n <= 20;
+const colorWord = col => col === 'red' ? 'red' : 'black';
+
+function cardHTML(c, cls = '', style = ''){
+  if (c.rank === 'JK')
+    return `<div class="card joker ${cls}" style="${style}"><div class="corner tl">★</div><div class="mid"><div class="frame"><span class="jk">JOKER</span><b>★</b></div></div><div class="corner br">★</div></div>`;
+  const mid = isNum(c)
+    ? `<div class="mid"><b>${c.rank}</b><span>${c.suit}</span></div>`
+    : `<div class="mid"><div class="frame"><b>${c.rank}</b><span>${c.suit}</span></div></div>`;
+  return `<div class="card ${c.color} ${cls}" style="${style}"><div class="corner tl">${c.rank}<br>${c.suit}</div>${mid}<div class="corner br">${c.rank}<br>${c.suit}</div></div>`;
+}
+
+/* =====================================================================
+   Settings (menu)
+   ===================================================================== */
+const SETTINGS_KEY = 'bust-card-game-settings-v1';
+const DEFAULTS = {
+  count: 4,
+  seats: [
+    {name:'You', cpu:false}, {name:'Ada', cpu:true}, {name:'Bram', cpu:true},
+    {name:'Cleo', cpu:true}, {name:'Dex', cpu:true}, {name:'Esme', cpu:true}
+  ],
+  cover: false, previews: true, speed: 'normal'
+};
+let S = loadSettings();
+
+function loadSettings(){
+  try {
+    const raw = JSON.parse(localStorage.getItem(SETTINGS_KEY));
+    if (raw && Array.isArray(raw.seats) && raw.seats.length === 6) return Object.assign({}, DEFAULTS, raw);
+  } catch (e) {}
+  return JSON.parse(JSON.stringify(DEFAULTS));
+}
+function saveSettings(){ try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(S)); } catch (e) {} }
+
+function renderMenu(){
+  $('#menuFan').innerHTML = [
+    {rank:'A', suit:'♥', color:'red'}, {rank:'Q', suit:'♠', color:'black'}, {rank:'K', suit:'♦', color:'red'}
+  ].map(c => cardHTML(c)).join('');
+  $('#countBtns').innerHTML = [2,3,4,5,6].map(n => `<button data-n="${n}" class="${S.count === n ? 'on' : ''}">${n}</button>`).join('');
+  $('#seatRows').innerHTML = S.seats.slice(0, S.count).map((s, i) => `
+    <div class="seat-row">
+      <span class="seat-num">P${i + 1}</span>
+      <input data-i="${i}" maxlength="14" value="${esc(s.name)}" placeholder="Player ${i + 1}" aria-label="Player ${i + 1} name">
+      <div class="seg">
+        <button data-i="${i}" data-cpu="0" class="${!s.cpu ? 'on' : ''}">Human</button>
+        <button data-i="${i}" data-cpu="1" class="${s.cpu ? 'on' : ''}">CPU</button>
+      </div>
+    </div>`).join('');
+  $('#optCover').checked = S.cover;
+  $('#optPreview').checked = S.previews;
+  $('#speedBtns').innerHTML = ['slow','normal','fast'].map(k => `<button data-s="${k}" class="${S.speed === k ? 'on' : ''}">${k[0].toUpperCase() + k.slice(1)}</button>`).join('');
+  validateMenu();
+}
+function validateMenu(){
+  const humans = S.seats.slice(0, S.count).filter(s => !s.cpu).length;
+  const ok = humans >= 1;
+  $('#menuErr').textContent = ok ? '' : 'At least one player must be human.';
+  $('#startBtn').disabled = !ok;
+  return ok;
+}
+$('#countBtns').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  S.count = +b.dataset.n; saveSettings(); renderMenu();
+});
+$('#seatRows').addEventListener('input', e => {
+  if (e.target.matches('input')) { S.seats[+e.target.dataset.i].name = e.target.value; saveSettings(); }
+});
+$('#seatRows').addEventListener('click', e => {
+  const b = e.target.closest('button[data-cpu]'); if (!b) return;
+  S.seats[+b.dataset.i].cpu = b.dataset.cpu === '1'; saveSettings(); renderMenu();
+});
+$('#speedBtns').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  S.speed = b.dataset.s; saveSettings(); renderMenu();
+});
+$('#optCover').addEventListener('change', e => { S.cover = e.target.checked; saveSettings(); });
+$('#optPreview').addEventListener('change', e => { S.previews = e.target.checked; saveSettings(); if (G) render(); });
+$('#startBtn').addEventListener('click', () => { if (validateMenu()) newGame(); });
+
+/* =====================================================================
+   Game state
+   ===================================================================== */
+let G = null;
+let gameCounter = 0;
+let lastTopId = null, lastTotal = null;
+
+function later(fn, ms){
+  const gid = G.id;
+  setTimeout(() => { if (G && G.id === gid && G.phase !== 'over') fn(); }, ms * SPEED[S.speed]);
+}
+
+function newGame(){
+  hideAllOverlays();
+  const seats = S.seats.slice(0, S.count);
+  G = {
+    id: ++gameCounter,
+    players: seats.map((s, i) => ({
+      idx: i, cpu: s.cpu, hand: [], out: false, outReason: '',
+      name: (s.name || '').trim() || (s.cpu ? `CPU ${i + 1}` : `Player ${i + 1}`)
+    })),
+    deck: shuffle(buildDeck()), pile: [],
+    total: 0, dir: 1, cur: 0,
+    req: null,            // {color, by} — active King requirement
+    forced: false,        // a Joker forces the next player to play the top of the draw pile
+    phase: 'busy',        // busy | human | cpu | cover | over
+    log: [], revealed: null, lastViewer: null, bust: false, winner: null
+  };
+  lastTopId = null; lastTotal = null;
+  for (let r = 0; r < 7; r++) for (const p of G.players) p.hand.push(G.deck.pop());
+  G.players.forEach(sortHand);
+  log(`Dealt 7 cards to each of ${G.players.length} players.`, 'sys');
+  const c = flipStarter();
+  if (c) log(`Starting count: flipped ${cName(c)} → ${G.total}.`, 'sys');
+  G.cur = Math.floor(Math.random() * G.players.length);
+  log(`${G.players[G.cur].name} goes first.`, 'sys');
+
+  $('#menu').hidden = true;
+  $('#game').hidden = false;
+  $('#logPanel').hidden = window.innerWidth <= 980;
+  window.scrollTo(0, 0);
+  render();
+  later(beginTurn, 700);
+}
+
+function sortHand(p){
+  const order = {red:0, black:1, joker:2};
+  p.hand.sort((a, b) => order[a.color] - order[b.color]
+    || RANKS.indexOf(a.rank) - RANKS.indexOf(b.rank) || a.suit.localeCompare(b.suit));
+}
+
+function log(msg, kind = 'play'){
+  G.log.push({msg, kind});
+  if (G.log.length > 200) G.log.shift();
+}
+
+const alive = () => G.players.filter(p => !p.out);
+const activeHumans = () => G.players.filter(p => !p.cpu && !p.out).length;
+const coverMode = () => S.cover && activeHumans() > 1;
+const canBlind = () => G.deck.length > 0 || G.pile.length > 1;
+
+function nextIdx(i){
+  const n = G.players.length; let j = i;
+  do { j = (j + G.dir + n) % n; } while (G.players[j].out && j !== i);
+  return j;
+}
+
+/* ---------- Deck handling ---------- */
+function reshuffle(){
+  if (G.pile.length <= 1) return false;
+  const top = G.pile.pop();
+  G.deck = shuffle(G.deck.concat(G.pile));
+  G.pile = [top];
+  log('Play pile shuffled into a new draw pile.', 'sys');
+  toast('Reshuffle', 'Play pile became the new draw pile');
+  return true;
+}
+function drawOne(){
+  if (G.deck.length === 0) reshuffle();
+  return G.deck.pop() || null;
+}
+// Flip cards until a number card appears; it goes on the play pile and sets the count.
+function flipStarter(){
+  if (!G.deck.some(isNum)) reshuffle();
+  if (!G.deck.some(isNum)) { G.total = 10; log('No number cards available — count set to 10.', 'sys'); return null; }
+  let c;
+  while (true) {
+    c = G.deck.pop();
+    if (isNum(c)) break;
+    log(`Flipped ${cName(c)} — face card shuffled back in.`, 'sys');
+    G.deck.push(c); shuffle(G.deck);
+  }
+  G.pile.push(c);
+  G.total = numVal(c);
+  return c;
+}
+
+function eliminate(p, reason){
+  p.out = true; p.outReason = reason;
+  G.pile.unshift(...p.hand);   // hand goes to the bottom of the play pile
+  p.hand = [];
+  if (G.req && G.req.by === p.idx) G.req = null;
+}
+
+function checkEnd(){
+  if (G.phase === 'over') return true;
+  const a = alive();
+  if (a.length <= 1) { win(a.length ? a[0].idx : null, 'last'); return true; }
+  return false;
+}
+
+/* =====================================================================
+   Turn flow
+   ===================================================================== */
+function beginTurn(){
+  if (checkEnd()) return;
+  const p = G.players[G.cur];
+  if (G.revealed !== G.cur) G.revealed = null;
+
+  if (G.req) {
+    const col = G.req.color;
+    if (G.cur === G.req.by) {
+      G.req = null;
+      log(`Nobody could play a ${col} card — ${p.name} is eliminated by their own King!`, 'out');
+      toast(`${p.name} is out!`, `No one could follow the ${col} King`, 'bad');
+      eliminate(p, 'king');
+      G.phase = 'busy'; render();
+      if (checkEnd()) return;
+      G.cur = nextIdx(G.cur);
+      render();
+      return later(beginTurn, 1500);
+    }
+    if (!p.hand.some(c => c.color === col)) {
+      log(`${p.name} has no ${col} card — turn skipped.`, 'skip');
+      toast(`${p.name} is skipped`, `No ${col} card to play`);
+      G.phase = 'busy';
+      G.cur = nextIdx(G.cur);
+      render();
+      return later(beginTurn, 1300);
+    }
+  }
+
+  if (G.forced) {
+    G.forced = false;
+    if (canBlind()) {
+      log(`${p.name} is forced to play the top card of the draw pile.`, 'skip');
+      toast(`${p.name} must flip`, 'Joker: top card of the draw pile');
+      G.phase = 'busy'; render();
+      return later(() => { const c = drawOne(); if (c) playCard(p.idx, c, true); else beginTurn(); }, 1200);
+    }
+  }
+
+  if (p.cpu) {
+    G.phase = 'cpu'; render();
+    later(cpuAct, 950);
+  } else if (coverMode() && G.revealed !== G.cur) {
+    G.phase = 'cover'; render();
+    $('#coverName').textContent = p.name;
+    $('#cover').hidden = false;
+  } else {
+    revealFor(G.cur);
+  }
+}
+function revealFor(i){
+  G.revealed = i; G.lastViewer = i; G.phase = 'human';
+  $('#cover').hidden = true;
+  render();
+}
+$('#coverBtn').addEventListener('click', () => { if (G && G.phase === 'cover') revealFor(G.cur); });
+
+function playCard(pi, card, blind){
+  const p = G.players[pi];
+  G.phase = 'busy';
+  if (!blind) p.hand.splice(p.hand.indexOf(card), 1);
+  G.pile.push(card);
+  G.req = null;                       // any legal play satisfies an active requirement
+  const how = blind ? ' from the top of the draw pile' : '';
+  let skip = false;
+
+  if (isNum(card)) {
+    const before = G.total, v = numVal(card), nt = before + signed(card);
+    const isAce = card.rank === 'A';
+    if (isAce) G.dir *= -1;
+    const expr = `${before} ${card.color === 'red' ? '+' : '−'} ${v} = ${nt}`;
+    if (!inRange(nt)) {
+      G.total = nt; G.bust = true;
+      log(`${p.name} played ${cName(card)}${how}: ${expr}. BUST!`, 'out');
+      toast('BUST!', `${p.name} hit ${nt} and is eliminated`, 'bad');
+      eliminate(p, 'bust');
+      render();
+      later(() => {
+        G.bust = false;
+        if (alive().length > 1) {
+          const c = flipStarter();
+          if (c) log(`New count: flipped ${cName(c)} → ${G.total}.`, 'sys');
+        }
+        endTurn(pi, false);
+      }, 1900);
+      return;
+    }
+    G.total = nt;
+    log(`${p.name} played ${cName(card)}${how}: ${expr}.${isAce ? ' Direction reversed!' : ''}`);
+    if (isAce) toast('Reverse!', G.dir === 1 ? 'Now clockwise →' : 'Now counter-clockwise ←');
+  } else if (card.rank === 'Q') {
+    G.total = card.color === 'black' ? 0 : 20;
+    log(`${p.name} played ${cName(card)}${how}: count set to ${G.total}.`);
+  } else if (card.rank === 'J') {
+    skip = true;
+    log(`${p.name} played ${cName(card)}${how}: next player is skipped and draws 1.`);
+  } else if (card.rank === 'JK') {
+    G.forced = true;
+    log(`${p.name} played a Joker${how}: next player must play the top card of the draw pile.`);
+    toast('Joker!', 'Next player must flip the top card of the draw pile');
+  } else {
+    G.req = {color: card.color, by: pi};
+    log(`${p.name} played ${cName(card)}${how}: next player must play ${colorWord(card.color)}.`);
+    toast(`${card.color === 'red' ? 'Red' : 'Black'} King`, `Next player must play a ${card.color} card`);
+  }
+  render();
+
+  if (p.hand.length === 0) return later(() => win(pi, 'empty'), 700);
+
+  later(() => endTurn(pi, skip), 650);
+}
+
+function endTurn(pi, skip){
+  if (checkEnd()) return;
+  let n = nextIdx(pi);
+  if (skip) {
+    const sp = G.players[n];
+    const c = drawOne();
+    if (c) { sp.hand.push(c); sortHand(sp); }
+    log(`${sp.name}'s turn is skipped${c ? ' and they draw 1' : ''}.`, 'skip');
+    toast(`${sp.name} is skipped`, c ? 'Jack: draw 1 card' : 'Jack');
+    n = nextIdx(n);
+  }
+  G.cur = n;
+  render();
+  later(beginTurn, skip ? 1000 : 250);
+}
+
+function win(pi, reason){
+  G.phase = 'over'; G.winner = pi; G.req = null;
+  const p = pi == null ? null : G.players[pi];
+  if (p) log(reason === 'empty' ? `${p.name} played their last card and wins!` : `${p.name} is the last player standing and wins!`, 'win');
+  $('#cover').hidden = true;
+  render();
+  const gid = G.id;
+  setTimeout(() => { if (G && G.id === gid) showGameOver(reason); }, 900);
+}
+function showGameOver(reason){
+  const p = G.winner == null ? null : G.players[G.winner];
+  $('#overTitle').textContent = p ? `${p.name} wins!` : 'Game over';
+  $('#overReason').textContent = !p ? '' : reason === 'empty' ? 'Played their last card.' : 'Last player standing.';
+  const order = [...G.players].sort((a, b) =>
+    (b.idx === G.winner) - (a.idx === G.winner) || a.out - b.out || a.hand.length - b.hand.length);
+  $('#standings').innerHTML = order.map(q => {
+    const st = q.idx === G.winner ? '🏆 Winner'
+      : q.out ? (q.outReason === 'king' ? 'Out — King penalty' : 'Out — busted')
+      : `${q.hand.length} card${q.hand.length === 1 ? '' : 's'} left`;
+    return `<li><span>${esc(q.name)}${q.cpu ? ' <small>(CPU)</small>' : ''}</span><span>${st}</span></li>`;
+  }).join('');
+  $('#overModal').hidden = false;
+}
+
+/* ---------- Human input ---------- */
+$('#hand').addEventListener('click', e => {
+  const b = e.target.closest('.hand-card');
+  if (!b || !G || G.phase !== 'human') return;
+  const p = G.players[G.cur];
+  const card = p.hand.find(c => c.id === +b.dataset.id);
+  if (!card || (G.req && card.color !== G.req.color)) return;
+  playCard(G.cur, card, false);
+});
+function humanBlind(){
+  if (!G || G.phase !== 'human' || G.req || !canBlind()) return;
+  const p = G.players[G.cur];
+  const c = drawOne();
+  if (c) playCard(p.idx, c, true);
+}
+$('#blindBtn').addEventListener('click', humanBlind);
+$('#drawPile').addEventListener('click', humanBlind);
+
+/* =====================================================================
+   Computer AI
+   ===================================================================== */
+function cpuAct(){
+  const pi = G.cur, p = G.players[pi];
+  const opts = p.hand.filter(c => !G.req || c.color === G.req.color);
+  let best = null, bestScore = -Infinity;
+  for (const c of opts) {
+    const s = scoreCard(p, c);
+    if (s > bestScore) { best = c; bestScore = s; }
+  }
+  if (!G.req && canBlind()) {
+    const bs = blindScore(p);
+    if (bs > bestScore) { best = 'blind'; bestScore = bs; }
+  }
+  if (best === 'blind') {
+    const c = drawOne();
+    if (c) return playCard(pi, c, true);
+  }
+  if (best && best !== 'blind') return playCard(pi, best, false);
+  endTurn(pi, false); // should never happen
+}
+
+function scoreCard(p, card){
+  const others = alive().filter(o => o !== p);
+  const next = G.players[nextIdx(p.idx)];
+  const pressure = next.hand.length <= 2;          // next player is close to winning
+  const lastCard = p.hand.length === 1;
+  const hasSafeNum = p.hand.some(c => isNum(c) && inRange(G.total + signed(c)) && (!G.req || c.color === G.req.color));
+  let s;
+
+  if (isNum(card)) {
+    const nt = G.total + signed(card);
+    if (!inRange(nt)) return -1000;
+    if (lastCard) return 1000;
+    const margin = Math.min(nt, 20 - nt);              // 0..10 — distance from the edges
+    s = 40 + margin * 2 + numVal(card) * 0.4;
+    if (pressure) s += (10 - margin) * 1.6;            // squeeze a dangerous opponent
+  } else {
+    if (lastCard) return 1000;
+    const {rank, color} = card;
+    if (rank === 'Q') {
+      s = hasSafeNum ? 16 : 74;
+      if ((color === 'black' && G.total === 0) || (color === 'red' && G.total === 20)) s -= 6;
+      if (pressure) s += 14;
+    } else if (rank === 'J') {
+      s = (hasSafeNum ? 26 : 70) + (pressure ? 22 : 0);
+    } else if (rank === 'JK') {
+      // A forced blind flip hurts the next player most when the count sits near an edge
+      const margin = Math.min(G.total, 20 - G.total);
+      s = (hasSafeNum ? 24 : 72) + (10 - margin) * 1.2 + (pressure ? 18 : 0);
+    } else { // King
+      // Rough chance nobody else holds the colour: 0.5 ^ (cards) per opponent
+      const riskAllLack = others.reduce((acc, o) => acc * Math.pow(0.5, o.hand.length), 1);
+      s = (hasSafeNum ? 20 : 66) - riskAllLack * 160 + (pressure ? 10 : 0);
+    }
+  }
+  return s + Math.random() * 6;
+}
+
+function blindScore(p){
+  const seen = new Set([...p.hand, ...G.pile].map(c => c.id));
+  const unseen = buildDeck().filter(c => !seen.has(c.id));
+  if (!unseen.length) return -Infinity;
+  let safe = 0;
+  for (const c of unseen) {
+    if (!isNum(c)) safe += c.rank === 'K' ? 0.8 : 1;
+    else if (inRange(G.total + signed(c))) safe += 1;
+  }
+  return (safe / unseen.length) * 45 - 8;
+}
+
+/* =====================================================================
+   Rendering
+   ===================================================================== */
+function render(){
+  if (!G) return;
+  renderTop(); renderSeats(); renderTable(); renderHand(); renderLog();
+}
+
+function renderTop(){
+  let t;
+  if (G.phase === 'over') t = G.winner != null ? `🏆 <b>${esc(G.players[G.winner].name)}</b> wins!` : 'Game over';
+  else {
+    const p = G.players[G.cur];
+    t = `<b>${esc(p.name)}</b>'s turn${p.cpu ? ' <small>(CPU)</small>' : ''}`;
+  }
+  $('#turnInfo').innerHTML = t;
+}
+
+function renderSeats(){
+  const arrow = G.dir === 1 ? '›' : '‹';
+  $('#seats').innerHTML = G.players.map((p, i) => {
+    const cls = ['seat',
+      i === G.cur && G.phase !== 'over' && !p.out ? 'current' : '',
+      p.out ? 'out' : '', G.winner === i ? 'winner' : ''].join(' ');
+    const minis = p.out ? '' : Array.from({length: Math.min(p.hand.length, 12)}, () => '<i></i>').join('');
+    const status = p.out
+      ? (p.outReason === 'king' ? 'Out — King penalty' : 'Out — busted')
+      : p.hand.length === 1 ? '<span class="last">1 card — last card!</span>'
+      : `${p.hand.length} cards`;
+    return `<div class="${cls}">
+        <div class="seat-name">${esc(p.name)}<span class="seat-tag">${p.cpu ? 'CPU' : 'HUMAN'}</span></div>
+        <div class="seat-minis">${minis}</div>
+        <div class="seat-count">${status}</div>
+      </div>${i < G.players.length - 1 ? `<span class="seat-arrow">${arrow}</span>` : ''}`;
+  }).join('');
+}
+
+function renderTable(){
+  const humanTurn = G.phase === 'human';
+  const blindOK = humanTurn && !G.req && canBlind();
+
+  // Draw pile
+  const dp = $('#drawPile');
+  const backs = Math.min(3, Math.ceil(G.deck.length / 8));
+  dp.innerHTML = G.deck.length
+    ? Array.from({length: backs}, (_, k) => `<div class="card back" style="transform:translate(${-k * 2}px,${-k * 2}px)"></div>`).join('')
+    : '<div class="slot"></div>';
+  dp.classList.toggle('clickable', blindOK && G.deck.length > 0);
+  dp.title = blindOK ? 'Play the top card of the draw pile (blind)' : 'Draw pile';
+  $('#deckCount').textContent = G.deck.length;
+
+  // Play pile — show the top three cards with a slight scatter
+  const pp = $('#playPile');
+  const shown = G.pile.slice(-3);
+  const top = shown[shown.length - 1];
+  pp.innerHTML = shown.length ? shown.map((c, k) => {
+    const r = ((c.id * 37) % 17) - 8;
+    const isTop = k === shown.length - 1;
+    const cls = isTop && c.id !== lastTopId ? 'enter' : '';
+    return cardHTML(c, cls, `--r:${r}deg;transform:rotate(${r}deg)`);
+  }).join('') : '<div class="slot"></div>';
+  lastTopId = top ? top.id : null;
+  $('#pileCount').textContent = G.pile.length;
+
+  // Count
+  const tEl = $('#total');
+  tEl.textContent = G.total;
+  tEl.classList.toggle('bust', G.bust);
+  tEl.classList.toggle('danger', !G.bust && (G.total <= 3 || G.total >= 17));
+  if (lastTotal !== null && lastTotal !== G.total) {
+    tEl.classList.remove('pulse', 'shake'); void tEl.offsetWidth;
+    tEl.classList.add(G.bust ? 'shake' : 'pulse');
+  }
+  lastTotal = G.total;
+  $('#gaugeMarker').style.left = `${Math.max(0, Math.min(20, G.total)) / 20 * 100}%`;
+
+  $('#reqBanner').innerHTML = G.req
+    ? `<span class="req ${G.req.color}">${G.req.color === 'red' ? '♥♦ Must play RED' : '♠♣ Must play BLACK'}</span>` : '';
+  $('#dirInfo').textContent = G.dir === 1 ? 'Direction: clockwise →' : 'Direction: counter-clockwise ←';
+
+  // Status line
+  let status = G.log.length ? G.log[G.log.length - 1].msg : '';
+  if (humanTurn) status = G.req
+    ? `Your turn — you must play a ${G.req.color} card from your hand.`
+    : 'Your turn — play a card from your hand, or gamble on the top card of the draw pile.';
+  $('#status').textContent = status;
+}
+
+function currentViewer(){
+  const onTurn = G.phase === 'human' && !G.players[G.cur].cpu;
+  if (coverMode()) return onTurn ? G.cur : null;
+  if (onTurn) return G.cur;
+  if (G.lastViewer != null && !G.players[G.lastViewer].out) return G.lastViewer;
+  const h = G.players.find(p => !p.cpu && !p.out);
+  if (h) return h.idx;
+  return G.lastViewer != null ? G.lastViewer : G.players.findIndex(p => !p.cpu);
+}
+
+function previewFor(c){
+  if (isNum(c)) {
+    const nt = G.total + signed(c);
+    if (!inRange(nt)) return {label: `BUST (${nt})`, cls: 'bad'};
+    return {label: `→ ${nt}${c.rank === 'A' ? ' ⇄' : ''}`, cls: nt <= 3 || nt >= 17 ? 'warn' : ''};
+  }
+  if (c.rank === 'Q') return {label: `→ ${c.color === 'black' ? 0 : 20}`, cls: ''};
+  if (c.rank === 'J') return {label: 'Skip + draw 1', cls: ''};
+  if (c.rank === 'JK') return {label: 'Force blind', cls: ''};
+  return {label: c.color === 'black' ? 'Force black' : 'Force red', cls: ''};
+}
+
+function renderHand(){
+  const area = $('#hand'), title = $('#handTitle'), blind = $('#blindBtn');
+  const v = currentViewer();
+  const myTurn = G.phase === 'human' && v === G.cur;
+  blind.hidden = !myTurn;
+  blind.disabled = !(myTurn && !G.req && canBlind());
+  blind.title = G.req ? 'Not allowed while a King requires a color' : '';
+
+  if (v === null || v < 0) {
+    title.textContent = 'Hands hidden';
+    area.innerHTML = `<div class="hand-empty">${G.phase === 'over' ? 'Game over.' : 'Waiting for the next player…'}</div>`;
+    return;
+  }
+  const p = G.players[v];
+  if (p.out) {
+    title.innerHTML = `${esc(p.name)}'s hand`;
+    const msg = G.phase === 'over' ? '' : activeHumans() ? '' : ' The computer players will finish the game.';
+    area.innerHTML = `<div class="hand-empty">${esc(p.name)} has been eliminated.${msg}</div>`;
+    return;
+  }
+  title.innerHTML = `${esc(p.name)}'s hand <span>(${p.hand.length})</span>${myTurn ? '<em>YOUR TURN</em>' : ''}`;
+  area.innerHTML = p.hand.map(c => {
+    const legal = myTurn && (!G.req || c.color === G.req.color);
+    const cls = myTurn ? (legal ? 'playable' : 'illegal') : 'idle';
+    let prev = '';
+    if (S.previews && legal) { const pv = previewFor(c); prev = `<span class="preview ${pv.cls}">${pv.label}</span>`; }
+    return `<button class="hand-card ${cls}" data-id="${c.id}" ${legal ? '' : 'disabled'} aria-label="${cName(c)}">${cardHTML(c)}${prev}</button>`;
+  }).join('');
+}
+
+function renderLog(){
+  $('#logList').innerHTML = G.log.slice().reverse().map(l => `<li class="${l.kind}">${esc(l.msg)}</li>`).join('');
+}
+
+function toast(title, sub = '', kind = ''){
+  const el = document.createElement('div');
+  el.className = `toast ${kind}`;
+  el.innerHTML = `<b>${esc(title)}</b>${sub ? `<small>${esc(sub)}</small>` : ''}`;
+  const box = $('#toasts');
+  box.appendChild(el);
+  while (box.children.length > 3) box.firstChild.remove();
+  setTimeout(() => el.classList.add('leave'), 1700);
+  setTimeout(() => el.remove(), 2100);
+}
+
+/* =====================================================================
+   Menus, modals & navigation
+   ===================================================================== */
+function hideAllOverlays(){
+  ['#cover', '#overModal', '#rulesModal'].forEach(s => $(s).hidden = true);
+}
+function toMenu(){
+  if (G) G.id = -1;
+  G = null;
+  hideAllOverlays();
+  $('#toasts').innerHTML = '';
+  $('#game').hidden = true;
+  $('#menu').hidden = false;
+  renderMenu();
+}
+$('#quitBtn').addEventListener('click', () => {
+  if (G && G.phase !== 'over' && !confirm('Quit this game and return to the menu?')) return;
+  toMenu();
+});
+$('#overMenu').addEventListener('click', toMenu);
+$('#overAgain').addEventListener('click', newGame);
+$('#logToggle').addEventListener('click', () => { const l = $('#logPanel'); l.hidden = !l.hidden; });
+$('#menuRules').addEventListener('click', () => $('#rulesModal').hidden = false);
+$('#gameRules').addEventListener('click', () => $('#rulesModal').hidden = false);
+$('#rulesClose').addEventListener('click', () => $('#rulesModal').hidden = true);
+$('#rulesModal').addEventListener('click', e => { if (e.target.id === 'rulesModal') $('#rulesModal').hidden = true; });
+
+renderMenu();
+</script>
+</body>
+</html>
